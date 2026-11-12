@@ -1,0 +1,172 @@
+{
+  "_about": "Which Talk Trail voice clips Rory uses for each moment. 'says' is an automatic transcript.",
+  "source": "https://github.com/ZeroNolidge/SpeechApp-test (audio/)",
+  "moments": {
+    "hello": [
+      {
+        "file": "c22b5f9178342609-a1927b-f1.mp3",
+        "says": "hi"
+      },
+      {
+        "file": "f81b3e7b11403fbd-439c59-f1.mp3",
+        "says": "hi friend"
+      },
+      {
+        "file": "0aeb99f23f301e26-e4b726-f1.mp3",
+        "says": "i missed you"
+      },
+      {
+        "file": "d8afb2459fe569a4-0cc15b-f1.mp3",
+        "says": "welcome back"
+      },
+      {
+        "file": "65090bb12b81666c-e374f8-f1.mp3",
+        "says": "let's play"
+      }
+    ],
+    "morning": [
+      {
+        "file": "d1e868b58e24c54e-4c0bb1-f1.mp3",
+        "says": "rory is awake"
+      },
+      {
+        "file": "45a21e4b5b2a90eb-d3d710-f1.mp3",
+        "says": "morning"
+      },
+      {
+        "file": "0aeb99f23f301e26-e4b726-f1.mp3",
+        "says": "i missed you"
+      },
+      {
+        "file": "d8afb2459fe569a4-0cc15b-f1.mp3",
+        "says": "welcome back"
+      }
+    ],
+    "giggle": [
+      {
+        "file": "bf48095db4e17be2-a25464-f1.mp3",
+        "says": "funny"
+      },
+      {
+        "file": "e891b554dd524dde-839227-f1.mp3",
+        "says": "silly"
+      },
+      {
+        "file": "3310c8cde3ed1280-2e9308-f1.mp3",
+        "says": "woohoo"
+      },
+      {
+        "file": "19ff94efc860acf5-4ec2f9-f1.mp3",
+        "says": "hooray"
+      }
+    ],
+    "wheee": [
+      {
+        "file": "076c1bb34a2dd223-08753f-f1.mp3",
+        "says": "whoa hoo"
+      },
+      {
+        "file": "c1c9e5aafc031d9d-fa917e-f1.mp3",
+        "says": "up up"
+      },
+      {
+        "file": "04948d252d110009-d1b704-f1.mp3",
+        "says": "up up up it goes"
+      },
+      {
+        "file": "3310c8cde3ed1280-2e9308-f1.mp3",
+        "says": "woohoo"
+      }
+    ],
+    "dizzy": [
+      {
+        "file": "10eb3c901c4c7bcf-6cfdd8-f1.mp3",
+        "says": "it goes round and round"
+      },
+      {
+        "file": "076c1bb34a2dd223-08753f-f1.mp3",
+        "says": "whoa hoo"
+      }
+    ],
+    "love": [
+      {
+        "file": "bb7b1901d99e8b26-f1.mp3",
+        "says": "i love you"
+      },
+      {
+        "file": "897a1c59876432ed-e33a61-f1.mp3",
+        "says": "thank you"
+      }
+    ],
+    "listen": [
+      {
+        "file": "25726b60eaafaa88-c9a05a-f1.mp3",
+        "says": "rory can hear you now"
+      }
+    ],
+    "chat": [
+      {
+        "file": "65090bb12b81666c-e374f8-f1.mp3",
+        "says": "let's play"
+      },
+      {
+        "file": "1131ab3a5084e1f7-70fb1c-f1.mp3",
+        "says": "let's practice talking"
+      },
+      {
+        "file": "34125cb535e5e305-cc59d6-f1.mp3",
+        "says": "every adventure needs a buddy"
+      },
+      {
+        "file": "f81b3e7b11403fbd-439c59-f1.mp3",
+        "says": "hi friend"
+      },
+      {
+        "file": "bb7b1901d99e8b26-f1.mp3",
+        "says": "i love you"
+      }
+    ],
+    "dark": [
+      {
+        "file": "b99d178d06ef54ea-e2e7d6-f1.mp3",
+        "says": "the sky is still dark"
+      }
+    ],
+    "yawn": [
+      {
+        "file": "4c8a3daab995cd09-2dd331-f1.mp3",
+        "says": "ah sleepy"
+      },
+      {
+        "file": "6d677ad010cd3f9f-b696ab-f1.mp3",
+        "says": "sleepy"
+      }
+    ],
+    "goodnight": [
+      {
+        "file": "fb3809644732ee93-be9252-f1.mp3",
+        "says": "night night"
+      },
+      {
+        "file": "1be2a44cb53dde90-967cad-f1.mp3",
+        "says": "night"
+      }
+    ],
+    "bye": [
+      {
+        "file": "d03d5865f0262261-38176d-f1.mp3",
+        "says": "see you next time"
+      },
+      {
+        "file": "fb3809644732ee93-be9252-f1.mp3",
+        "says": "night night"
+      }
+    ],
+    "tired": [
+      {
+        "file": "4c8a3daab995cd09-2dd331-f1.mp3",
+        "says": "ah sleepy"
+      }
+    ]
+  }
+}

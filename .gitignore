@@ -1,0 +1,6 @@
+.pio/
+.vscode/
+tools/face-preview/out/
+__pycache__/
+*.pyc
+.DS_Store
