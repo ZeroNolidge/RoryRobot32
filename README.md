@@ -11,23 +11,24 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 
 | You… | Rory… |
 |---|---|
-| switch her on | opens her eyes, sparkles, says *"Hi friend!"* |
-| tap her face | giggles with happy `^ ^` eyes |
+| switch her on | opens her eyes, sparkles, says *"Hi friend!"* or *"It's Rory!"* |
+| tap her face | *"Beep boop!"* with happy `^ ^` eyes |
 | tap 3 times quickly | gets heart eyes — *"I love you!"* |
-| rub/tickle her face | giggles, sparkles |
+| rub/tickle her face | *"Silly!"*, *"Yay!"*, sparkles |
 | slide a finger on the screen | her eyes follow your finger |
 | hold a finger on her face | *"Rory can hear you now!"* — listening face (this becomes "ask Rory a question" in phase 2) |
-| pick her up | surprised, then *"Whoa-hoo!"* |
+| pick her up | surprised, then *"Up up up it goes!"* or *"Hooray!"* |
 | tilt her while holding | her eyes roll "downhill" |
-| shake her | spiral dizzy eyes, wobbly mouth |
+| shake her | spiral dizzy eyes, wobbly mouth — *"It goes round and round!"* |
 | put her face-down | *"The sky is still dark!"* |
 | leave her alone 3 min | yawns, gets droopy eyes, *"night night"*, sleeps with floating Zzz (screen dims) |
 | touch or pick her up while asleep | wakes up: *"Rory is awake!"* |
 | hold **PWR** ~1.5 s | *"See you next time!"* and switches off (on battery) |
 | press **BOOT** | changes the volume (3 kid-safe levels) |
 
-Her voice is the **same voice as the app** — the firmware plays the app's own
-clips from the microSD card, and her mouth moves with the sound.
+Her voice is the **same voice as the app** (OpenAI `gpt-4o-mini-tts`, voice
+`marin`) — the firmware plays the app's own clips from the microSD card, and
+her mouth moves with the sound.
 
 ## What you need
 
@@ -63,13 +64,15 @@ python3 make_sdcard.py /path/to/your/sdcard
 This downloads the clips from the Talk Trail app and sorts them into folders:
 
 ```
-rory/hello/  rory/giggle/  rory/wheee/  rory/dizzy/  rory/love/  rory/listen/
-rory/chat/   rory/dark/    rory/yawn/   rory/goodnight/  rory/morning/  rory/bye/  rory/tired/
+rory/hello/  rory/boop/  rory/giggle/  rory/wheee/  rory/dizzy/  rory/love/  rory/listen/
+rory/chat/   rory/cheer/  rory/dark/  rory/yawn/  rory/goodnight/  rory/morning/  rory/bye/  rory/tired/
 ```
 
 Want to add your own? Drop any MP3 into one of those folders (e.g. a recording
 of you saying *"Hi buddy!"* into `rory/hello/`) and Rory will use it. The
-choices are listed in [`sdcard/rory_clips.json`](sdcard/rory_clips.json).
+choices are listed in [`sdcard/rory_clips.json`](sdcard/rory_clips.json), using the
+exact lines from the app's `audio/manifest.json`. (`cheer` — *"You did it!"*,
+*"You fixed it!"* — is ready for phase 2, when Rory praises his answers.)
 
 ### 3. Play!
 
@@ -111,7 +114,7 @@ tools/face-preview/      renders the face on a PC: ./tools/face-preview/make_pre
 Rory (board) ──Wi-Fi──► Rory's cloud server (Cloudflare Workers)
   hold face, record        ├─ speech → text
   stream question          ├─ Claude: kid-safe Rory persona, short cheerful answers
-  play answer ◄────────────┴─ text → speech (OpenAI TTS, same voice as the app)
+  play answer ◄────────────┴─ text → speech (OpenAI gpt-4o-mini-tts, voice "marin")
 ```
 
 * The hold-to-talk gesture and the Listening → Thinking → Talking faces are
@@ -119,9 +122,9 @@ Rory (board) ──Wi-Fi──► Rory's cloud server (Cloudflare Workers)
 * API keys live only on the server, never on the robot.
 * Answers stream back sentence-by-sentence so Rory starts talking ~1.5–2.5 s
   after he finishes asking.
-* To match her voice exactly we need the OpenAI TTS **model, voice name,
-  instructions/style text, speed and any post-processing** used to make the
-  app's clips.
+* Her voice: OpenAI **`gpt-4o-mini-tts`**, voice **`marin`** — the same settings as
+  every Rory line in the app (from the app's `audio/manifest.json`). The manifest
+  records no style instructions or speed, so the server uses the defaults.
 
 ## Safety notes
 

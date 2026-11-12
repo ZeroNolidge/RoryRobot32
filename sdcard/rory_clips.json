@@ -1,6 +1,10 @@
 {
-  "_about": "Which Talk Trail voice clips Rory uses for each moment. 'says' is an automatic transcript.",
+  "_about": "Which Talk Trail voice clips Rory uses for each moment. 'says' is the exact line from the app's audio/manifest.json.",
   "source": "https://github.com/ZeroNolidge/SpeechApp-test (audio/)",
+  "voice": {
+    "model": "gpt-4o-mini-tts",
+    "voice": "marin"
+  },
   "moments": {
     "hello": [
       {
@@ -10,6 +14,10 @@
       {
         "file": "f81b3e7b11403fbd-439c59-f1.mp3",
         "says": "hi friend"
+      },
+      {
+        "file": "f52197008120a9ee-ff6c3f-f1.mp3",
+        "says": "it's rory"
       },
       {
         "file": "0aeb99f23f301e26-e4b726-f1.mp3",
@@ -30,16 +38,30 @@
         "says": "rory is awake"
       },
       {
+        "file": "cc00a253f537b01b-b1d22e-f1.mp3",
+        "says": "what a morning"
+      },
+      {
         "file": "45a21e4b5b2a90eb-d3d710-f1.mp3",
         "says": "morning"
       },
       {
         "file": "0aeb99f23f301e26-e4b726-f1.mp3",
         "says": "i missed you"
+      }
+    ],
+    "boop": [
+      {
+        "file": "7c8357577f51d4f0-7bb996-f1.mp3",
+        "says": "beep boop"
       },
       {
-        "file": "d8afb2459fe569a4-0cc15b-f1.mp3",
-        "says": "welcome back"
+        "file": "e891b554dd524dde-839227-f1.mp3",
+        "says": "silly"
+      },
+      {
+        "file": "bf48095db4e17be2-a25464-f1.mp3",
+        "says": "funny"
       }
     ],
     "giggle": [
@@ -52,8 +74,8 @@
         "says": "silly"
       },
       {
-        "file": "3310c8cde3ed1280-2e9308-f1.mp3",
-        "says": "woohoo"
+        "file": "4511f8c0e213c8ec-92ca6b-f1.mp3",
+        "says": "yay"
       },
       {
         "file": "19ff94efc860acf5-4ec2f9-f1.mp3",
@@ -62,8 +84,12 @@
     ],
     "wheee": [
       {
-        "file": "076c1bb34a2dd223-08753f-f1.mp3",
-        "says": "whoa hoo"
+        "file": "4511f8c0e213c8ec-92ca6b-f1.mp3",
+        "says": "yay"
+      },
+      {
+        "file": "19ff94efc860acf5-4ec2f9-f1.mp3",
+        "says": "hooray"
       },
       {
         "file": "c1c9e5aafc031d9d-fa917e-f1.mp3",
@@ -72,10 +98,6 @@
       {
         "file": "04948d252d110009-d1b704-f1.mp3",
         "says": "up up up it goes"
-      },
-      {
-        "file": "3310c8cde3ed1280-2e9308-f1.mp3",
-        "says": "woohoo"
       }
     ],
     "dizzy": [
@@ -84,8 +106,12 @@
         "says": "it goes round and round"
       },
       {
-        "file": "076c1bb34a2dd223-08753f-f1.mp3",
-        "says": "whoa hoo"
+        "file": "7d4d40e8c7dbd189-f1.mp3",
+        "says": "spin around"
+      },
+      {
+        "file": "725e5ed60ea63b45-4b9f20-f1.mp3",
+        "says": "oops"
       }
     ],
     "love": [
@@ -111,7 +137,7 @@
       },
       {
         "file": "1131ab3a5084e1f7-70fb1c-f1.mp3",
-        "says": "let's practice talking"
+        "says": "let's practise talking"
       },
       {
         "file": "34125cb535e5e305-cc59d6-f1.mp3",
@@ -124,19 +150,49 @@
       {
         "file": "bb7b1901d99e8b26-f1.mp3",
         "says": "i love you"
+      },
+      {
+        "file": "b29d43b3fb5bdf7c-f1.mp3",
+        "says": "play again"
+      }
+    ],
+    "cheer": [
+      {
+        "file": "fa53dbb38c4529a1-c70490-f1.mp3",
+        "says": "you did it"
+      },
+      {
+        "file": "98d029ddc8181f38-f1.mp3",
+        "says": "you fixed it"
+      },
+      {
+        "file": "19ff94efc860acf5-4ec2f9-f1.mp3",
+        "says": "hooray"
+      },
+      {
+        "file": "4511f8c0e213c8ec-92ca6b-f1.mp3",
+        "says": "yay"
+      },
+      {
+        "file": "bb8062f0e46a3510-ed5b01-f1.mp3",
+        "says": "great talking"
+      },
+      {
+        "file": "63c0555504a8b76b-0d0571-f1.mp3",
+        "says": "great playing"
       }
     ],
     "dark": [
       {
         "file": "b99d178d06ef54ea-e2e7d6-f1.mp3",
         "says": "the sky is still dark"
+      },
+      {
+        "file": "725e5ed60ea63b45-4b9f20-f1.mp3",
+        "says": "oops"
       }
     ],
     "yawn": [
-      {
-        "file": "4c8a3daab995cd09-2dd331-f1.mp3",
-        "says": "ah sleepy"
-      },
       {
         "file": "6d677ad010cd3f9f-b696ab-f1.mp3",
         "says": "sleepy"
@@ -158,14 +214,18 @@
         "says": "see you next time"
       },
       {
+        "file": "78c9a53e2f28b543-92e236-f1.mp3",
+        "says": "bye"
+      },
+      {
         "file": "fb3809644732ee93-be9252-f1.mp3",
         "says": "night night"
       }
     ],
     "tired": [
       {
-        "file": "4c8a3daab995cd09-2dd331-f1.mp3",
-        "says": "ah sleepy"
+        "file": "6d677ad010cd3f9f-b696ab-f1.mp3",
+        "says": "sleepy"
       }
     ]
   }
