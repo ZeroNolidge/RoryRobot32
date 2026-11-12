@@ -94,6 +94,7 @@ Every board is mounted a little differently in its case. Adjust these in
 ## Project layout
 
 ```
+server/                  Rory's cloud AI server (Cloudflare Worker)
 firmware/                PlatformIO project (Arduino-ESP32 3.2)
   src/config.h           pins (from Waveshare's examples), Rory's colors, tuning
   src/face.*             the animated face — expressions, blinking, lip sync
@@ -105,26 +106,29 @@ firmware/                PlatformIO project (Arduino-ESP32 3.2)
   src/power.*            battery latch / power off
   lib/es8311/            ES8311 codec driver (Espressif, Apache-2.0)
 sdcard/                  voice clip list + SD card maker
+docs/voice.md            Rory's exact voice settings
 tools/face-preview/      renders the face on a PC: ./tools/face-preview/make_previews.sh
 ```
 
-## Phase 2: ask Rory anything (planned)
+## Phase 2: ask Rory anything
 
 ```
 Rory (board) ──Wi-Fi──► Rory's cloud server (Cloudflare Workers)
-  hold face, record        ├─ speech → text
-  stream question          ├─ Claude: kid-safe Rory persona, short cheerful answers
+  hold face, record        ├─ speech → text (OpenAI gpt-4o-mini-transcribe)
+  send question            ├─ Claude: kid-safe Rory persona, short cheerful answers
   play answer ◄────────────┴─ text → speech (OpenAI gpt-4o-mini-tts, voice "marin")
 ```
 
-* The hold-to-talk gesture and the Listening → Thinking → Talking faces are
-  already in place (`Ev::HoldStart` / `Ev::HoldEnd` in `brain.cpp`).
+* **Server: done** — see [`server/README.md`](server/README.md) to deploy it
+  (free Cloudflare account + Anthropic and OpenAI API keys). You can talk to
+  Rory with `curl` before the robot is connected.
+* **Robot side: next** — Wi-Fi setup, recording from the dual mics while his
+  finger is held, sending it to the server and playing the answer. The
+  hold-to-talk gesture and Listening → Thinking → Talking faces are already in
+  place (`Ev::HoldStart` / `Ev::HoldEnd` in `brain.cpp`).
+* Her voice uses the app's exact settings — model, voice and instructions are
+  in [`docs/voice.md`](docs/voice.md).
 * API keys live only on the server, never on the robot.
-* Answers stream back sentence-by-sentence so Rory starts talking ~1.5–2.5 s
-  after he finishes asking.
-* Her voice: OpenAI **`gpt-4o-mini-tts`**, voice **`marin`** — the same settings as
-  every Rory line in the app (from the app's `audio/manifest.json`). The manifest
-  records no style instructions or speed, so the server uses the defaults.
 
 ## Safety notes
 

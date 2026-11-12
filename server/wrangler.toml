@@ -1,0 +1,14 @@
+# Rory's cloud server - Cloudflare Workers
+name = "rory-server"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Claude model for Rory's answers.
+RORY_MODEL = "claude-opus-5-5"
+# Voice for the backup tts-1 model (tts-1 has no "marin"). Match the app's script.
+TTS_FALLBACK_VOICE = "coral"
+
+[observability]
+enabled = true
