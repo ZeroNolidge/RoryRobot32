@@ -41,7 +41,8 @@ her mouth moves with the sound.
   dual mics, speaker amp, microSD slot and battery charger built in)
 * a small speaker (Waveshare lists one with the board; if yours has none, any small 8Ω speaker with an MX1.25 2-pin plug clips in)
 * a **microSD card** (any size, FAT32)
-* optional: 3.7 V LiPo battery for cordless play (some versions include it)
+* optional: 3.7 V LiPo battery with an MX1.25 plug, for cordless play (protected; check red = +)
+* optional: a printed Rory body — see [`body/`](body/README.md) (~10 cm tall, 4 × M3 × 12 mm screws)
 * a USB-C cable
 
 ## Setting it up
@@ -69,8 +70,7 @@ python3 make_sdcard.py /path/to/your/sdcard
 This downloads the clips from the Talk Trail app and sorts them into folders:
 
 ```
-rory/hello/  rory/boop/  rory/highfive/  rory/dance/  rory/walk/
-rory/  rory/giggle/  rory/wheee/  rory/dizzy/  rory/love/  rory/listen/
+rory/hello/  rory/boop/  rory/highfive/  rory/dance/  rory/walk/  rory/giggle/  rory/wheee/  rory/dizzy/  rory/love/  rory/listen/
 rory/chat/   rory/cheer/  rory/dark/  rory/yawn/  rory/goodnight/  rory/morning/  rory/bye/  rory/tired/
 ```
 
@@ -101,6 +101,7 @@ Every board is mounted a little differently in its case. Adjust these in
 ## Project layout
 
 ```
+body/                    3D-printable Rory body (OpenSCAD + STL files)
 server/                  Rory's cloud AI server (Cloudflare Worker)
 firmware/                PlatformIO project (Arduino-ESP32 3.2)
   src/config.h           pins (from Waveshare's examples), Rory's colors, tuning
