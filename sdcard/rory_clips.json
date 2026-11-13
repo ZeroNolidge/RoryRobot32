@@ -227,6 +227,60 @@
         "file": "6d677ad010cd3f9f-b696ab-f1.mp3",
         "says": "sleepy"
       }
+    ],
+    "highfive": [
+      {
+        "file": "4511f8c0e213c8ec-92ca6b-f1.mp3",
+        "says": "yay"
+      },
+      {
+        "file": "19ff94efc860acf5-4ec2f9-f1.mp3",
+        "says": "hooray"
+      },
+      {
+        "file": "63c0555504a8b76b-0d0571-f1.mp3",
+        "says": "great playing"
+      },
+      {
+        "file": "3226c5c9682a3192-fad757-f1.mp3",
+        "says": "got it"
+      }
+    ],
+    "dance": [
+      {
+        "file": "c4cf0dd8a12d55aa-1a6876-f1.mp3",
+        "says": "go go go"
+      },
+      {
+        "file": "97ac68f368c2ab44-4db4bd-f1.mp3",
+        "says": "looking good"
+      },
+      {
+        "file": "19ff94efc860acf5-4ec2f9-f1.mp3",
+        "says": "hooray"
+      },
+      {
+        "file": "4511f8c0e213c8ec-92ca6b-f1.mp3",
+        "says": "yay"
+      }
+    ],
+    "walk": [
+      {
+        "file": "1b9da852493a0e20-e819e3-f1.mp3",
+        "says": "hop hop"
+      },
+      {
+        "file": "028d851b43e2c327-49f875-f1.mp3",
+        "says": "let's keep going"
+      },
+      {
+        "file": "a93bbf84d3e60cc8-a9a790-f1.mp3",
+        "says": "let's go"
+      },
+      {
+        "file": "5a86f322ea7b0eac-dba09e-f1.mp3",
+        "says": "keep going"
+      }
     ]
   }
 }

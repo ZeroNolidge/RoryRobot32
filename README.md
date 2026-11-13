@@ -21,6 +21,11 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | tilt her while holding | her eyes roll "downhill" |
 | shake her | spiral dizzy eyes, wobbly mouth — *"It goes round and round!"* |
 | put her face-down | *"The sky is still dark!"* |
+| tap her hand or head (not the screen) | **high five!** cheer face, sparkles, *"Yay!"* / *"Great playing!"* |
+| bounce her up and down to a beat | **dances**: eyes swing, face hops, *"Go go go!"* / *"Looking good!"* |
+| hop her along the table | *"Hop hop!"* / *"Let's keep going!"*, watching where she goes |
+| hold her quietly for a few seconds | heart eyes, *"I love you"* |
+| lay her on her back | droopy eyes, then *"night night"* and sleep (tucked in!) |
 | leave her alone 3 min | yawns, gets droopy eyes, *"night night"*, sleeps with floating Zzz (screen dims) |
 | touch or pick her up while asleep | wakes up: *"Rory is awake!"* |
 | hold **PWR** ~1.5 s | *"See you next time!"* and switches off (on battery) |
@@ -64,7 +69,8 @@ python3 make_sdcard.py /path/to/your/sdcard
 This downloads the clips from the Talk Trail app and sorts them into folders:
 
 ```
-rory/hello/  rory/boop/  rory/giggle/  rory/wheee/  rory/dizzy/  rory/love/  rory/listen/
+rory/hello/  rory/boop/  rory/highfive/  rory/dance/  rory/walk/
+rory/  rory/giggle/  rory/wheee/  rory/dizzy/  rory/love/  rory/listen/
 rory/chat/   rory/cheer/  rory/dark/  rory/yawn/  rory/goodnight/  rory/morning/  rory/bye/  rory/tired/
 ```
 
@@ -90,6 +96,7 @@ Every board is mounted a little differently in its case. Adjust these in
 | eyes follow the finger mirrored | `TOUCH_MIRROR_X` / `TOUCH_MIRROR_Y` / `TOUCH_SWAP_XY` |
 | too loud / quiet | `VOLUME_STEPS` |
 | sleeps too soon | `SLEEPY_AFTER_MS` |
+| high fives / dancing too touchy or never trigger | set `MOTION_DEBUG 1`, watch the serial monitor, adjust the numbers in `senses.cpp` |
 
 ## Project layout
 

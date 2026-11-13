@@ -27,6 +27,7 @@ class Brain {
   void wakeUp(uint32_t now);
   void goSleepy(uint32_t now);
   void fallAsleep(uint32_t now);
+  void tuckIn(uint32_t now);
 
   Face* face_ = nullptr;
   Mode mode_ = Mode::Awake;

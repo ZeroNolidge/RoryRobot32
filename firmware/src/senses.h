@@ -13,6 +13,11 @@ enum class Ev : uint8_t {
   PickedUp,   // was resting, now moving
   PutDown,    // resting again
   FaceDown,   // screen turned to face the floor/table
+  FaceUp,     // laid on her back, still ("tucked in")
+  HighFive,   // one clear tap on her body/hands (not the screen)
+  Dance,      // bounced up and down in a rhythm
+  Walk,       // gently hopped along in a rhythm
+  Hug,        // held quietly in someone's hands for a few seconds
   BootButton, // short press on BOOT
   PowerHold,  // PWR held ~1.5 s
 };

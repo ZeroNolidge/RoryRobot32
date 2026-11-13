@@ -89,6 +89,59 @@ int joltIdx = 0;
 uint32_t lastJoltMs = 0, lastShakeMs = 0, lastPickupMs = 0;
 uint32_t faceDownSinceMs = 0;
 bool faceDownFired = false;
+uint32_t faceUpSinceMs = 0;
+bool faceUpFired = false;
+
+// pick-up check
+float restGx = 0, restGy = 0, restGz = 1;
+uint32_t liftCheckMs = 0;
+bool liftSpin = false;
+
+// taps / high fives
+bool tapAbove = false, tapPending = false;
+uint32_t tapMs = 0, calmSinceMs = 0;
+
+// rhythm (dance / walk): times and sizes of recent bounces
+bool bounceAbove = false;
+float bouncePeak = 0;
+uint32_t bounceTimes[6] = {0};
+float bounceSizes[6] = {0};
+int bounceIdx = 0;
+uint32_t lastDanceMs = 0, lastWalkMs = 0;
+
+// hugs
+uint32_t heldCalmSinceMs = 0;
+bool hugFired = false;
+
+void checkRhythm(uint32_t now) {
+  // Look at the last 5 bounces: are they evenly spaced, like a dance or steps?
+  uint32_t t[5];
+  float size = 0;
+  for (int i = 0; i < 5; i++) {
+    int k = (bounceIdx - 1 - i + 6) % 6;
+    t[i] = bounceTimes[k];
+    size += bounceSizes[k];
+    if (!t[i]) return;
+  }
+  size /= 5;
+  uint32_t lo = 100000, hi = 0;
+  for (int i = 0; i < 4; i++) {
+    uint32_t gap = t[i] - t[i + 1];
+    if (gap < lo) lo = gap;
+    if (gap > hi) hi = gap;
+  }
+  if (lo < 250 || hi > 900 || hi > lo * 1.6f) return;  // not a steady beat
+  if (now - lastShakeMs < 2000) return;
+  if (size >= 0.6f) {
+    if (now - lastDanceMs > 4000) {
+      lastDanceMs = now;
+      push(Ev::Dance);
+    }
+  } else if (now - lastWalkMs > 4000 && now - lastDanceMs > 4000) {
+    lastWalkMs = now;
+    push(Ev::Walk);
+  }
+}
 
 float axisOf(float x, float y, float z, int axis) { return axis == 0 ? x : (axis == 1 ? y : z); }
 
@@ -123,17 +176,83 @@ void pollImu(uint32_t now) {
   }
 
   // --- resting / picked up / put down
+  // Leaving "resting" only counts as a pick-up if she then really turns or
+  // tilts; a tap on her while she sits on the table is a high five instead.
   if (dyn < 0.05f && spin < 8) stillMs += (uint32_t)(dt * 1000);
   else stillMs = 0;
-  if (!isResting && stillMs > 1500) {
+  if (!isResting && stillMs > 2500) {
     isResting = true;
+    restGx = gx;
+    restGy = gy;
+    restGz = gz;
     push(Ev::PutDown);
   } else if (isResting && (spin > 45 || dyn > 0.25f)) {
     isResting = false;
-    if (now - lastPickupMs > 4000 && now - lastShakeMs > 2000) {
-      lastPickupMs = now;
-      push(Ev::PickedUp);
+    liftCheckMs = now;
+    liftSpin = false;
+  }
+  if (liftCheckMs) {
+    if (spin > 40 && now - liftCheckMs > 80) liftSpin = true;
+    if (now - liftCheckMs > 500) {
+      float tilt = fabsf(gx - restGx) + fabsf(gy - restGy) + fabsf(gz - restGz);
+      liftCheckMs = 0;
+      if ((liftSpin || tilt > 0.15f) && now - lastPickupMs > 4000 && now - lastShakeMs > 2000) {
+        lastPickupMs = now;
+        push(Ev::PickedUp);
+      }
     }
+  }
+
+  // --- high five: one clear jolt after a calm moment, with no second jolt
+  //     right after, and not from a finger on the screen
+  uint32_t calmFor = calmSinceMs ? now - calmSinceMs : 0;  // measured before this sample
+  if (dyn < 0.12f) {
+    if (!calmSinceMs) calmSinceMs = now;
+  } else if (dyn > 0.25f) {
+    calmSinceMs = 0;
+  }
+  if (!tapAbove && dyn > 0.45f) {
+    tapAbove = true;
+    if (tapPending && now - tapMs > 100) tapPending = false;  // a second jolt: bouncing or shaking
+    else if (!tapPending && calmFor > 300) {
+      tapPending = true;
+      tapMs = now;
+    }
+  } else if (tapAbove && dyn < 0.25f) {
+    tapAbove = false;
+  }
+  if (tapPending && now - tapMs > 600) {
+    tapPending = false;
+    bool screenTouched = t.down || now - t.lastSeenMs < 600;
+    bool lifted = now - lastPickupMs < 1200;
+    if (!screenTouched && !lifted && now - lastShakeMs > 2000) push(Ev::HighFive);
+  }
+
+  // --- rhythm: count bounces and check if they keep a steady beat
+  if (!bounceAbove && dyn > 0.25f) {
+    bounceAbove = true;
+    bouncePeak = dyn;
+  } else if (bounceAbove) {
+    if (dyn > bouncePeak) bouncePeak = dyn;
+    if (dyn < 0.15f) {
+      bounceAbove = false;
+      bounceTimes[bounceIdx] = now;
+      bounceSizes[bounceIdx] = bouncePeak;
+      bounceIdx = (bounceIdx + 1) % 6;
+      checkRhythm(now);
+    }
+  }
+
+  // --- hug: held (not on the table) and kept calm for a few seconds
+  if (!isResting && dyn < 0.12f && spin < 25) {
+    if (!heldCalmSinceMs) heldCalmSinceMs = now;
+    if (!hugFired && now - heldCalmSinceMs > 3000 && now - lastPickupMs < 60000) {
+      hugFired = true;
+      push(Ev::Hug);
+    }
+  } else if (dyn > 0.3f || isResting) {
+    heldCalmSinceMs = 0;
+    if (isResting) hugFired = false;
   }
 
   // --- screen facing down
@@ -148,6 +267,26 @@ void pollImu(uint32_t now) {
     faceDownSinceMs = 0;
     faceDownFired = false;
   }
+
+  // --- lying on her back, still
+  if (out > 0.8f && dyn < 0.08f) {
+    if (!faceUpSinceMs) faceUpSinceMs = now;
+    if (!faceUpFired && now - faceUpSinceMs > 1500) {
+      faceUpFired = true;
+      push(Ev::FaceUp);
+    }
+  } else if (out < 0.5f) {
+    faceUpSinceMs = 0;
+    faceUpFired = false;
+  }
+
+#if MOTION_DEBUG
+  static uint32_t lastLog = 0;
+  if (now - lastLog > 100) {
+    lastLog = now;
+    Serial.printf("[motion] dyn=%.2f spin=%5.1f screen=%+.2f resting=%d\n", dyn, spin, out, isResting);
+  }
+#endif
 }
 
 // ------------------------------------------------------------ buttons

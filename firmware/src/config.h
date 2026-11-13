@@ -74,6 +74,9 @@ static const uint8_t VOLUME_STEPS[] = {8, 13, 17};
 // Which accelerometer axis points out of the screen, and its sign.
 #define IMU_SCREEN_AXIS 2         // 0=x 1=y 2=z
 #define IMU_SCREEN_SIGN (+1.0f)
+// Print motion sensor values over USB serial (for tuning the thresholds in senses.cpp)
+#define MOTION_DEBUG 0
+
 // Touch panel orientation fixes
 #define TOUCH_SWAP_XY false
 #define TOUCH_MIRROR_X false

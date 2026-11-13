@@ -55,6 +55,8 @@ void Face::lookAt(float x, float y) {
 
 void Face::sparkle(uint32_t durationMs) { sparkleUntilMs_ = nowMs_ + durationMs; }
 
+void Face::dance(uint32_t durationMs) { danceUntilMs_ = nowMs_ + durationMs; }
+
 void Face::blink() {
   if (blinking_) return;
   blinking_ = true;
@@ -106,6 +108,14 @@ void Face::update(uint32_t nowMs) {
     nextGlanceMs_ = nowMs + (uint32_t)(900 + rnd() * 2600);
   }
 
+  // --- dancing: eyes swing side to side, face hops
+  bool dancing = nowMs < danceUntilMs_;
+  if (dancing) {
+    float beat = nowMs * (2 * kPi / 600.0f);
+    lookTX_ = sinf(beat) * 0.8f;
+    lookTY_ = -0.2f;
+  }
+
   // --- smooth everything
   lookX_ = approach(lookX_, lookTX_, dt, 14);
   lookY_ = approach(lookY_, lookTY_, dt, 14);
@@ -115,7 +125,8 @@ void Face::update(uint32_t nowMs) {
   mouthOpen_ = approach(mouthOpen_, mouthTarget, dt, 28);
   dizzyAngle_ += dt * 540.0f;
   if (dizzyAngle_ > 360) dizzyAngle_ -= 360;
-  bob_ = sinf(nowMs * (2 * kPi / 3200.0f)) * 2.0f;  // gentle "breathing"
+  bob_ = dancing ? -fabsf(sinf(nowMs * (2 * kPi / 1200.0f))) * 7.0f
+                : sinf(nowMs * (2 * kPi / 3200.0f)) * 2.0f;  // hop, or gentle "breathing"
 }
 
 void Face::render(Raster& r) {

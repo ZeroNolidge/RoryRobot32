@@ -56,6 +56,7 @@ class Face {
   void setTalkLevel(float level) { talkLevel_ = level; }  // 0..1 from the speaker
   void setZzz(bool on) { zzz_ = on; }
   void sparkle(uint32_t durationMs);  // yellow twinkles (cheering)
+  void dance(uint32_t durationMs);    // eyes bop side to side to the beat
   void blink();
   void wake(uint32_t nowMs);  // eyes pop open from closed
 
@@ -92,6 +93,7 @@ class Face {
 
   bool zzz_ = false;
   uint32_t sparkleUntilMs_ = 0;
+  uint32_t danceUntilMs_ = 0;
   uint32_t seed_ = 0x9E3779B9u;
 
   static const int kSpeckles = 650;

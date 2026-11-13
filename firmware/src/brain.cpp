@@ -21,6 +21,9 @@ const char* MORNING = "morning";
 const char* BYE = "bye";
 const char* CHAT = "chat";
 const char* LISTEN = "listen";
+const char* HIGHFIVE = "highfive";
+const char* DANCE = "dance";
+const char* WALK = "walk";
 const char* TIRED = "tired";
 }  // namespace Moment
 
@@ -75,9 +78,21 @@ void Brain::fallAsleep(uint32_t now) {
   Display::setBacklight(BACKLIGHT_ASLEEP);
 }
 
+void Brain::tuckIn(uint32_t now) {
+  // Laid on her back: droopy eyes now, asleep in a couple of seconds.
+  mode_ = Mode::Sleepy;
+  face_->setAutoLook(false);
+  face_->lookAt(0, 0);
+  face_->setExpression(Expr::Sleepy);
+  showing_ = Expr::Sleepy;
+  until_ = now;
+  modeSinceMs_ = now - ASLEEP_AFTER_MS + 2500;
+}
+
 void Brain::handle(const Event& e, uint32_t now) {
   if (mode_ == Mode::GoingOff) return;
-  bool playful = e.type != Ev::PutDown && e.type != Ev::None;
+  bool playful = e.type != Ev::PutDown && e.type != Ev::FaceUp && e.type != Ev::None;
+  bool busyTalking = mode_ == Mode::Listening || mode_ == Mode::Thinking;
   if (playful) lastPlayMs_ = now;
 
   // Any play wakes a sleepy Rory.
@@ -158,6 +173,35 @@ void Brain::handle(const Event& e, uint32_t now) {
       face_->setZzz(false);
       face_->setExpression(Expr::Asleep);
       say(Moment::BYE, Moment::GOODNIGHT);
+      break;
+
+    case Ev::HighFive:
+      if (busyTalking) break;
+      face_->sparkle(1400);
+      react({Expr::Cheer, Moment::HIGHFIVE, Moment::GIGGLE, 1400}, now);
+      break;
+
+    case Ev::Dance:
+      if (busyTalking) break;
+      face_->dance(3200);
+      face_->sparkle(3200);
+      react({Expr::Happy, Moment::DANCE, Moment::GIGGLE, 3200}, now);
+      break;
+
+    case Ev::Walk:
+      if (busyTalking) break;
+      face_->lookAt(0, 0.4f);  // watching where she's going
+      react({Expr::Content, Moment::WALK, nullptr, 1500}, now);
+      break;
+
+    case Ev::Hug:
+      if (busyTalking) break;
+      react({Expr::Love, Moment::LOVE, Moment::GIGGLE, 2600}, now);
+      break;
+
+    case Ev::FaceUp:
+      if (busyTalking || mode_ == Mode::Asleep || mode_ == Mode::Sleepy) break;
+      tuckIn(now);
       break;
 
     case Ev::PutDown:
