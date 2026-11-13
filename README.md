@@ -7,7 +7,7 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 |---|---|
 | <img src="docs/rory-in-the-app.png" width="180"> | <img src="docs/faces.png" width="560"> |
 
-## What Rory does (phase 1 — this code)
+## What Rory does
 
 | You… | Rory… |
 |---|---|
@@ -16,7 +16,7 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | tap 3 times quickly | gets heart eyes — *"I love you!"* |
 | rub/tickle her face | *"Silly!"*, *"Yay!"*, sparkles |
 | slide a finger on the screen | her eyes follow your finger |
-| hold a finger on her face | *"Rory can hear you now!"* — listening face (this becomes "ask Rory a question" in phase 2) |
+| hold a finger on her face and ask something | listening face (her eyes grow when she hears him), thinking face, then **she answers** with her AI brain — or, offline, *"Rory can hear you now!"* and a friendly clip |
 | pick her up | surprised, then *"Up up up it goes!"* or *"Hooray!"* |
 | tilt her while holding | her eyes roll "downhill" |
 | shake her | spiral dizzy eyes, wobbly mouth — *"It goes round and round!"* |
@@ -109,16 +109,18 @@ firmware/                PlatformIO project (Arduino-ESP32 3.2)
   src/raster.h           tiny anti-aliased drawing engine
   src/brain.*            personality: what Rory does for each event
   src/senses.*           touch gestures, motion (QMI8658), buttons
-  src/voice.*            ES8311 codec + microSD clip player
+  src/voice.*            speaker (ES8311) + microphones (ES7210): clips, streaming, recording
+  src/net.*              Wi-Fi + asking the server
+  src/settings.*         reads /rory/config.txt from the SD card
   src/display.*          ST7789 screen + backlight
   src/power.*            battery latch / power off
-  lib/es8311/            ES8311 codec driver (Espressif, Apache-2.0)
+  lib/es8311/, lib/es7210/  codec drivers (Espressif, Apache-2.0)
 sdcard/                  voice clip list + SD card maker
 docs/voice.md            Rory's exact voice settings
 tools/face-preview/      renders the face on a PC: ./tools/face-preview/make_previews.sh
 ```
 
-## Phase 2: ask Rory anything
+## Ask Rory anything
 
 ```
 Rory (board) ──Wi-Fi──► Rory's cloud server (Cloudflare Workers)
@@ -127,21 +129,35 @@ Rory (board) ──Wi-Fi──► Rory's cloud server (Cloudflare Workers)
   play answer ◄────────────┴─ text → speech (OpenAI gpt-4o-mini-tts, voice "marin")
 ```
 
-* **Server: done** — see [`server/README.md`](server/README.md) to deploy it
-  (free Cloudflare account + Anthropic and OpenAI API keys). You can talk to
-  Rory with `curl` before the robot is connected.
-* **Robot side: next** — Wi-Fi setup, recording from the dual mics while his
-  finger is held, sending it to the server and playing the answer. The
-  hold-to-talk gesture and Listening → Thinking → Talking faces are already in
-  place (`Ev::HoldStart` / `Ev::HoldEnd` in `brain.cpp`).
-* Her voice uses the app's exact settings — model, voice and instructions are
-  in [`docs/voice.md`](docs/voice.md).
-* API keys live only on the server, never on the robot.
+1. **Deploy the server** — [`server/README.md`](server/README.md) (free
+   Cloudflare account + Anthropic and OpenAI API keys). You can talk to Rory
+   with `curl` before the robot is connected.
+2. **Tell Rory how to reach it** — put your Wi-Fi and server details on the
+   SD card:
+   ```bash
+   cd sdcard
+   python3 make_sdcard.py /path/to/sdcard --wifi-name "Home WiFi" --wifi-password "..." \
+       --server https://rory-server.NAME.workers.dev --token "<RORY_DEVICE_TOKEN>"
+   ```
+   (or edit `rory/config.txt` on the card by hand). The ESP32 needs a
+   **2.4 GHz** Wi-Fi network.
+3. **Ask!** Hold a finger on her face, talk, let go. She listens for up to
+   12 seconds, shows her thinking face, then answers with a matching
+   expression. Follow-up questions ("why?") work for 3 minutes.
+
+* If Wi-Fi or the server is down she plays one of her clips instead, so she
+  never just goes quiet.
+* Her voice uses the app's exact settings — see [`docs/voice.md`](docs/voice.md).
+* API keys live only on the server. The robot only has a password for it,
+  sent over verified HTTPS. (Her spoken answer streams from a short-lived
+  signed link; the audio library can't check certificates, which is fine on
+  a home network.)
 
 ## Safety notes
 
 * Use a **protected** LiPo (built-in protection circuit) and keep the battery
   enclosed in the case.
 * Volume steps are capped low on purpose.
-* Grown-ups: the BOOT and PWR buttons are the only controls; nothing on the
-  robot connects to the internet in phase 1.
+* Grown-ups: the BOOT and PWR buttons are the only controls. Rory only goes
+  online if `rory/config.txt` has Wi-Fi details, and she only records while a
+  finger is held on her face.

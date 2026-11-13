@@ -2,16 +2,18 @@
 // A talking robot friend with a screen for a face, based on Rory from
 // "Rory's Talk Trail". Runs on the Waveshare ESP32-S3-Touch-LCD-1.54.
 //
-// Phase 1 (this code): animated face, touch + motion reactions, voice clips
-// from the microSD card.  Phase 2: ask Rory questions through a cloud AI.
+// Animated face, touch + motion reactions, voice clips from the microSD card,
+// and (with /rory/config.txt) questions answered by Rory's cloud AI server.
 
 #include <Arduino.h>
 #include "brain.h"
 #include "config.h"
 #include "display.h"
 #include "face.h"
+#include "net.h"
 #include "power.h"
 #include "senses.h"
+#include "settings.h"
 #include "voice.h"
 
 static Face face;
@@ -26,6 +28,8 @@ void setup() {
   if (!Display::begin()) Serial.println("[main] display init failed");
   Senses::begin();
   Voice::begin();
+  Settings::load();  // Wi-Fi + server details from /rory/config.txt on the SD card
+  Net::begin();
   Serial.printf("[main] battery %.2f V%s\n", Power::batteryVolts(), Power::charging() ? " (charging)" : "");
 
   uint32_t now = millis();

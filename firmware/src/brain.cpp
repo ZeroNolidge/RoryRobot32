@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "config.h"
 #include "display.h"
+#include "net.h"
 #include "power.h"
 #include "voice.h"
 
@@ -41,6 +42,9 @@ void Brain::say(const char* moment, const char* fallback) {
 }
 
 void Brain::react(const Reaction& r, uint32_t now) {
+  // Anything else happening (a shake, a high five...) ends a question.
+  if (ai_ == Ai::Recording) Voice::stopRecording();
+  ai_ = Ai::None;
   mode_ = Mode::Reacting;
   modeSinceMs_ = now;
   showing_ = r.expr;
@@ -89,6 +93,42 @@ void Brain::tuckIn(uint32_t now) {
   modeSinceMs_ = now - ASLEEP_AFTER_MS + 2500;
 }
 
+void Brain::finishListening(uint32_t now) {
+  if (ai_ == Ai::Recording) Voice::stopRecording();
+  mode_ = Mode::Thinking;
+  modeSinceMs_ = now;
+  face_->lookAt(0.6f, -0.8f);
+  face_->setExpression(Expr::Thinking);
+  showing_ = Expr::Thinking;
+  until_ = now + 900;
+}
+
+// The face Rory's answer asked for.
+static Expression faceFor(const String& f, bool& sparkle) {
+  sparkle = false;
+  if (f == "excited") { sparkle = true; return Expr::Cheer; }
+  if (f == "silly") return Expr::Happy;
+  if (f == "love") return Expr::Love;
+  if (f == "curious") return Expr::Listening;
+  if (f == "thinking") return Expr::Thinking;
+  return Expr::Content;  // happy, calm
+}
+
+void Brain::answerArrived(uint32_t now) {
+  const Net::Answer& a = Net::answer();
+  Serial.printf("[brain] he said \"%s\" -> Rory: \"%s\" (%s)\n", a.heard.c_str(), a.say.c_str(), a.face.c_str());
+  bool sparkle;
+  Expression e = faceFor(a.face, sparkle);
+  String url = a.audioUrl;
+  Net::reset();
+  react({e, nullptr, nullptr, 600}, now);  // the mouth moves while her answer plays
+  if (sparkle) face_->sparkle(2500);
+  face_->lookAt(0, 0);
+  face_->setAutoLook(false);
+  if (!Voice::playUrl(url.c_str())) say(Moment::CHAT, Moment::GIGGLE);
+  lastPlayMs_ = now;
+}
+
 void Brain::handle(const Event& e, uint32_t now) {
   if (mode_ == Mode::GoingOff) return;
   bool playful = e.type != Ev::PutDown && e.type != Ev::FaceUp && e.type != Ev::None;
@@ -124,7 +164,8 @@ void Brain::handle(const Event& e, uint32_t now) {
       break;
 
     case Ev::HoldStart:
-      // "Talk to Rory" - in the AI phase this starts recording the question.
+      // "Talk to Rory": listen while his finger stays on her face.
+      if (mode_ == Mode::Thinking) break;  // still answering the last one
       Voice::stop();
       mode_ = Mode::Listening;
       modeSinceMs_ = now;
@@ -132,19 +173,17 @@ void Brain::handle(const Event& e, uint32_t now) {
       face_->lookAt(0, -0.35f);
       face_->setExpression(Expr::Listening);
       showing_ = Expr::Listening;
-      say(Moment::LISTEN);  // "Rory can hear you now!"
+      if (Net::online() && Net::state() != Net::State::Busy && Voice::startRecording()) {
+        ai_ = Ai::Recording;  // the "o" face is his cue to talk
+      } else {
+        ai_ = Ai::None;
+        say(Moment::LISTEN);  // offline: "Rory can hear you now!" and a chat clip after
+      }
       break;
 
     case Ev::HoldEnd:
       if (mode_ != Mode::Listening) break;
-      // AI phase: send the recording to Rory's server here, show Thinking
-      // until the answer starts streaming back.
-      mode_ = Mode::Thinking;
-      modeSinceMs_ = now;
-      face_->lookAt(0.6f, -0.8f);
-      face_->setExpression(Expr::Thinking);
-      showing_ = Expr::Thinking;
-      until_ = now + 900;
+      finishListening(now);
       break;
 
     case Ev::Shake:
@@ -238,21 +277,47 @@ void Brain::update(uint32_t now) {
     }
 
     case Mode::Thinking:
-      if (now >= until_) {
-        // Until the AI is connected, Rory answers with one of her chat clips.
+      if (ai_ == Ai::Recording && Voice::recordingReady()) {
+        if (Voice::recordedSeconds() < 0.4f) {  // just a quick touch - nothing to send
+          ai_ = Ai::None;
+          react({Expr::Content, nullptr, nullptr, 300}, now);
+        } else if (Net::ask(Voice::wav(), Voice::wavSize())) {
+          ai_ = Ai::Uploading;
+        } else {
+          react({Expr::Happy, Moment::CHAT, Moment::GIGGLE, 800}, now);
+        }
+      } else if (ai_ == Ai::Uploading) {
+        Net::State st = Net::state();
+        if (st == Net::State::Done) {
+          answerArrived(now);
+        } else if (st == Net::State::Failed || now - modeSinceMs_ > 25000) {
+          // Couldn't reach her brain: a friendly clip instead of silence.
+          Net::reset();
+          react({Expr::Happy, Moment::CHAT, Moment::GIGGLE, 800}, now);
+        } else if (now - modeSinceMs_ > 1500) {
+          // "hmm..." - glance around while thinking
+          float t = now * 0.002f;
+          face_->lookAt(0.5f + 0.3f * sinf(t), -0.75f);
+        }
+      } else if (ai_ == Ai::None && now >= until_) {
+        // Offline: Rory answers with one of her chat clips.
         react({Expr::Talking, Moment::CHAT, Moment::GIGGLE, 800}, now);
         showing_ = Expr::Content;
       }
       break;
 
-    case Mode::Listening:
-      // keep the "o" mouth, but move it while the "I can hear you" clip plays
-      {
-        Expression e = Expr::Listening;
-        if (talking) e.mouth = Mouth::Talk;
-        face_->setExpression(e);
+    case Mode::Listening: {
+      Expression e = Expr::Listening;
+      if (ai_ == Ai::Recording) {
+        // her eyes grow a little when she hears him
+        e.eyeScale += 0.15f * Voice::micLevel();
+        if (!Voice::recording()) finishListening(now);  // 12 s is the most she'll listen
+      } else if (talking) {
+        e.mouth = Mouth::Talk;  // the offline "I can hear you" clip
       }
+      if (mode_ == Mode::Listening) face_->setExpression(e);
       break;
+    }
 
     case Mode::Awake: {
       int16_t tx, ty;

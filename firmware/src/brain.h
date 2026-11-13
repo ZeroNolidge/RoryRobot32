@@ -13,6 +13,8 @@ class Brain {
 
  private:
   enum class Mode : uint8_t { Awake, Reacting, Listening, Thinking, Sleepy, Asleep, GoingOff };
+  // Asking the AI: record while his finger is held, then upload and wait.
+  enum class Ai : uint8_t { None, Recording, Uploading };
 
   struct Reaction {
     Expression expr;
@@ -28,9 +30,12 @@ class Brain {
   void goSleepy(uint32_t now);
   void fallAsleep(uint32_t now);
   void tuckIn(uint32_t now);
+  void finishListening(uint32_t now);
+  void answerArrived(uint32_t now);
 
   Face* face_ = nullptr;
   Mode mode_ = Mode::Awake;
+  Ai ai_ = Ai::None;
   Expression showing_ = Expr::Content;
   uint32_t until_ = 0;
   uint32_t lastPlayMs_ = 0;
