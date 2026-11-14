@@ -23,6 +23,8 @@ static uint32_t lastFrameMs = 0;
 void setup() {
   Power::holdOn();  // first thing: stay switched on when running from the battery
   Serial.begin(115200);
+  // Give the Serial Monitor a moment to reconnect so the start-up report isn't missed.
+  for (uint32_t t0 = millis(); !Serial && millis() - t0 < 1500;) delay(10);
   Serial.println("\n== Rory the Robot ==");
 
   if (!Display::begin()) Serial.println("[main] display init failed");
@@ -31,6 +33,10 @@ void setup() {
   Settings::load();  // Wi-Fi + server details from /rory/config.txt on the SD card
   Net::begin();
   Serial.printf("[main] battery %.2f V%s\n", Power::batteryVolts(), Power::charging() ? " (charging)" : "");
+  Serial.printf("[main] check: touch %s | motion %s | SD card %s | voice clips %s | AI settings %s\n",
+                Senses::touchOk() ? "OK" : "MISSING", Senses::imuOk() ? "OK" : "MISSING",
+                Voice::hasCard() ? "OK" : "MISSING", Voice::clipCount("hello") ? "OK" : "none",
+                Settings::aiConfigured() ? "OK" : "not set");
 
   uint32_t now = millis();
   face.begin(now);
