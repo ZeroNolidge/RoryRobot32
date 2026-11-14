@@ -7,16 +7,23 @@
 
 namespace {
 // ------------------------------------------------------------ event queue
-const int kQ = 16;
-Event q[kQ];
-int qHead = 0, qTail = 0;
+// Touch and buttons are read in the main loop; motion in its own fast task.
+// Both feed this thread-safe queue.
+QueueHandle_t events = nullptr;
+#if MOTION_DEBUG
+const char* kEvName[] = {"None", "Tap", "HoldStart", "HoldEnd", "Tickle", "Shake", "PickedUp", "PutDown", "FaceDown",
+                         "FaceUp", "HighFive", "Dance", "Walk", "Hug", "BootButton", "PowerHold"};
+#endif
 void push(Ev t, int16_t x = 0, int16_t y = 0) {
-  int n = (qTail + 1) % kQ;
-  if (n == qHead) return;  // full: drop
-  q[qTail].type = t;
-  q[qTail].x = x;
-  q[qTail].y = y;
-  qTail = n;
+  if (!events) return;
+  Event e;
+  e.type = t;
+  e.x = x;
+  e.y = y;
+  xQueueSend(events, &e, 0);  // full: drop
+#if MOTION_DEBUG
+  Serial.printf("[event] %s\n", kEvName[(int)t]);
+#endif
 }
 
 // ------------------------------------------------------------ touch
@@ -178,7 +185,7 @@ void pollImu(uint32_t now) {
   // --- resting / picked up / put down
   // Leaving "resting" only counts as a pick-up if she then really turns or
   // tilts; a tap on her while she sits on the table is a high five instead.
-  if (dyn < 0.05f && spin < 8) stillMs += (uint32_t)(dt * 1000);
+  if (dyn < 0.04f && spin < 3.0f) stillMs += (uint32_t)(dt * 1000);  // gyro reads ~1.4 when still
   else stillMs = 0;
   if (!isResting && stillMs > 2500) {
     isResting = true;
@@ -244,7 +251,7 @@ void pollImu(uint32_t now) {
   }
 
   // --- hug: held (not on the table) and kept calm for a few seconds
-  if (!isResting && dyn < 0.12f && spin < 25) {
+  if (!isResting && dyn < 0.15f && spin < 30) {
     if (!heldCalmSinceMs) heldCalmSinceMs = now;
     if (!hugFired && now - heldCalmSinceMs > 3000 && now - lastPickupMs < 60000) {
       hugFired = true;
@@ -282,11 +289,24 @@ void pollImu(uint32_t now) {
 
 #if MOTION_DEBUG
   static uint32_t lastLog = 0;
-  if (now - lastLog > 100) {
+  static float peakDyn = 0, peakSpin = 0;
+  if (dyn > peakDyn) peakDyn = dyn;
+  if (spin > peakSpin) peakSpin = spin;
+  if (now - lastLog > 100) {  // biggest values in the last 0.1 s, so quick taps show up
     lastLog = now;
-    Serial.printf("[motion] dyn=%.2f spin=%5.1f screen=%+.2f resting=%d\n", dyn, spin, out, isResting);
+    Serial.printf("[motion] dyn=%.2f spin=%5.1f screen=%+.2f resting=%d\n", peakDyn, peakSpin, out, isResting);
+    peakDyn = peakSpin = 0;
   }
 #endif
+}
+
+// Read the motion sensor ~250 times a second in its own task, so quick taps
+// and bounces aren't missed while the face is being drawn.
+void imuTask(void*) {
+  for (;;) {
+    pollImu(millis());
+    vTaskDelay(pdMS_TO_TICKS(4));
+  }
 }
 
 // ------------------------------------------------------------ buttons
@@ -317,6 +337,7 @@ void pollButton(Button& b, uint32_t now, bool isPower) {
 namespace Senses {
 
 bool begin() {
+  events = xQueueCreate(16, sizeof(Event));
   Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL, 400000);
 
   touch.setPins(PIN_TOUCH_RST, PIN_TOUCH_INT);
@@ -326,8 +347,8 @@ bool begin() {
 
   imuReady = imu.begin(Wire, QMI8658_L_SLAVE_ADDRESS, PIN_I2C_SDA, PIN_I2C_SCL);
   if (imuReady) {
-    imu.configAccelerometer(SensorQMI8658::ACC_RANGE_4G, SensorQMI8658::ACC_ODR_125Hz, SensorQMI8658::LPF_MODE_0);
-    imu.configGyroscope(SensorQMI8658::GYR_RANGE_512DPS, SensorQMI8658::GYR_ODR_112_1Hz, SensorQMI8658::LPF_MODE_3);
+    imu.configAccelerometer(SensorQMI8658::ACC_RANGE_4G, SensorQMI8658::ACC_ODR_250Hz, SensorQMI8658::LPF_MODE_3);
+    imu.configGyroscope(SensorQMI8658::GYR_RANGE_512DPS, SensorQMI8658::GYR_ODR_224_2Hz, SensorQMI8658::LPF_MODE_3);
     imu.enableAccelerometer();
     imu.enableGyroscope();
   } else {
@@ -336,22 +357,18 @@ bool begin() {
 
   pinMode(PIN_BTN_BOOT, INPUT_PULLUP);
   pinMode(PIN_BTN_PWR, INPUT_PULLUP);
+  // same core as the main loop, higher priority, so it runs between drawing steps
+  if (imuReady) xTaskCreatePinnedToCore(imuTask, "motion", 4096, nullptr, 2, nullptr, 1);
   return touchReady && imuReady;
 }
 
 void poll(uint32_t now) {
   pollTouch(now);
-  pollImu(now);
   pollButton(boot, now, false);
   pollButton(pwr, now, true);
 }
 
-bool next(Event& e) {
-  if (qHead == qTail) return false;
-  e = q[qHead];
-  qHead = (qHead + 1) % kQ;
-  return true;
-}
+bool next(Event& e) { return events && xQueueReceive(events, &e, 0) == pdTRUE; }
 
 bool touching(int16_t& x, int16_t& y) {
   if (!t.down) return false;
