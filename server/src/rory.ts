@@ -81,7 +81,28 @@ export function buildMessages(question: string, history: Turn[]): Anthropic.Beta
   return messages;
 }
 
-export async function askRory(client: Anthropic, model: string, question: string, history: Turn[]): Promise<Reply> {
+/**
+ * Grown-up-provided notes about his toy friends (RORY_FRIENDS on the server),
+ * e.g. "Knight Owl - his favorite stuffed owl". Kept short; only about toys.
+ */
+export function friendsNote(friends: string | undefined): string | null {
+  const text = (friends ?? "").replace(/\s+/g, " ").trim().slice(0, 600);
+  if (!text) return null;
+  return `His toy friends (from his grown-ups): ${text}
+You know these friends well. Now and then, ask how they are, include them in pretend games and little stories, or say hello to them. Treat them as his toys, never as real people.`;
+}
+
+export async function askRory(
+  client: Anthropic,
+  model: string,
+  question: string,
+  history: Turn[],
+  friends?: string,
+): Promise<Reply> {
+  const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }];
+  const note = friendsNote(friends);
+  if (note) system.push({ type: "text", text: note });
+
   const response = await client.beta.messages.create({
     model,
     max_tokens: 4000,
@@ -90,7 +111,7 @@ export async function askRory(client: Anthropic, model: string, question: string
     // If the model declines, the API retries on a fallback model automatically.
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
-    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+    system,
     messages: buildMessages(question, history),
   });
 

@@ -22,6 +22,11 @@ const char* MORNING = "morning";
 const char* BYE = "bye";
 const char* CHAT = "chat";
 const char* LISTEN = "listen";
+const char* ONE = "one";
+const char* TWO = "two";
+const char* THREE = "three";
+const char* OOPS = "oops";
+const char* OWL = "owl";
 const char* HIGHFIVE = "highfive";
 const char* DANCE = "dance";
 const char* WALK = "walk";
@@ -42,6 +47,11 @@ void Brain::say(const char* moment, const char* fallback) {
 }
 
 void Brain::react(const Reaction& r, uint32_t now) {
+  chainLen_ = chainPos_ = 0;  // a new reaction replaces anything queued
+  show(r, now);
+}
+
+void Brain::show(const Reaction& r, uint32_t now) {
   // Anything else happening (a shake, a high five...) ends a question.
   if (ai_ == Ai::Recording) Voice::stopRecording();
   ai_ = Ai::None;
@@ -50,7 +60,6 @@ void Brain::react(const Reaction& r, uint32_t now) {
   showing_ = r.expr;
   face_->setExpression(r.expr);
   until_ = now + r.ms;
-  hasNext_ = false;
   if (r.moment) say(r.moment, r.fallback);
 }
 
@@ -186,9 +195,28 @@ void Brain::handle(const Event& e, uint32_t now) {
       finishListening(now);
       break;
 
-    case Ev::Shake:
-      react({Expr::Dizzy, Moment::DIZZY, nullptr, 2800}, now);
+    case Ev::Shake: {
+      // The dizzy game: spins in a row make her dizzier - she counts them,
+      // and on the third she gets so dizzy she topples over for a nap.
+      dizzyLevel_ = (now - lastSpinMs_ < 20000) ? dizzyLevel_ + 1 : 1;
+      lastSpinMs_ = now;
+      face_->setDizzySpeed(dizzyLevel_ == 1 ? 1.0f : dizzyLevel_ == 2 ? 1.7f : 2.6f);
+      if (dizzyLevel_ == 1) {
+        react({Expr::Dizzy, Moment::ONE, nullptr, 500}, now);
+        then({Expr::Dizzy, Moment::DIZZY, nullptr, 2300});
+      } else if (dizzyLevel_ == 2) {
+        react({Expr::Dizzy, Moment::TWO, nullptr, 500}, now);
+        then({Expr::Dizzy, Moment::DIZZY, nullptr, 3000});
+      } else {
+        dizzyLevel_ = 0;  // start counting again after the nap
+        react({Expr::Dizzy, Moment::THREE, nullptr, 500}, now);
+        then({Expr::Dizzy, Moment::OOPS, Moment::DIZZY, 1800});
+        then({Expr::Asleep, nullptr, nullptr, 2600});          // topples over for a little nap
+        then({Expr::Surprised, nullptr, nullptr, 450});
+        then({Expr::Cheer, Moment::MORNING, Moment::HELLO, 1500});
+      }
       break;
+    }
 
     case Ev::PickedUp:
       if (mode_ == Mode::Listening || mode_ == Mode::Thinking) break;
@@ -236,6 +264,8 @@ void Brain::handle(const Event& e, uint32_t now) {
     case Ev::Hug:
       if (busyTalking) break;
       react({Expr::Love, Moment::LOVE, Moment::GIGGLE, 2600}, now);
+      // every third hug she says hi to her owl friend too
+      if (++hugs_ % 3 == 0) then({Expr::Happy, Moment::OWL, nullptr, 1200});
       break;
 
     case Ev::FaceUp:
@@ -265,9 +295,10 @@ void Brain::update(uint32_t now) {
         face_->setExpression(showing_);
       }
       if (now >= until_ && !talking) {
-        if (hasNext_) {
-          react(next_, now);
+        if (chainPos_ < chainLen_) {
+          show(chain_[chainPos_++], now);
         } else {
+          face_->setDizzySpeed(1);
           mode_ = Mode::Awake;
           modeSinceMs_ = now;
           face_->setExpression(Expr::Content);

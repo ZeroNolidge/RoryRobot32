@@ -24,7 +24,9 @@ class Brain {
   };
 
   void react(const Reaction& r, uint32_t now);
-  void then(const Reaction& r) { next_ = r; hasNext_ = true; }
+  // queue up to 4 reactions to follow the current one
+  void then(const Reaction& r) { if (chainLen_ < 4) chain_[chainLen_++] = r; }
+  void show(const Reaction& r, uint32_t now);  // like react(), but keeps the queue
   void say(const char* moment, const char* fallback = nullptr);
   void wakeUp(uint32_t now);
   void goSleepy(uint32_t now);
@@ -43,6 +45,9 @@ class Brain {
   uint32_t lastBatteryCheckMs_ = 0, lastTiredMs_ = 0;
   uint8_t taps_ = 0;
   uint32_t firstTapMs_ = 0;
-  Reaction next_{};
-  bool hasNext_ = false;
+  Reaction chain_[4]{};
+  uint8_t chainLen_ = 0, chainPos_ = 0;
+  uint8_t dizzyLevel_ = 0;     // the dizzy game: spins in a row
+  uint32_t lastSpinMs_ = 0;
+  uint32_t hugs_ = 0;
 };

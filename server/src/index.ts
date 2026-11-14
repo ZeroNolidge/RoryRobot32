@@ -19,6 +19,7 @@ export interface Env {
   RORY_DEVICE_TOKEN: string;
   RORY_MODEL?: string;
   TTS_FALLBACK_VOICE?: string;
+  RORY_FRIENDS?: string;
 }
 
 const MAX_AUDIO_BYTES = 1_000_000; // ~30 s of 16 kHz mono 16-bit audio
@@ -52,7 +53,7 @@ async function handleAsk(req: Request, env: Env): Promise<Response> {
   } else {
     try {
       const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1 });
-      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history);
+      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history, env.RORY_FRIENDS);
     } catch (err) {
       if (err instanceof Anthropic.RateLimitError) console.error("Claude rate limited");
       else if (err instanceof Anthropic.APIError) console.error(`Claude API error ${err.status}: ${err.message}`);

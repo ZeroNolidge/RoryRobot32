@@ -154,6 +154,14 @@
       {
         "file": "b29d43b3fb5bdf7c-f1.mp3",
         "says": "play again"
+      },
+      {
+        "file": "eef995016c56ee01-293a28-f1.mp3",
+        "says": "owl friend"
+      },
+      {
+        "file": "076c1bb34a2dd223-08753f-f1.mp3",
+        "says": "hoo hoo"
       }
     ],
     "cheer": [
@@ -280,6 +288,44 @@
       {
         "file": "5a86f322ea7b0eac-dba09e-f1.mp3",
         "says": "keep going"
+      }
+    ],
+    "one": [
+      {
+        "file": "fe05bcdcdc492801-7851bc-f1.mp3",
+        "says": "one"
+      }
+    ],
+    "two": [
+      {
+        "file": "ad782ecdac770fc6-4ff43f-f1.mp3",
+        "says": "two"
+      }
+    ],
+    "three": [
+      {
+        "file": "b802f384302cb24f-483cae-f1.mp3",
+        "says": "three"
+      }
+    ],
+    "oops": [
+      {
+        "file": "725e5ed60ea63b45-4b9f20-f1.mp3",
+        "says": "oops"
+      }
+    ],
+    "owl": [
+      {
+        "file": "eef995016c56ee01-293a28-f1.mp3",
+        "says": "owl friend"
+      },
+      {
+        "file": "076c1bb34a2dd223-08753f-f1.mp3",
+        "says": "hoo hoo"
+      },
+      {
+        "file": "c2be2e89f0729c02-a35211-f1.mp3",
+        "says": "a little owl waves"
       }
     ]
   }

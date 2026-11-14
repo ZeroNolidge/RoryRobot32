@@ -65,6 +65,7 @@ Run it on your computer instead: put the three secrets in a `.dev.vars` file
 |---|---|---|
 | `RORY_MODEL` | `claude-opus-5-5` | Rory's brain. `claude-haiku-5-5` is faster and much cheaper if you'd like to try it. |
 | `TTS_FALLBACK_VOICE` | `coral` | Voice for the backup `tts-1` model (only used if `gpt-4o-mini-tts` fails). Set it to whatever the app's script uses. |
+| `RORY_FRIENDS` | `Knight Owl: his favorite stuffed toy, an owl.` | His toy friends. Rory asks about them and brings them into games and stories. Keep it to toys — no names, school or other family details. |
 
 Rory's voice settings are in [`src/voice.ts`](src/voice.ts) and documented in
 [`../docs/voice.md`](../docs/voice.md).

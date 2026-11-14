@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildMessages, cleanForSpeech, parseReply } from "../src/rory";
+import { buildMessages, cleanForSpeech, friendsNote, parseReply } from "../src/rory";
 import { heardNothing } from "../src/stt";
 import { b64urlDecode, b64urlEncode, packHistory, signSpeakUrl, unpackHistory, verifySpeakUrl } from "../src/util";
 import { fallbackSpeechBody, mainSpeechBody, speak, TTS_INSTRUCTIONS } from "../src/voice";
@@ -78,6 +78,15 @@ describe("history", () => {
     const m = buildMessages("why?", [{ q: "is the sky blue?", a: "Yes!" }]);
     expect(m.map((x) => x.role)).toEqual(["user", "assistant", "user"]);
     expect(m[2].content).toBe("why?");
+  });
+});
+
+describe("friendsNote", () => {
+  it("is empty without friends and trims long notes", () => {
+    expect(friendsNote(undefined)).toBeNull();
+    expect(friendsNote("   ")).toBeNull();
+    expect(friendsNote("Knight Owl")).toContain("Knight Owl");
+    expect(friendsNote("x".repeat(2000))!.length).toBeLessThan(900);
   });
 });
 

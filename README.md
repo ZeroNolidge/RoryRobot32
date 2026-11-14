@@ -20,11 +20,12 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | pick her up | surprised, then *"Up up up it goes!"* or *"Hooray!"* |
 | tilt her while holding | her eyes roll "downhill" |
 | shake her | spiral dizzy eyes, wobbly mouth — *"It goes round and round!"* |
+| shake her again… and again | **the dizzy game:** she counts *"one!"*, *"two!"* with faster spirals, and on *"three!"* says *"oops!"*, topples into a little nap, then wakes up: *"Rory is awake!"* |
 | put her face-down | *"The sky is still dark!"* |
 | tap her hand or head (not the screen) | **high five!** cheer face, sparkles, *"Yay!"* / *"Great playing!"* |
 | bounce her up and down to a beat | **dances**: eyes swing, face hops, *"Go go go!"* / *"Looking good!"* |
 | hop her along the table | *"Hop hop!"* / *"Let's keep going!"*, watching where she goes |
-| hold her quietly for a few seconds | heart eyes, *"I love you"* |
+| hold her quietly for a few seconds | heart eyes, *"I love you"* (and every third hug, *"Hoo hoo! Owl friend!"* for Knight Owl) |
 | lay her on her back | droopy eyes, then *"night night"* and sleep (tucked in!) |
 | leave her alone 3 min | yawns, gets droopy eyes, *"night night"*, sleeps with floating Zzz (screen dims) |
 | touch or pick her up while asleep | wakes up: *"Rory is awake!"* |
@@ -70,7 +71,8 @@ python3 make_sdcard.py /path/to/your/sdcard
 This downloads the clips from the Talk Trail app and sorts them into folders:
 
 ```
-rory/hello/  rory/boop/  rory/highfive/  rory/dance/  rory/walk/  rory/giggle/  rory/wheee/  rory/dizzy/  rory/love/  rory/listen/
+rory/hello/  rory/boop/  rory/highfive/  rory/dance/  rory/walk/  rory/giggle/  rory/owl/
+rory/one/  rory/two/  rory/three/  rory/oops/  rory/wheee/  rory/dizzy/  rory/love/  rory/listen/
 rory/chat/   rory/cheer/  rory/dark/  rory/yawn/  rory/goodnight/  rory/morning/  rory/bye/  rory/tired/
 ```
 
@@ -144,6 +146,8 @@ Rory (board) ──Wi-Fi──► Rory's cloud server (Cloudflare Workers)
 3. **Ask!** Hold a finger on her face, talk, let go. She listens for up to
    12 seconds, shows her thinking face, then answers with a matching
    expression. Follow-up questions ("why?") work for 3 minutes.
+   She knows his toy friends (`RORY_FRIENDS` on the server, e.g. Knight
+   Owl) and brings them into games and stories.
 
 * If Wi-Fi or the server is down she plays one of her clips instead, so she
   never just goes quiet.

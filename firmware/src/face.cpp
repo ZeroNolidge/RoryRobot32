@@ -123,8 +123,8 @@ void Face::update(uint32_t nowMs) {
   open_ = approach(open_, target_.eyeOpen, dt, 4);
   float mouthTarget = target_.mouth == Mouth::Talk ? clampf(talkLevel_, 0, 1) : 0;
   mouthOpen_ = approach(mouthOpen_, mouthTarget, dt, 28);
-  dizzyAngle_ += dt * 540.0f;
-  if (dizzyAngle_ > 360) dizzyAngle_ -= 360;
+  dizzyAngle_ += dt * 540.0f * dizzySpeed_;
+  while (dizzyAngle_ > 360) dizzyAngle_ -= 360;
   bob_ = dancing ? -fabsf(sinf(nowMs * (2 * kPi / 1200.0f))) * 7.0f
                 : sinf(nowMs * (2 * kPi / 3200.0f)) * 2.0f;  // hop, or gentle "breathing"
 }

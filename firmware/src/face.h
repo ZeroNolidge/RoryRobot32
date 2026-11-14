@@ -57,6 +57,7 @@ class Face {
   void setZzz(bool on) { zzz_ = on; }
   void sparkle(uint32_t durationMs);  // yellow twinkles (cheering)
   void dance(uint32_t durationMs);    // eyes bop side to side to the beat
+  void setDizzySpeed(float s) { dizzySpeed_ = s; }  // spiral speed (dizzy game)
   void blink();
   void wake(uint32_t nowMs);  // eyes pop open from closed
 
@@ -78,7 +79,7 @@ class Face {
   float lookX_ = 0, lookY_ = 0, lookTX_ = 0, lookTY_ = 0;
   float scale_ = 1, open_ = 1;
   float talkLevel_ = 0, mouthOpen_ = 0;
-  float dizzyAngle_ = 0;
+  float dizzyAngle_ = 0, dizzySpeed_ = 1;
   float bob_ = 0;
 
   bool autoLook_ = true;

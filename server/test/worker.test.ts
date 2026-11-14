@@ -7,6 +7,7 @@ const env: Env = {
   OPENAI_API_KEY: "sk-openai-test",
   RORY_DEVICE_TOKEN: "robot-password",
   RORY_MODEL: "claude-opus-5-5",
+  RORY_FRIENDS: "Knight Owl: his favorite stuffed toy, an owl.",
 };
 
 let claudeBodies: any[] = [];
@@ -69,6 +70,7 @@ describe("POST /ask", () => {
     expect(body.fallbacks).toBe("default");
     expect(headers["anthropic-beta"]).toContain("server-side-fallback-2026-07-01");
     expect(body.system[0].text).toContain("You are Rory");
+    expect(body.system[1].text).toContain("Knight Owl");
     expect(body.messages).toEqual([{ role: "user", content: "Do you like dinosaurs?" }]);
 
     // the speech link streams the answer in Rory's voice
