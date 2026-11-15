@@ -116,7 +116,7 @@ void setup() {
 
   if (String(WIFI_NAME) == "your-wifi-name") {
     logf("[eyes] Wi-Fi not set up yet: put your Wi-Fi name and password in src/my_settings.h, then Upload\n");
-    return;
+    return;  // loop() keeps reporting the status
   }
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(EYES_HOSTNAME);
@@ -143,5 +143,16 @@ void setup() {
 
 void loop() {
   server.handleClient();
+  // Repeat the status every 10 s, so it shows whenever the Serial Monitor connects.
+  static uint32_t lastReport = 0;
+  if (millis() - lastReport > 10000) {
+    lastReport = millis();
+    if (WiFi.status() == WL_CONNECTED)
+      logf("[eyes] camera %s | Wi-Fi OK | open http://%s.local/ or http://%s/\n", cameraOk ? "OK" : "NOT FOUND",
+           EYES_HOSTNAME, WiFi.localIP().toString().c_str());
+    else
+      logf("[eyes] camera %s | Wi-Fi NOT connected to \"%s\" - check my_settings.h (2.4 GHz only)\n",
+           cameraOk ? "OK" : "NOT FOUND", WIFI_NAME);
+  }
   delay(2);
 }
