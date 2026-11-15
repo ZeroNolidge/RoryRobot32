@@ -46,6 +46,9 @@ describe("parseReply", () => {
   it("reads the face tag", () => {
     expect(parseReply("[excited] Dinosaurs are cool!")).toEqual({ face: "excited", say: "Dinosaurs are cool!" });
   });
+  it("knows the pretend-scared face", () => {
+    expect(parseReply("[scared] Eek! A shark!")).toEqual({ face: "scared", say: "Eek! A shark!" });
+  });
   it("defaults to happy when the tag is missing or unknown", () => {
     expect(parseReply("Hello there!").face).toBe("happy");
     expect(parseReply("[angry] Grr").face).toBe("happy");

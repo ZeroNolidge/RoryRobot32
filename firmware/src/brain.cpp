@@ -118,6 +118,7 @@ static Expression faceFor(const String& f, bool& sparkle) {
   if (f == "excited") { sparkle = true; return Expr::Cheer; }
   if (f == "silly") return Expr::Happy;
   if (f == "love") return Expr::Love;
+  if (f == "scared") return Expr::Scared;  // pretend-scared (toy shark game)
   if (f == "curious") return Expr::Listening;
   if (f == "thinking") return Expr::Thinking;
   return Expr::Content;  // happy, calm
@@ -132,7 +133,8 @@ void Brain::answerArrived(uint32_t now) {
   Net::reset();
   react({e, nullptr, nullptr, 600}, now);  // the mouth moves while her answer plays
   if (sparkle) face_->sparkle(2500);
-  face_->lookAt(0, 0);
+  if (a.face == "scared") face_->lookAt(-0.7f, 0.15f);  // peeks away
+  else face_->lookAt(0, 0);
   face_->setAutoLook(false);
   if (!Voice::playUrl(url.c_str())) say(Moment::CHAT, Moment::GIGGLE);
   lastPlayMs_ = now;

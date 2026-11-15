@@ -27,6 +27,7 @@ struct Expression {
   Mouth mouth;
   float eyeScale;  // 1 = normal, >1 = surprised
   float eyeOpen;   // 1 = fully open, ~0.4 = sleepy
+  bool tremble = false;  // shaky face (pretend-scared)
 };
 
 namespace Expr {
@@ -42,6 +43,7 @@ static const Expression Yawning = {Eyes::Closed, Mouth::Yawn, 1.00f, 1.0f};
 static const Expression Asleep = {Eyes::Closed, Mouth::Smile, 1.00f, 1.0f};
 static const Expression Talking = {Eyes::Normal, Mouth::Talk, 1.00f, 1.0f};
 static const Expression Love = {Eyes::Heart, Mouth::Smile, 1.00f, 1.0f};
+static const Expression Scared = {Eyes::Normal, Mouth::Wobbly, 1.12f, 1.0f, true};  // "eek!" (pretend)
 }  // namespace Expr
 
 class Face {

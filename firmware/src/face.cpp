@@ -135,6 +135,10 @@ void Face::render(Raster& r) {
   for (int i = 0; i < kSpeckles; i++) r.dot(speckX_[i], speckY_[i], sp);
 
   float lx = lookX_ * kLookRangeX, ly = lookY_ * kLookRangeY + bob_;
+  if (target_.tremble) {  // pretend-scared: a quick little shiver
+    lx += sinf(nowMs_ * 0.11f) * 1.8f;
+    ly += cosf(nowMs_ * 0.17f) * 1.2f;
+  }
   drawEye(r, kEyeLX + lx, kEyeY + ly, true);
   drawEye(r, kEyeRX + lx, kEyeY + ly, false);
   drawMouth(r, kMouthX + lx * 0.45f, kMouthY + ly * 0.5f);

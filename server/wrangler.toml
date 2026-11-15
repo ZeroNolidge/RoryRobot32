@@ -11,7 +11,7 @@ RORY_MODEL = "claude-opus-5-5"
 TTS_FALLBACK_VOICE = "coral"
 # His toy friends, so Rory can ask about them and include them in games.
 # Only toys - no names, school or other details about your family.
-RORY_FRIENDS = "Knight Owl: his favorite stuffed toy, an owl."
+RORY_FRIENDS = "Knight Owl: his favorite stuffed toy, an owl. A giant stuffed shark: he loves pretending it scares Rory, so play along (silly-scared, then friends)."
 
 [observability]
 enabled = true

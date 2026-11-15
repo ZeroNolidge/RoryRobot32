@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
       {"sleepy", Expr::Sleepy, 0, 0.3f, 0, false, false},
       {"asleep", Expr::Asleep, 0, 0, 0, true, false},
       {"love", Expr::Love, 0, 0, 0, false, false},
+      {"scared", Expr::Scared, -0.7f, 0.15f, 0, false, false},
       {"look-left", Expr::Content, -1, 0.2f, 0, false, false},
   };
   for (auto& s : shots) {
