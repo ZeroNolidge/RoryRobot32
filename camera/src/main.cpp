@@ -114,6 +114,10 @@ void setup() {
   cameraOk = startCamera();
   if (!cameraOk) logf("[eyes] CAMERA NOT FOUND - check the ribbon cable is pushed in and the clip closed\n");
 
+  if (String(WIFI_NAME) == "your-wifi-name") {
+    logf("[eyes] Wi-Fi not set up yet: put your Wi-Fi name and password in src/my_settings.h, then Upload\n");
+    return;
+  }
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(EYES_HOSTNAME);
   WiFi.begin(WIFI_NAME, WIFI_PASSWORD);
@@ -125,7 +129,7 @@ void setup() {
   }
   digitalWrite(kStatusLed, LOW);
   if (WiFi.status() != WL_CONNECTED) {
-    logf("\n[eyes] could not join Wi-Fi - check WIFI_NAME / WIFI_PASSWORD in settings.h (2.4 GHz only)\n");
+    logf("\n[eyes] could not join Wi-Fi - check WIFI_NAME / WIFI_PASSWORD in my_settings.h (2.4 GHz only)\n");
     return;
   }
   MDNS.begin(EYES_HOSTNAME);

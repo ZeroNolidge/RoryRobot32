@@ -4,3 +4,8 @@ tools/face-preview/out/
 __pycache__/
 *.pyc
 .DS_Store
+
+# personal settings - never committed
+firmware/src/my_config.h
+camera/src/my_settings.h
+server/.dev.vars

@@ -5,6 +5,12 @@
 #pragma once
 #include <stdint.h>
 
+// Your own tweaks (debug switches, timings, orientation) go in my_config.h,
+// which Git ignores - updates never overwrite it. See my_config.example.h.
+#if __has_include("my_config.h")
+#include "my_config.h"
+#endif
+
 // ---------------------------------------------------------------- pins
 // Display (SPI, ST7789 240x240)
 #define PIN_LCD_SCLK 38
@@ -56,28 +62,56 @@
 
 // ---------------------------------------------------------------- behavior tuning
 #define FRAME_MS 33               // ~30 fps
+#ifndef SLEEPY_AFTER_MS
 #define SLEEPY_AFTER_MS (3UL * 60 * 1000)   // no play for 3 min -> yawns
+#endif
+#ifndef ASLEEP_AFTER_MS
 #define ASLEEP_AFTER_MS (20UL * 1000)       // ...then falls asleep 20 s later
+#endif
+#ifndef POWER_OFF_AFTER_MS
 #define POWER_OFF_AFTER_MS (30UL * 60 * 1000)  // asleep 30 min -> power off (battery only)
+#endif
+#ifndef BACKLIGHT_AWAKE
 #define BACKLIGHT_AWAKE 100       // percent
+#endif
+#ifndef BACKLIGHT_ASLEEP
 #define BACKLIGHT_ASLEEP 12       // percent
+#endif
 
 // Speaker volume steps (0..21 in the audio library). BOOT button cycles them.
 // Kept deliberately modest for little ears.
 static const uint8_t VOLUME_STEPS[] = {8, 13, 17};
+#ifndef VOLUME_DEFAULT_STEP
 #define VOLUME_DEFAULT_STEP 1
+#endif
 
 // ---------------------------------------------------------------- sensor orientation
 // If Rory's eyes look the wrong way when you tilt her, flip these.
+#ifndef IMU_LOOK_X_SIGN
 #define IMU_LOOK_X_SIGN (+1.0f)
+#endif
+#ifndef IMU_LOOK_Y_SIGN
 #define IMU_LOOK_Y_SIGN (-1.0f)
+#endif
 // Which accelerometer axis points out of the screen, and its sign.
+#ifndef IMU_SCREEN_AXIS
 #define IMU_SCREEN_AXIS 2         // 0=x 1=y 2=z
+#endif
+#ifndef IMU_SCREEN_SIGN
 #define IMU_SCREEN_SIGN (-1.0f)   // measured on a real ESP32-S3-Touch-LCD-1.54: -1 when screen faces up
+#endif
 // Print motion sensor values over USB serial (for tuning the thresholds in senses.cpp)
+#ifndef MOTION_DEBUG
 #define MOTION_DEBUG 0
+#endif
 
 // Touch panel orientation fixes
+#ifndef TOUCH_SWAP_XY
 #define TOUCH_SWAP_XY false
+#endif
+#ifndef TOUCH_MIRROR_X
 #define TOUCH_MIRROR_X false
+#endif
+#ifndef TOUCH_MIRROR_Y
 #define TOUCH_MIRROR_Y false
+#endif

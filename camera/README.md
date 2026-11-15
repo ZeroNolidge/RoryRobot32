@@ -10,8 +10,9 @@ it when he says *"Rory, look!"*.
 ## Try it
 
 1. In VS Code: **File → Open Folder…** → choose this **`camera`** folder.
-2. Open **`src/settings.h`** and fill in your Wi-Fi name and password
-   (the same 2.4 GHz network Rory uses). Save.
+2. Click **Build** (✓) once. It creates **`src/my_settings.h`** — open it,
+   fill in your Wi-Fi name and password (the same 2.4 GHz network Rory uses)
+   and save. Git ignores this file, so updates never overwrite it.
 3. Plug in the camera board with USB-C and click **Upload**.
    *If it won't upload:* hold **BOOT**, tap **RESET**, let go of BOOT, try again.
 4. Open the **Serial Monitor**. You should see:
