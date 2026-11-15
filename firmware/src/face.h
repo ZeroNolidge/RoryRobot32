@@ -10,6 +10,7 @@ enum class Eyes : uint8_t {
   Closed,  // sleeping curves
   Dizzy,   // spinning spirals
   Heart,   // love eyes
+  Shock,   // huge white eyes, tiny pupils, raised eyebrows
 };
 
 enum class Mouth : uint8_t {
@@ -20,6 +21,7 @@ enum class Mouth : uint8_t {
   Wobbly,  // dizzy squiggle
   Talk,    // opens and closes with Rory's voice
   Yawn,    // big tall "O"
+  Gasp,    // gaping shocked "O"
 };
 
 struct Expression {
@@ -43,7 +45,7 @@ static const Expression Yawning = {Eyes::Closed, Mouth::Yawn, 1.00f, 1.0f};
 static const Expression Asleep = {Eyes::Closed, Mouth::Smile, 1.00f, 1.0f};
 static const Expression Talking = {Eyes::Normal, Mouth::Talk, 1.00f, 1.0f};
 static const Expression Love = {Eyes::Heart, Mouth::Smile, 1.00f, 1.0f};
-static const Expression Scared = {Eyes::Normal, Mouth::Wobbly, 1.12f, 1.0f, true};  // "eek!" (pretend)
+static const Expression Scared = {Eyes::Shock, Mouth::Gasp, 1.12f, 1.0f, true};  // "eek!" (pretend)
 }  // namespace Expr
 
 class Face {

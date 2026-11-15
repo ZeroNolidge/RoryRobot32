@@ -142,6 +142,12 @@ void Face::render(Raster& r) {
   drawEye(r, kEyeLX + lx, kEyeY + ly, true);
   drawEye(r, kEyeRX + lx, kEyeY + ly, false);
   drawMouth(r, kMouthX + lx * 0.45f, kMouthY + ly * 0.5f);
+  if (target_.tremble) {  // a cartoon sweat drop
+    uint16_t drop = C(0xB6ECF2);
+    float dy = fmodf(nowMs_ / 1400.0f, 1.0f) * 6;
+    r.circle(206, 76 + dy, 6.5f, drop);
+    r.capsule(206, 64 + dy, 206, 72 + dy, 2.2f, drop);
+  }
   if (zzz_) drawZzz(r);
   if (nowMs_ < sparkleUntilMs_) drawSparkles(r);
 }
@@ -198,6 +204,18 @@ void Face::drawEye(Raster& r, float cx, float cy, bool left) {
       r.heart(cx, cy, R * 0.95f * pulse, C(COL_HEART));
       break;
     }
+    case Eyes::Shock: {
+      // big white eyes ringed in cyan, with tiny pupils
+      r.circle(cx, cy, R, eye);
+      r.circle(cx, cy, R - 4.5f, white);
+      r.circle(cx, cy, R * 0.24f, C(COL_SCREEN));
+      r.circle(cx + R * 0.08f, cy - R * 0.1f, 2.4f, white);
+      // eyebrows shot up, inner ends higher ("eek!")
+      float s = left ? 1.0f : -1.0f;  // +1: inner side is to the right
+      float by = cy - R - 9;
+      r.capsule(cx - s * R * 0.6f, by + 3, cx + s * R * 0.45f, by - 6, 3.5f, eye);
+      break;
+    }
   }
 }
 
@@ -243,6 +261,10 @@ void Face::drawMouth(Raster& r, float cx, float cy) {
     case Mouth::O:
       r.ellipse(cx, cy, 15, 12, eye);
       r.ellipse(cx, cy, 8.5f, 6, bg);
+      break;
+    case Mouth::Gasp:
+      r.ellipse(cx, cy + 6, 15, 22, eye);
+      r.ellipse(cx, cy + 6, 10, 17, red);
       break;
     case Mouth::Yawn:
       r.ellipse(cx, cy + 4, 20, 26, eye);
