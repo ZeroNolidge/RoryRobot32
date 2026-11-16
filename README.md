@@ -64,6 +64,22 @@ her mouth moves with the sound.
    ```
    If the upload doesn't start: hold **BOOT**, tap **RESET**, release **BOOT**, and try again.
 
+### Updating Rory over Wi-Fi (after the first USB upload)
+
+Once Rory is on Wi-Fi she can take new versions without a cable:
+
+1. Copy `firmware/my_upload.ini.example` to `firmware/my_upload.ini` and put
+   in her password (the `token` from `rory/config.txt`). One time only.
+2. Switch Rory on (awake, on Wi-Fi). The Serial Monitor says
+   `ready for wireless updates at rory.local`.
+3. In the PlatformIO bar, switch the environment from `env:rory` to
+   **`env:rory-wifi`** and click **Upload**. Her face shows `^ ^` eyes and a
+   progress bar, then she restarts with the new version.
+
+If Windows asks whether to allow Python through the firewall, click **Allow**
+(private networks). The update connects back to your computer. If `rory.local`
+isn't found, put her IP address in `my_upload.ini` (see the example).
+
 ### 2. Put Rory's voice on the microSD card
 
 ```bash
@@ -116,6 +132,7 @@ firmware/                PlatformIO project (Arduino-ESP32 3.2)
   src/senses.*           touch gestures, motion (QMI8658), buttons
   src/voice.*            speaker (ES8311) + microphones (ES7210): clips, streaming, recording
   src/net.*              Wi-Fi + asking the server
+  src/ota.*              wireless updates (env:rory-wifi)
   src/settings.*         reads /rory/config.txt from the SD card
   src/memory.*           what she remembers about him: /rory/memory.txt
   src/display.*          ST7789 screen + backlight

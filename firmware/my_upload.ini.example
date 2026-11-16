@@ -1,0 +1,8 @@
+; Copy this file to  my_upload.ini  (same folder) and put in Rory's password:
+; the same "token" that's in rory/config.txt on her SD card (RORY_DEVICE_TOKEN).
+; my_upload.ini is never committed to git.
+[env:rory-wifi]
+upload_flags = --auth=PUT-RORYS-PASSWORD-HERE
+; If "rory.local" can't be found, use her address from the Serial Monitor
+; ("ready for wireless updates at rory.local (192.168.1.xx)"):
+; upload_port = 192.168.1.xx

@@ -9,3 +9,6 @@ __pycache__/
 firmware/src/my_config.h
 camera/src/my_settings.h
 server/.dev.vars
+
+# Wi-Fi upload password
+firmware/my_upload.ini

@@ -72,7 +72,10 @@ bool findEyes() {
   if (eyesIp != IPAddress()) return true;
   const String& e = Settings::get().eyes;
   if (eyesIp.fromString(e)) return true;  // an address like 192.168.1.250
-  if (!mdnsStarted) mdnsStarted = MDNS.begin("rory");
+  if (!mdnsStarted) {  // (already running if wireless updates started it)
+    MDNS.begin("rory");
+    mdnsStarted = true;
+  }
   String name = e;
   name.replace(".local", "");
   IPAddress ip = MDNS.queryHost(name.c_str(), 2000);

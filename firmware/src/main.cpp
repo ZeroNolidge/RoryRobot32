@@ -12,6 +12,7 @@
 #include "face.h"
 #include "memory.h"
 #include "net.h"
+#include "ota.h"
 #include "power.h"
 #include "senses.h"
 #include "settings.h"
@@ -52,6 +53,8 @@ void loop() {
   Senses::poll(now);
   Event e;
   while (Senses::next(e)) brain.handle(e, now);
+
+  Ota::loop();  // wireless updates
 
   if (now - lastFrameMs >= FRAME_MS) {
     lastFrameMs = now;
