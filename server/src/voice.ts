@@ -12,29 +12,40 @@ export const TTS_INSTRUCTIONS =
 export const FALLBACK_MODEL = "tts-1";
 export const FALLBACK_SPEED = 0.95;
 
+// "mp3" for clips and links; "pcm" (raw 24 kHz 16-bit mono) streams straight to
+// the robot's speaker with no decoding, so she starts talking sooner.
+export type SpeechFormat = "mp3" | "pcm";
+export const PCM_RATE = 24000;
+
 export interface SpeechRequestBody {
   model: string;
   voice: string;
   input: string;
-  response_format: "mp3";
+  response_format: SpeechFormat;
   instructions?: string;
   speed?: number;
 }
 
-export function mainSpeechBody(text: string): SpeechRequestBody {
+export function mainSpeechBody(text: string, format: SpeechFormat = "mp3"): SpeechRequestBody {
   // No speed: the instructions' "a little slowly" handles pacing, as in the app.
-  return { model: TTS_MODEL, voice: TTS_VOICE, input: text, instructions: TTS_INSTRUCTIONS, response_format: "mp3" };
+  return { model: TTS_MODEL, voice: TTS_VOICE, input: text, instructions: TTS_INSTRUCTIONS, response_format: format };
 }
 
-export function fallbackSpeechBody(text: string, voice: string): SpeechRequestBody {
-  return { model: FALLBACK_MODEL, voice, input: text, speed: FALLBACK_SPEED, response_format: "mp3" };
+export function fallbackSpeechBody(text: string, voice: string, format: SpeechFormat = "mp3"): SpeechRequestBody {
+  return { model: FALLBACK_MODEL, voice, input: text, speed: FALLBACK_SPEED, response_format: format };
 }
 
 /**
  * Ask OpenAI to speak `text`, returning the streaming MP3 response.
  * Falls back to tts-1 (like the app's script) if the main model refuses.
  */
-export async function speak(text: string, apiKey: string, fallbackVoice: string, fetchFn: typeof fetch = fetch): Promise<Response> {
+export async function speak(
+  text: string,
+  apiKey: string,
+  fallbackVoice: string,
+  fetchFn: typeof fetch = fetch,
+  format: SpeechFormat = "mp3",
+): Promise<Response> {
   const call = (body: SpeechRequestBody) =>
     fetchFn("https://api.openai.com/v1/audio/speech", {
       method: "POST",
@@ -42,10 +53,10 @@ export async function speak(text: string, apiKey: string, fallbackVoice: string,
       body: JSON.stringify(body),
     });
 
-  let res = await call(mainSpeechBody(text));
+  let res = await call(mainSpeechBody(text, format));
   if (!res.ok && res.status !== 401 && res.status !== 429) {
     console.warn(`gpt-4o-mini-tts failed (${res.status}); using ${FALLBACK_MODEL}`);
-    res = await call(fallbackSpeechBody(text, fallbackVoice));
+    res = await call(fallbackSpeechBody(text, fallbackVoice, format));
   }
   return res;
 }

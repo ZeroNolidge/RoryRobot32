@@ -53,6 +53,43 @@ def write_config(args) -> None:
     print(f"Settings written to {path}" + ("" if given else " (empty - fill it in to connect Rory)"))
 
 
+# Thinking sounds, made in Rory's own voice by your server (needs --server/--token,
+# or a config.txt already on the card).
+THINKING_LINES = ["Hmm, let me think!", "Ooh, good question!", "Hmm...", "Let me see...", "Ooh, let me think about that!"]
+
+
+def read_config(card: str) -> dict:
+    path = os.path.join(card, "rory", "config.txt")
+    out = {}
+    if os.path.exists(path):
+        for line in open(path, encoding="utf-8"):
+            if "=" in line and not line.strip().startswith("#"):
+                k, v = line.split("=", 1)
+                out[k.strip().lower()] = v.strip()
+    return out
+
+
+def make_thinking_clips(card: str, server: str, token: str) -> None:
+    folder = os.path.join(card, "rory", "hmm")
+    os.makedirs(folder, exist_ok=True)
+    made = 0
+    for line in THINKING_LINES:
+        dest = os.path.join(folder, slug(line) + ".mp3")
+        if os.path.exists(dest):
+            continue
+        req = urllib.request.Request(server.rstrip("/") + "/say", data=line.encode("utf-8"), method="POST",
+                                     headers={"Authorization": "Bearer " + token, "Content-Type": "text/plain"})
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r, open(dest, "wb") as f:
+                f.write(r.read())
+            made += 1
+            print(f"  hmm        {line}")
+        except Exception as e:  # keep going; Rory just thinks quietly without these
+            print(f"  (couldn't make \"{line}\": {e})")
+    if made:
+        print(f"Made {made} thinking clips in Rory's voice")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("card", help="where the SD card is mounted (or any folder to copy later)")
@@ -81,6 +118,14 @@ def main() -> int:
             total += 1
             print(f"  {moment:10s} {clip['says']}")
     print(f"Done: {total} new clips in {os.path.join(args.card, 'rory')}")
+
+    cfg = read_config(args.card)
+    server = (args.server or cfg.get("server", "")).strip()
+    token = (args.token or cfg.get("token", "")).strip()
+    if server.startswith("https://") and token:
+        make_thinking_clips(args.card, server, token)
+    else:
+        print("(Add --server and --token to also make Rory's \"Hmm, let me think!\" clips.)")
     return 0
 
 

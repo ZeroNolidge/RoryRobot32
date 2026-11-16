@@ -27,6 +27,7 @@ const char* TWO = "two";
 const char* THREE = "three";
 const char* OOPS = "oops";
 const char* OWL = "owl";
+const char* HMM = "hmm";
 const char* HIGHFIVE = "highfive";
 const char* DANCE = "dance";
 const char* WALK = "walk";
@@ -129,14 +130,11 @@ void Brain::answerArrived(uint32_t now) {
   Serial.printf("[brain] he said \"%s\" -> Rory: \"%s\" (%s)\n", a.heard.c_str(), a.say.c_str(), a.face.c_str());
   bool sparkle;
   Expression e = faceFor(a.face, sparkle);
-  String url = a.audioUrl;
-  Net::reset();
-  react({e, nullptr, nullptr, 600}, now);  // the mouth moves while her answer plays
+  react({e, nullptr, nullptr, 600}, now);  // her voice is already streaming; the mouth follows it
   if (sparkle) face_->sparkle(2500);
   if (a.face == "scared") face_->lookAt(-0.7f, 0.15f);  // peeks away
   else face_->lookAt(0, 0);
   face_->setAutoLook(false);
-  if (!Voice::playUrl(url.c_str())) say(Moment::CHAT, Moment::GIGGLE);
   lastPlayMs_ = now;
 }
 
@@ -185,8 +183,10 @@ void Brain::handle(const Event& e, uint32_t now) {
       face_->lookAt(0, -0.35f);
       face_->setExpression(Expr::Listening);
       showing_ = Expr::Listening;
-      if (Net::online() && Net::state() != Net::State::Busy && Voice::startRecording()) {
+      if (Net::online() && Net::state() != Net::State::Busy && Net::state() != Net::State::Speaking &&
+          Voice::startRecording()) {
         ai_ = Ai::Recording;  // the "o" face is his cue to talk
+        Net::prepare();       // open the connection to the server while he talks
       } else {
         ai_ = Ai::None;
         say(Moment::LISTEN);  // offline: "Rory can hear you now!" and a chat clip after
@@ -326,12 +326,13 @@ void Brain::update(uint32_t now) {
           react({Expr::Content, nullptr, nullptr, 300}, now);
         } else if (Net::ask(Voice::wav(), Voice::wavSize())) {
           ai_ = Ai::Uploading;
+          say(Moment::HMM);  // "Hmm, let me think!" while the server works
         } else {
           react({Expr::Happy, Moment::CHAT, Moment::GIGGLE, 800}, now);
         }
       } else if (ai_ == Ai::Uploading) {
         Net::State st = Net::state();
-        if (st == Net::State::Done) {
+        if (st == Net::State::Speaking || st == Net::State::Done) {
           answerArrived(now);
         } else if (st == Net::State::Failed || now - modeSinceMs_ > 25000) {
           // Couldn't reach her brain: a friendly clip instead of silence.

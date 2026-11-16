@@ -2,7 +2,11 @@
 //
 //   POST /ask     the robot sends the recorded question (WAV), or plain text for testing
 //                 -> { heard, say, face, audio, history }
+//   POST /talk    what the robot uses: same as /ask, but the reply IS her spoken answer -
+//                 raw 24 kHz audio streamed back on the same connection (face, words and
+//                 history in X-Rory-* headers), so she starts talking as soon as possible
 //   GET  /speak   streams Rory's spoken answer as MP3 (signed link from /ask)
+//   POST /say     MP3 of any short line in Rory's voice (used to make her "hmm" clips)
 //   GET  /        health check
 //
 // Secrets (set with `npx wrangler secret put NAME`):
@@ -11,7 +15,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { askRory, LINES, type Reply } from "./rory";
 import { heardNothing, transcribe } from "./stt";
 import { bearer, packHistory, safeEqual, signSpeakUrl, unpackHistory, verifySpeakUrl } from "./util";
-import { speak } from "./voice";
+import { PCM_RATE, speak } from "./voice";
 
 export interface Env {
   ANTHROPIC_API_KEY: string;
@@ -29,7 +33,16 @@ function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
 }
 
-async function handleAsk(req: Request, env: Env): Promise<Response> {
+interface Answer {
+  heard: string;
+  reply: Reply;
+  history: string;
+  sttMs: number;
+  claudeMs: number;
+}
+
+/** Hear the question and decide Rory's reply (shared by /ask and /talk). */
+async function think(req: Request, env: Env): Promise<Answer | Response> {
   const started = Date.now();
   const type = req.headers.get("Content-Type") ?? "";
   const history = unpackHistory(req.headers.get("X-Rory-History"));
@@ -63,13 +76,47 @@ async function handleAsk(req: Request, env: Env): Promise<Response> {
   }
   const tReply = Date.now();
 
-  // 3. a link the robot streams her voice from
-  const origin = new URL(req.url).origin;
-  const audioUrl = await signSpeakUrl(origin, reply.say, env.RORY_DEVICE_TOKEN, Math.floor(Date.now() / 1000));
   const newHistory = reply === LINES.didntHear || reply.refused ? history : [...history, { q: heard, a: reply.say }];
+  return { heard, reply, history: packHistory(newHistory), sttMs: tHeard - started, claudeMs: tReply - tHeard };
+}
 
-  console.log(JSON.stringify({ event: "ask", sttMs: tHeard - started, claudeMs: tReply - tHeard, face: reply.face }));
-  return json({ heard, say: reply.say, face: reply.face, audio: audioUrl, history: packHistory(newHistory) });
+async function handleAsk(req: Request, env: Env): Promise<Response> {
+  const a = await think(req, env);
+  if (a instanceof Response) return a;
+  // a link the robot (or you, testing with curl) can play her voice from
+  const origin = new URL(req.url).origin;
+  const audioUrl = await signSpeakUrl(origin, a.reply.say, env.RORY_DEVICE_TOKEN, Math.floor(Date.now() / 1000));
+  console.log(JSON.stringify({ event: "ask", sttMs: a.sttMs, claudeMs: a.claudeMs, face: a.reply.face }));
+  return json({ heard: a.heard, say: a.reply.say, face: a.reply.face, audio: audioUrl, history: a.history });
+}
+
+async function handleTalk(req: Request, env: Env): Promise<Response> {
+  const a = await think(req, env);
+  if (a instanceof Response) return a;
+  const t0 = Date.now();
+  const res = await speak(a.reply.say, env.OPENAI_API_KEY, env.TTS_FALLBACK_VOICE || "coral", fetch, "pcm");
+  console.log(JSON.stringify({ event: "talk", sttMs: a.sttMs, claudeMs: a.claudeMs, voiceMs: Date.now() - t0, face: a.reply.face }));
+  const headers = {
+    "X-Rory-Face": a.reply.face,
+    "X-Rory-Say": encodeURIComponent(a.reply.say),
+    "X-Rory-Heard": encodeURIComponent(a.heard),
+    "X-Rory-History": a.history,
+    "Cache-Control": "no-store",
+  };
+  if (!res.ok || !res.body) {
+    console.error(`speech failed: ${res.status}`);
+    return new Response("speech failed", { status: 502, headers });
+  }
+  return new Response(res.body, { headers: { ...headers, "Content-Type": `audio/L16; rate=${PCM_RATE}; channels=1` } });
+}
+
+/** A short line in Rory's voice as MP3 - for making clips like "Hmm, let me think!". */
+async function handleSay(req: Request, env: Env): Promise<Response> {
+  const text = (await req.text()).trim().slice(0, 200);
+  if (!text) return new Response("nothing to say", { status: 400 });
+  const res = await speak(text, env.OPENAI_API_KEY, env.TTS_FALLBACK_VOICE || "coral");
+  if (!res.ok || !res.body) return new Response("speech failed", { status: 502 });
+  return new Response(res.body, { headers: { "Content-Type": "audio/mpeg", "Cache-Control": "no-store" } });
 }
 
 async function handleSpeak(req: Request, env: Env): Promise<Response> {
@@ -89,10 +136,12 @@ export default {
     const url = new URL(req.url);
     if (req.method === "GET" && url.pathname === "/") return new Response("Rory is awake!\n");
     if (req.method === "GET" && url.pathname === "/speak") return handleSpeak(req, env);
-    if (req.method === "POST" && url.pathname === "/ask") {
+    if (req.method === "POST" && ["/ask", "/talk", "/say"].includes(url.pathname)) {
       if (!env.RORY_DEVICE_TOKEN || !safeEqual(bearer(req), env.RORY_DEVICE_TOKEN)) {
         return json({ error: "unauthorized" }, 401);
       }
+      if (url.pathname === "/talk") return handleTalk(req, env);
+      if (url.pathname === "/say") return handleSay(req, env);
       return handleAsk(req, env);
     }
     return new Response("not found", { status: 404 });

@@ -11,6 +11,7 @@ const env: Env = {
 };
 
 let claudeBodies: any[] = [];
+let speechBodies: any[] = [];
 let claudeText = "[excited] Dinosaurs are so cool! Which one do you like best?";
 let claudeStop = "end_turn";
 
@@ -29,7 +30,10 @@ function installFakeApis() {
       });
     }
     if (url.pathname === "/v1/audio/transcriptions") return Response.json({ text: "Do you like dinosaurs?" });
-    if (url.pathname === "/v1/audio/speech") return new Response("FAKE-MP3", { headers: { "Content-Type": "audio/mpeg" } });
+    if (url.pathname === "/v1/audio/speech") {
+      speechBodies.push(await req.json());
+      return new Response("FAKE-MP3", { headers: { "Content-Type": "audio/mpeg" } });
+    }
     return new Response("unexpected " + url, { status: 500 });
   }));
 }
@@ -101,6 +105,35 @@ describe("POST /ask", () => {
     claudeText = "";
     const data: any = await (await ask("something", "text/plain")).json();
     expect(data.say).toMatch(/grown-up/);
+  });
+});
+
+describe("POST /talk", () => {
+  it("streams her answer as raw audio with the face and words in headers", async () => {
+    installFakeApis();
+    const res = await worker.fetch(new Request("https://rory.example/talk", {
+      method: "POST", body: "Do you like dinosaurs?", headers: { Authorization: "Bearer robot-password", "Content-Type": "text/plain" },
+    }), env);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("audio/L16; rate=24000; channels=1");
+    expect(res.headers.get("X-Rory-Face")).toBe("excited");
+    expect(decodeURIComponent(res.headers.get("X-Rory-Say")!)).toBe("Dinosaurs are so cool! Which one do you like best?");
+    expect(res.headers.get("X-Rory-History")).toBeTruthy();
+    expect(await res.text()).toBe("FAKE-MP3"); // the fake speech API's body, streamed through
+    expect(speechBodies.at(-1).response_format).toBe("pcm");
+  });
+});
+
+describe("POST /say", () => {
+  it("needs the password and returns MP3 in Rory's voice", async () => {
+    installFakeApis();
+    const denied = await worker.fetch(new Request("https://rory.example/say", { method: "POST", body: "Hmm!" }), env);
+    expect(denied.status).toBe(401);
+    const res = await worker.fetch(new Request("https://rory.example/say", {
+      method: "POST", body: "Hmm, let me think!", headers: { Authorization: "Bearer robot-password" },
+    }), env);
+    expect(res.headers.get("Content-Type")).toBe("audio/mpeg");
+    expect(speechBodies.at(-1)).toMatchObject({ voice: "marin", input: "Hmm, let me think!", response_format: "mp3" });
   });
 });
 

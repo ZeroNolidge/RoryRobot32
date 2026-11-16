@@ -18,7 +18,7 @@ I2SClass* mic = nullptr;
 bool cardOk = false;
 int volStep = VOLUME_DEFAULT_STEP;
 
-enum class CmdType : uint8_t { File, Url, Stop, RecStart, RecStop };
+enum class CmdType : uint8_t { File, Url, Stop, RecStart, RecStop, StreamStart };
 struct Cmd {
   CmdType type;
   char arg[800];  // file path or URL
@@ -40,6 +40,19 @@ const size_t kMaxBytes = kHeader + kRate * 2 * kMaxSeconds;
 uint8_t* recBuf = nullptr;
 size_t recLen = 0;  // bytes of audio after the header
 uint32_t recStartMs = 0;
+
+// streaming (AI answers): network task -> stream buffer -> speaker
+const uint32_t kStreamRate = 24000;
+const size_t kStreamBufBytes = 64 * 1024;          // ~1.3 s of audio
+const size_t kPrebufferBytes = kStreamRate * 2 / 6;  // start once ~170 ms is waiting
+StreamBufferHandle_t sbuf = nullptr;
+StaticStreamBuffer_t sbufStruct;
+I2SClass* spk = nullptr;
+volatile bool streamOpen = false;    // the network task is still writing
+volatile bool streamEndReq = false;  // ...and has finished
+bool streamActive = false, streamStarted = false;  // voice task side
+uint8_t carryByte = 0;
+bool hasCarry = false;
 
 std::map<std::string, std::vector<std::string>> clips;
 std::map<std::string, int> lastPick;
@@ -172,6 +185,101 @@ void recordSome() {
   if (recLen >= kMaxBytes - kHeader) endRecording();  // full: stop by itself
 }
 
+void finishStream() {
+  if (spk) {
+    int16_t silence[256] = {0};
+    for (int i = 0; i < 10; i++) spk->write((uint8_t*)silence, sizeof(silence));  // fade to quiet, no click
+    spk->end();
+    delete spk;
+    spk = nullptr;
+  }
+  streamActive = streamStarted = false;
+  streamOpen = false;
+  hasCarry = false;
+  running = false;
+  vu = 0;
+  makeAudio();
+}
+
+void beginStream() {
+  if (recActive) endRecording();
+  if (audio) {
+    // let a "hmm" clip finish naturally (up to 1.5 s) before switching over
+    for (uint32_t t0 = millis(); audio->isRunning() && millis() - t0 < 1500 && streamOpen;) {
+      audio->loop();
+      vu = audio->getVUlevel();
+      vTaskDelay(1);
+    }
+    audio->stopSong();
+    delete audio;
+    audio = nullptr;
+  }
+  spk = new I2SClass();
+  spk->setPins(PIN_I2S_BCLK, PIN_I2S_LRCK, PIN_I2S_DOUT, -1, PIN_I2S_MCLK);
+  spk->setTimeout(200);
+  if (!spk->begin(I2S_MODE_STD, kStreamRate, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO)) {
+    Serial.println("[voice] speaker start failed");
+    delete spk;
+    spk = nullptr;
+    streamOpen = false;
+    makeAudio();
+    return;
+  }
+  streamActive = true;
+  streamStarted = false;
+  hasCarry = false;
+  running = true;
+}
+
+void pumpStream() {
+  if (!streamStarted) {
+    // wait for a little audio to build up so it never stutters
+    if (xStreamBufferBytesAvailable(sbuf) < kPrebufferBytes && !streamEndReq && streamOpen) {
+      vTaskDelay(pdMS_TO_TICKS(5));
+      return;
+    }
+    streamStarted = true;
+  }
+  uint8_t in[1025];
+  size_t off = 0;
+  if (hasCarry) {
+    in[0] = carryByte;
+    off = 1;
+    hasCarry = false;
+  }
+  size_t n = xStreamBufferReceive(sbuf, in + off, 1024, pdMS_TO_TICKS(20)) + off;
+  if (n < 2) {
+    if (n == 1) {
+      carryByte = in[0];
+      hasCarry = true;
+    }
+    if ((streamEndReq || !streamOpen) && xStreamBufferIsEmpty(sbuf)) finishStream();
+    return;
+  }
+  if (n & 1) {  // keep half a sample for next time
+    carryByte = in[n - 1];
+    hasCarry = true;
+    n--;
+  }
+  // mono -> stereo, volume, loudness for the mouth
+  const float v = VOLUME_STEPS[volStep] / 21.0f;
+  const float gain = v * v * STREAM_GAIN;
+  int16_t out[1024];
+  size_t samples = n / 2;
+  float sum = 0;
+  for (size_t i = 0; i < samples; i++) {
+    int16_t s = (int16_t)(in[2 * i] | (in[2 * i + 1] << 8));
+    int32_t g = (int32_t)(s * gain);
+    if (g > 32767) g = 32767;
+    if (g < -32768) g = -32768;
+    out[2 * i] = out[2 * i + 1] = (int16_t)g;
+    sum += (float)s * s;
+  }
+  uint8_t lvl = (uint8_t)fminf(127.0f, sqrtf(sum / samples) / 64.0f);
+  vu = (lvl << 8) | lvl;
+  spk->write((uint8_t*)out, samples * 4);
+}
+
 void scanClips() {
   clips.clear();
   File root = SD_MMC.open("/rory");
@@ -200,14 +308,19 @@ void audioTask(void*) {
     if (xQueueReceive(queue, &cmd, 0) == pdTRUE) {
       switch (cmd.type) {
         case CmdType::RecStart:
+          if (streamActive) finishStream();
           if (!recActive) beginRecording();
           recStarting = false;
+          break;
+        case CmdType::StreamStart:
+          if (!streamActive && streamOpen) beginStream();
           break;
         case CmdType::RecStop:
           if (recActive) endRecording();
           break;
         default:
-          if (recActive) endRecording();  // speaking always ends listening
+          if (streamActive) finishStream();  // a clip or stop interrupts an answer
+          if (recActive) endRecording();     // speaking always ends listening
           if (audio && audio->isRunning()) audio->stopSong();
           if (audio && cmd.type == CmdType::File) audio->connecttoFS(SD_MMC, cmd.arg);
           if (audio && cmd.type == CmdType::Url) audio->connecttohost(cmd.arg);
@@ -219,7 +332,9 @@ void audioTask(void*) {
       audio->setVolume(VOLUME_STEPS[volStep]);
       appliedVol = volStep;
     }
-    if (recActive && mic) {
+    if (streamActive) {
+      pumpStream();
+    } else if (recActive && mic) {
       recordSome();
     } else if (audio) {
       audio->loop();
@@ -260,6 +375,8 @@ bool begin() {
   else Serial.println("[voice] no microSD card found");
 
   recBuf = (uint8_t*)heap_caps_malloc(kMaxBytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  uint8_t* sbufMem = (uint8_t*)heap_caps_malloc(kStreamBufBytes + 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  if (sbufMem) sbuf = xStreamBufferCreateStatic(kStreamBufBytes, 1, sbufMem, &sbufStruct);
   makeAudio();
 
   queue = xQueueCreate(4, sizeof(Cmd));
@@ -288,7 +405,7 @@ bool say(const char* moment) {
 
 void stop() { send(CmdType::Stop, nullptr); }
 
-bool speaking() { return pending || running; }
+bool speaking() { return pending || running || streamOpen; }
 
 float level() {
   uint16_t v = vu;
@@ -327,5 +444,27 @@ const uint8_t* wav() { return recBuf; }
 size_t wavSize() { return kHeader + recLen; }
 float recordedSeconds() { return recLen / (2.0f * kRate); }
 float micLevel() { return micLvl; }
+
+bool streamBegin() {
+  if (!sbuf) return false;
+  xStreamBufferReset(sbuf);
+  streamEndReq = false;
+  streamOpen = true;
+  if (!send(CmdType::StreamStart, nullptr)) {
+    streamOpen = false;
+    return false;
+  }
+  return true;
+}
+
+size_t streamWrite(const uint8_t* data, size_t len) {
+  size_t done = 0;
+  while (done < len && streamOpen) {  // wait while the buffer is full (she's still talking)
+    done += xStreamBufferSend(sbuf, data + done, len - done, pdMS_TO_TICKS(100));
+  }
+  return streamOpen ? done : 0;
+}
+
+void streamEnd() { streamEndReq = true; }
 
 }  // namespace Voice

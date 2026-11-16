@@ -3,18 +3,28 @@
 #include <Arduino.h>
 
 namespace Net {
-void begin();     // starts Wi-Fi (doesn't wait)
+void begin();     // starts Wi-Fi and the network task (doesn't wait)
 bool online();    // Wi-Fi connected and server configured
 
-enum class State : uint8_t { Idle, Busy, Done, Failed };
+// Open the secure connection early (when his finger touches her face), so it's
+// ready by the time he finishes asking. Safe to call any time.
+void prepare();
+
+enum class State : uint8_t {
+  Idle,
+  Busy,      // sending the question / server thinking
+  Speaking,  // the answer has arrived and her voice is streaming to the speaker
+  Done,      // finished speaking
+  Failed,    // couldn't get an answer
+};
 // Send a WAV recording to the server. Returns false if a question is already
 // in flight or Rory is offline. `wav` must stay valid until the state leaves Busy.
 bool ask(const uint8_t* wav, size_t len);
 State state();
-void reset();     // back to Idle after reading the answer
+void reset();     // back to Idle once Done or Failed
 
 struct Answer {
-  String heard, say, face, audioUrl;
+  String heard, say, face;
 };
-const Answer& answer();  // valid when state() == Done
+const Answer& answer();  // valid from Speaking onward
 }  // namespace Net

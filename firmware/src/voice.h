@@ -33,4 +33,10 @@ const uint8_t* wav();            // the finished recording (WAV file bytes)
 size_t wavSize();
 float recordedSeconds();
 float micLevel();                // 0..1 how loud he is right now
+
+// --- streaming her AI answers: raw 24 kHz 16-bit mono audio, written by the
+// network task as it arrives and played almost immediately (no decoding)
+bool streamBegin();              // get the speaker ready (lets a "hmm" clip finish first)
+size_t streamWrite(const uint8_t* data, size_t len);  // waits while the buffer is full; 0 = stopped
+void streamEnd();                // that's all; plays out what's left
 }  // namespace Voice

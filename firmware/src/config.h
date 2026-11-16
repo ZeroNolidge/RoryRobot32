@@ -82,6 +82,10 @@
 // Speaker volume steps (0..21 in the audio library). BOOT button cycles them.
 // Kept deliberately modest for little ears.
 static const uint8_t VOLUME_STEPS[] = {8, 13, 17};
+// Loudness of streamed AI answers compared with the voice clips (raise if answers are quieter)
+#ifndef STREAM_GAIN
+#define STREAM_GAIN 1.0f
+#endif
 #ifndef VOLUME_DEFAULT_STEP
 #define VOLUME_DEFAULT_STEP 1
 #endif
