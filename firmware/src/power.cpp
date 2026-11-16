@@ -34,6 +34,9 @@ int percent(float v) {
 void off() {
   digitalWrite(PIN_BAT_HOLD, LOW);
   delay(500);
+  // Still running? Then USB is powering her. Latch the battery back on, or
+  // she'd switch off the moment the cable is unplugged.
+  digitalWrite(PIN_BAT_HOLD, HIGH);
 }
 
 }  // namespace Power
