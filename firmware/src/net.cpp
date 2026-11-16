@@ -3,6 +3,7 @@
 #include <HTTPClient.h>
 #include <NetworkClientSecure.h>
 #include <WiFi.h>
+#include "memory.h"
 #include "settings.h"
 #include "voice.h"
 
@@ -132,16 +133,17 @@ String urlEncode(const String& s) {
 enum class Body { Wav, Photo, NoEyes };
 int talk(Body kind, const uint8_t* body, size_t len) {
   const auto& cfg = Settings::get();
-  static const char* kHeaders[] = {"X-Rory-Face", "X-Rory-Say", "X-Rory-Heard", "X-Rory-History", "X-Rory-Look"};
+  static const char* kHeaders[] = {"X-Rory-Face", "X-Rory-Say", "X-Rory-Heard", "X-Rory-History", "X-Rory-Look", "X-Rory-Remember"};
   for (int attempt = 0; attempt < 2; attempt++) {
     if (!ensureConnected()) continue;
     HTTPClient http;
     http.setReuse(true);  // keep the connection for the next question
     http.setTimeout(20000);
-    http.collectHeaders(kHeaders, 5);
+    http.collectHeaders(kHeaders, 6);
     if (!http.begin(*client, cfg.server + "/talk")) continue;
     http.addHeader("Authorization", "Bearer " + cfg.token);
     if (!history.isEmpty() && millis() - historyMs < kHistoryKeepMs) http.addHeader("X-Rory-History", history);
+    if (!Memory::text().isEmpty()) http.addHeader("X-Rory-Memory", urlEncode(Memory::text()));
     if (kind == Body::Wav) {
       http.addHeader("Content-Type", "audio/wav");
       http.addHeader("X-Rory-Can-Look", "1");
@@ -168,6 +170,7 @@ int talk(Body kind, const uint8_t* body, size_t len) {
     if (code == 200) {
       ans.face = http.header("X-Rory-Face");
       ans.say = urlDecode(http.header("X-Rory-Say"));
+      ans.remember = urlDecode(http.header("X-Rory-Remember"));
       if (kind == Body::Wav) ans.heard = urlDecode(http.header("X-Rory-Heard"));
       String h = http.header("X-Rory-History");
       if (!h.isEmpty()) {

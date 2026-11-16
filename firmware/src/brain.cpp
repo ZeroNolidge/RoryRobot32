@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "config.h"
 #include "display.h"
+#include "memory.h"
 #include "net.h"
 #include "power.h"
 #include "voice.h"
@@ -139,6 +140,7 @@ void Brain::answerArrived(uint32_t now) {
   else face_->lookAt(0, 0);
   face_->setAutoLook(false);
   lastPlayMs_ = now;
+  if (!a.remember.isEmpty()) Memory::add(a.remember);  // saved to the SD card
   String said = a.say;
   said.trim();
   listenNext_ = KEEP_LISTENING && said.endsWith("?");

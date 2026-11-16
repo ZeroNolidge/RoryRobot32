@@ -10,6 +10,7 @@
 #include "config.h"
 #include "display.h"
 #include "face.h"
+#include "memory.h"
 #include "net.h"
 #include "power.h"
 #include "senses.h"
@@ -30,6 +31,7 @@ void setup() {
   if (!Display::begin()) Serial.println("[main] display init failed");
   Senses::begin();
   Voice::begin();
+  Memory::begin();
   Settings::load();  // Wi-Fi + server details from /rory/config.txt on the SD card
   Net::begin();
   Serial.printf("[main] battery %.2f V%s\n", Power::batteryVolts(), Power::charging() ? " (charging)" : "");

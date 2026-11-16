@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildMessages, cleanForSpeech, friendsNote, parseReply, wantsLook } from "../src/rory";
+import { buildMessages, cleanForSpeech, friendsNote, memoryNote, parseReply, safeMemory, wantsLook } from "../src/rory";
 import { heardNothing } from "../src/stt";
 import { b64urlDecode, b64urlEncode, packHistory, signSpeakUrl, unpackHistory, verifySpeakUrl } from "../src/util";
 import { fallbackSpeechBody, mainSpeechBody, speak, TTS_INSTRUCTIONS } from "../src/voice";
@@ -115,5 +115,25 @@ describe("heardNothing", () => {
     expect(heardNothing("")).toBe(true);
     expect(heardNothing(" . ")).toBe(true);
     expect(heardNothing("hi")).toBe(false);
+  });
+});
+
+describe("memory", () => {
+  it("pulls a remember tag out of the spoken reply", () => {
+    const r = parseReply("[excited] Green is a great color! What else is green? [remember: His favorite color is green.]");
+    expect(r).toEqual({ face: "excited", say: "Green is a great color! What else is green?", remember: "His favorite color is green." });
+  });
+  it("never keeps personal details", () => {
+    expect(safeMemory("He lives at 12 Oak Street")).toBeUndefined();
+    expect(safeMemory("His school is Maple Elementary")).toBeUndefined();
+    expect(safeMemory("His phone number is 5551234")).toBeUndefined();
+    expect(safeMemory("He has a dog called Biscuit")).toBe("He has a dog called Biscuit");
+    expect(parseReply("[happy] Cool! [remember: He lives on Elm Road]")).toEqual({ face: "happy", say: "Cool!" });
+  });
+  it("lists remembered facts, skipping comments and blanks", () => {
+    const note = memoryNote("# grown-up note\nHis name is Sam.\n\nHe loves sharks.\n")!;
+    expect(note).toContain("- His name is Sam.");
+    expect(note).toContain("- He loves sharks.");
+    expect(note).not.toContain("grown-up note");
   });
 });

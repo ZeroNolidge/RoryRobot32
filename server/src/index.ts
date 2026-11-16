@@ -93,7 +93,7 @@ async function think(req: Request, env: Env, canLook = false): Promise<Answer | 
   } else {
     try {
       const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1 });
-      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history, env.RORY_FRIENDS, look);
+      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history, env.RORY_FRIENDS, look, readMemory(req));
     } catch (err) {
       if (err instanceof Anthropic.RateLimitError) console.error("Claude rate limited");
       else if (err instanceof Anthropic.APIError) console.error(`Claude API error ${err.status}: ${err.message}`);
@@ -107,6 +107,17 @@ async function think(req: Request, env: Env, canLook = false): Promise<Answer | 
   return { heard, reply, history: packHistory(newHistory), sttMs: tHeard - started, claudeMs: tReply - tHeard };
 }
 
+/** Rory's memory file from her SD card, sent along with each question (URL-encoded). */
+function readMemory(req: Request): string | null {
+  const m = req.headers.get("X-Rory-Memory");
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m).slice(0, 6000);
+  } catch {
+    return null;
+  }
+}
+
 async function handleAsk(req: Request, env: Env): Promise<Response> {
   const a = await think(req, env);
   if (a instanceof Response) return a;
@@ -114,7 +125,7 @@ async function handleAsk(req: Request, env: Env): Promise<Response> {
   const origin = new URL(req.url).origin;
   const audioUrl = await signSpeakUrl(origin, a.reply.say, env.RORY_DEVICE_TOKEN, Math.floor(Date.now() / 1000));
   console.log(JSON.stringify({ event: "ask", sttMs: a.sttMs, claudeMs: a.claudeMs, face: a.reply.face }));
-  return json({ heard: a.heard, say: a.reply.say, face: a.reply.face, audio: audioUrl, history: a.history });
+  return json({ heard: a.heard, say: a.reply.say, face: a.reply.face, remember: a.reply.remember ?? null, audio: audioUrl, history: a.history });
 }
 
 async function handleTalk(req: Request, env: Env): Promise<Response> {
@@ -123,14 +134,15 @@ async function handleTalk(req: Request, env: Env): Promise<Response> {
   const t0 = Date.now();
   const res = await speak(a.reply.say, env.OPENAI_API_KEY, env.TTS_FALLBACK_VOICE || "coral", fetch, "pcm");
   const looked = (req.headers.get("Content-Type") ?? "").startsWith("image/jpeg");
-  console.log(JSON.stringify({ event: "talk", looked, sttMs: a.sttMs, claudeMs: a.claudeMs, voiceMs: Date.now() - t0, face: a.reply.face }));
-  const headers = {
+  console.log(JSON.stringify({ event: "talk", looked, sttMs: a.sttMs, claudeMs: a.claudeMs, voiceMs: Date.now() - t0, face: a.reply.face, remembered: !!a.reply.remember }));
+  const headers: Record<string, string> = {
     "X-Rory-Face": a.reply.face,
     "X-Rory-Say": encodeURIComponent(a.reply.say),
     "X-Rory-Heard": encodeURIComponent(a.heard),
     "X-Rory-History": a.history,
     "Cache-Control": "no-store",
   };
+  if (a.reply.remember) headers["X-Rory-Remember"] = encodeURIComponent(a.reply.remember);
   if (!res.ok || !res.body) {
     console.error(`speech failed: ${res.status}`);
     return new Response("speech failed", { status: 502, headers });

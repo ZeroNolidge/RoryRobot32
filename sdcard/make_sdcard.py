@@ -61,6 +61,34 @@ MADE_LINES = {
 }
 
 
+MEMORY_HEADER = """# What Rory remembers about her friend. She adds a line when she learns something new.
+# Grown-ups: change or delete any line. One fun fact per line, e.g.  His name is Sam.
+# (No addresses, school, last names or other private details.)
+"""
+
+
+def write_memory(card: str, name: str) -> None:
+    path = os.path.join(card, "rory", "memory.txt")
+    lines = []
+    if os.path.exists(path):
+        lines = open(path, encoding="utf-8").read().splitlines()
+    elif not name:
+        return  # Rory starts one herself when she learns something
+    if name:
+        fact = f"His name is {name}."
+        if any(l.strip().lower() == fact.lower() for l in lines):
+            return
+        lines = [l for l in lines if not l.strip().lower().startswith("his name is")]
+        lines.append(fact)
+    body = "\n".join(lines).strip()
+    if not body.startswith("#"):
+        body = MEMORY_HEADER + body
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(body.rstrip() + "\n")
+    print(f"Memory: {path} - Rory knows his name is {name}")
+
+
 def read_config(card: str) -> dict:
     path = os.path.join(card, "rory", "config.txt")
     out = {}
@@ -110,8 +138,10 @@ def main() -> int:
     ap.add_argument("--wifi-password", help="your Wi-Fi password")
     ap.add_argument("--server", help="Rory's server address, e.g. https://rory-server.NAME.workers.dev")
     ap.add_argument("--token", help="the RORY_DEVICE_TOKEN you set on the server")
+    ap.add_argument("--name", help="his first name, so Rory knows it from the start (saved in rory/memory.txt)")
     args = ap.parse_args()
     write_config(args)
+    write_memory(args.card, (args.name or "").strip())
 
     spec = json.load(open(os.path.join(HERE, "rory_clips.json")))
     total = 0

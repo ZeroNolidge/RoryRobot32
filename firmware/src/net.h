@@ -26,6 +26,7 @@ void reset();     // back to Idle once Done or Failed
 
 struct Answer {
   String heard, say, face;
+  String remember;  // something new she learned about him (saved by the brain)
 };
 const Answer& answer();  // valid from Speaking onward
 }  // namespace Net

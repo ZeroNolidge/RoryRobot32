@@ -109,6 +109,21 @@ describe("POST /ask", () => {
 });
 
 describe("POST /talk", () => {
+  it("sends her memories to Claude and passes new ones back to the robot", async () => {
+    installFakeApis();
+    claudeText = "[excited] A dog named Biscuit! Is he fluffy? [remember: He has a dog named Biscuit.]";
+    const res = await worker.fetch(new Request("https://rory.example/talk", {
+      method: "POST", body: "my dog is Biscuit",
+      headers: { Authorization: "Bearer robot-password", "Content-Type": "text/plain", "X-Rory-Memory": encodeURIComponent("His name is Sam.\nHe loves sharks.") },
+    }), env);
+    expect(res.status).toBe(200);
+    expect(decodeURIComponent(res.headers.get("X-Rory-Remember")!)).toBe("He has a dog named Biscuit.");
+    expect(decodeURIComponent(res.headers.get("X-Rory-Say")!)).toBe("A dog named Biscuit! Is he fluffy?");
+    const system = JSON.stringify(claudeBodies[0].body.system);
+    expect(system).toContain("His name is Sam.");
+    expect(system).toContain("He loves sharks.");
+  });
+
   it("streams her answer as raw audio with the face and words in headers", async () => {
     installFakeApis();
     const res = await worker.fetch(new Request("https://rory.example/talk", {

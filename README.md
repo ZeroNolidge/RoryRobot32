@@ -116,6 +116,7 @@ firmware/                PlatformIO project (Arduino-ESP32 3.2)
   src/voice.*            speaker (ES8311) + microphones (ES7210): clips, streaming, recording
   src/net.*              Wi-Fi + asking the server
   src/settings.*         reads /rory/config.txt from the SD card
+  src/memory.*           what she remembers about him: /rory/memory.txt
   src/display.*          ST7789 screen + backlight
   src/power.*            battery latch / power off
   lib/es8311/, lib/es7210/  codec drivers (Espressif, Apache-2.0)
@@ -148,6 +149,13 @@ Rory (board) ──Wi-Fi──► Rory's cloud server (Cloudflare Workers)
 3. **Ask!** Hold a finger on her face, talk, let go. She listens for up to
    20 seconds, shows her thinking face, then answers with a matching
    expression. Follow-up questions ("why?") work for 3 minutes.
+   She **remembers him**: when he tells her something new (his favorite color,
+   his dog's name, his birthday coming up), she saves it as a line in
+   `rory/memory.txt` on the SD card and brings it up in later chats. Grown-ups
+   can open that file on a computer to read, change or delete anything. To tell her his
+   name from the start, add `--name Sam` to `make_sdcard.py`. She never saves
+   addresses, school, last names or other private details, and the server
+   double-checks each one.
    She knows his toy friends (`RORY_FRIENDS` on the server, e.g. Knight
    Owl) and brings them into games and stories.
 

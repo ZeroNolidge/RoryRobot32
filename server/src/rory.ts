@@ -14,6 +14,7 @@ export interface Reply {
   face: Face;
   say: string;
   refused?: boolean;
+  remember?: string; // a new fact about him, saved on Rory's SD card
 }
 
 export const SYSTEM_PROMPT = `You are Rory, a warm, friendly, playful paper robot. You live in a little robot toy and you are best friends with a five-year-old boy who is learning to talk. He talks to you by holding a finger on your screen face. Everything you write is read aloud in your voice, so you are talking, not writing.
@@ -30,7 +31,7 @@ How you talk:
 - You are a robot and proud of it. Never pretend to be a person, never say you can see him, and don't claim to do things a toy can't do.
 
 Keeping him safe (always):
-- Never ask for, repeat or remember personal details: full name, address, school, phone, passwords, or where he is.
+- Never ask for, repeat or remember personal details: full name, address, school, phone, passwords, or where he is. (His first name and fun things he likes are fine.)
 - Never suggest secrets from his grown-ups, going anywhere, meeting anyone, buying things, or using other apps or websites.
 - For scary or grown-up topics (violence, weapons, death, private body parts, romance, drugs, frightening news), say it's a great thing to ask a grown-up he trusts, then gently switch to something fun.
 - If he says he is hurt, sick, scared, lost, or that someone is being mean or hurting him, tell him to go and find a grown-up right now, kindly and clearly.
@@ -48,8 +49,14 @@ export const LINES = {
   error: { face: "silly", say: "Oh no, my thinking gears got tangled! Can you ask me again?" },
 } satisfies Record<string, Reply>;
 
-/** Split "[face] words" into its parts. Unknown or missing tags become "happy". */
+/** Split "[face] words [remember: fact]" into its parts. Unknown or missing tags become "happy". */
 export function parseReply(text: string): Reply {
+  let remember: string | undefined;
+  const r = text.match(/\[remember:\s*([^\]]+)\]/i);
+  if (r) {
+    remember = safeMemory(r[1]);
+    text = text.replace(/\[remember:[^\]]*\]?/gi, " ");
+  }
   const trimmed = text.trim();
   const m = trimmed.match(/^\[([a-z]+)\]\s*/i);
   let face: Face = "happy";
@@ -59,7 +66,37 @@ export function parseReply(text: string): Reply {
     if ((FACES as readonly string[]).includes(tag)) face = tag as Face;
     say = trimmed.slice(m[0].length);
   }
-  return { face, say: cleanForSpeech(say) };
+  const reply: Reply = { face, say: cleanForSpeech(say) };
+  if (remember) reply.remember = remember;
+  return reply;
+}
+
+/**
+ * A fact Rory wants to remember, or undefined if it's not the kind of thing a
+ * toy should keep (anything that looks like an address, phone, school, etc.).
+ */
+export function safeMemory(fact: string): string | undefined {
+  const f = fact.replace(/\s+/g, " ").trim().replace(/^["']|["']$/g, "");
+  if (f.length < 4 || f.length > 140) return undefined;
+  if (/\d{3,}|@|https?:|www\.|\b(address|street|st\.|road|avenue|lane|drive|apartment|zip|phone|password|email|school|teacher|last name|surname|lives (at|on|in))\b/i.test(f)) return undefined;
+  return f;
+}
+
+/** What Rory remembers about him, from the memory file on her SD card. */
+export function memoryNote(memory: string | null | undefined): string | null {
+  const facts = (memory ?? "")
+    .split(/\n/)
+    .map((l) => l.replace(/\s+/g, " ").trim())
+    .filter((l) => l && !l.startsWith("#"))
+    .slice(-60);
+  let text = facts.map((f) => `- ${f}`).join("\n");
+  if (text.length > 3000) text = text.slice(text.length - 3000);
+  const intro = text
+    ? `What you remember about your friend (from your past chats and his grown-ups):\n${text}\nUse these naturally now and then, like a friend would ("Is Knight Owl having a good day?"). Don't list them, and don't bring one up every time.`
+    : "You don't remember anything about your friend yet.";
+  return `${intro}
+
+Remembering: when he tells you something new and fun about himself that a friend would remember (his first name, favorite things, pets, toys and their names, family members' first names, things he's learning or proud of, a birthday or trip coming up), add one tag at the very end of your reply: [remember: short fact about him]. Write it about him, like "His favorite color is green." At most one per reply, only for something new and worth keeping, never for things already remembered. Never remember personal details from the safety rules (last name, address, school, phone, passwords, where he is) or anything sad, private or about his body or health.`;
 }
 
 /** Remove anything that would sound odd when spoken. */
@@ -123,10 +160,13 @@ export async function askRory(
   history: Turn[],
   friends?: string,
   look: Look = {},
+  memory?: string | null,
 ): Promise<Reply> {
   const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }];
   const note = friendsNote(friends);
   if (note) system.push({ type: "text", text: note });
+  const remembered = memoryNote(memory);
+  if (remembered) system.push({ type: "text", text: remembered });
 
   const response = await client.beta.messages.create({
     model,
