@@ -24,17 +24,17 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | answer when **she asks him a question** | no finger needed: her "o" face means she's listening; she waits up to 6 s for him to start, and when he stops talking for a moment she answers, so they can keep chatting back and forth |
 | *"Let's play I Spy!"* | plays I Spy with him (Sonic characters, animals, colors): one easy clue at a time, and she quietly remembers her secret answer. Then it's his turn to spy |
 | hold her face and say *"Rory, look!"* / *"What's this?"* | *"Let me take a look!"* — wide eyes, her camera blinks its light and takes **one** photo, then she tells him what she sees (or pretends to be terrified of his shark 🦈) |
-| shake her again… and again | **the dizzy game:** she counts *"one!"*, *"two!"* with faster spirals, and on *"three!"* says *"oops!"*, topples into a little nap, then wakes up: *"Rory is awake!"* |
+| shake her again… and again | **the dizzy game:** *"Whoooooa!"*, then *"I'm getting dizzy!"* with faster, wobblier spirals, and on the third spin *"Aaarrgh! Too much spinning!"*, *"oops!"*, topples into a little nap, then wakes up: *"Rory is awake!"* |
 | put her face-down | *"The sky is still dark!"* |
 | tap her hand or head (not the screen) | **high five!** cheer face, sparkles, *"Yay!"* / *"Great playing!"* |
 | bounce her up and down to a beat | **dances**: eyes swing, face hops, *"Go go go!"* / *"Looking good!"* |
 | hop her along the table | *"Hop hop!"* / *"Let's keep going!"*, watching where she goes |
 | hold her quietly for a few seconds | heart eyes, *"I love you"* (and every third hug, *"Hoo hoo! Owl friend!"* for Knight Owl) |
 | lay her on her back | droopy eyes, then *"night night"* and sleep (tucked in!) |
-| leave her alone 3 min | yawns, gets droopy eyes, *"night night"*, sleeps with floating Zzz (screen dims) |
+| leave her alone 8 min (on the table, not in his hands) | yawns, gets droopy eyes, *"night night"*, sleeps with floating Zzz (screen dims) |
 | touch or pick her up while asleep | wakes up: *"Rory is awake!"* |
 | hold **PWR** ~1.5 s | *"See you next time!"* and switches off (on battery) |
-| press **BOOT** | changes the volume (3 kid-safe levels) |
+| press **BOOT** | changes the volume (3 kid-safe levels): a speaker with 1-3 bars shows on her face and she beeps at the new volume |
 
 Her voice is the **same voice as the app** (OpenAI `gpt-4o-mini-tts`, voice
 `marin`) — the firmware plays the app's own clips from the microSD card, and
@@ -88,7 +88,9 @@ cd sdcard
 python3 make_sdcard.py /path/to/your/sdcard
 ```
 
-This downloads the clips from the Talk Trail app and sorts them into folders:
+This downloads the clips from the Talk Trail app and sorts them into folders.
+You only need to do this once: after that, when she's on Wi-Fi, Rory makes any
+new clips she's missing in her own voice and saves them to her card herself.
 
 ```
 rory/hello/  rory/boop/  rory/highfive/  rory/dance/  rory/walk/  rory/giggle/  rory/owl/

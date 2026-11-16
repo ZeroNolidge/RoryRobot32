@@ -2,7 +2,9 @@
 #include <ESPmDNS.h>
 #include <HTTPClient.h>
 #include <NetworkClientSecure.h>
+#include <SD_MMC.h>
 #include <WiFi.h>
+#include "made_clips.h"
 #include "memory.h"
 #include "settings.h"
 #include "voice.h"
@@ -19,7 +21,8 @@ String history;  // last few turns, packed by the server
 uint32_t historyMs = 0;
 const uint32_t kHistoryKeepMs = 3 * 60 * 1000;  // forget the chat after 3 quiet minutes
 
-enum class Job : uint8_t { Prepare, Ask };
+enum class Job : uint8_t { Prepare, Ask, Sync };
+volatile bool syncQueued = false, syncDone = false, newClips = false;
 QueueHandle_t jobs = nullptr;
 const uint8_t* reqWav = nullptr;
 size_t reqLen = 0;
@@ -210,6 +213,76 @@ void doAsk() {
   st = code == 200 ? Net::State::Done : Net::State::Failed;
 }
 
+// Same file names as make_sdcard.py: "Hmm, let me think!" -> hmm-let-me-think.mp3
+String slug(const char* text) {
+  String out;
+  bool dash = false;
+  for (const char* p = text; *p; p++) {
+    char c = tolower((unsigned char)*p);
+    if (isalnum((unsigned char)c)) {
+      if (dash && out.length()) out += '-';
+      out += c;
+      dash = false;
+    } else {
+      dash = true;
+    }
+  }
+  if (out.isEmpty()) out = "clip";
+  return out.substring(0, 40);
+}
+
+// Ask the server to say one line in her voice and save the MP3.
+bool makeClip(const MadeClip& c, const String& path) {
+  const auto& cfg = Settings::get();
+  if (!ensureConnected()) return false;
+  HTTPClient http;
+  http.setReuse(true);
+  http.setTimeout(30000);
+  if (!http.begin(*client, cfg.server + "/say")) return false;
+  http.addHeader("Authorization", "Bearer " + cfg.token);
+  http.addHeader("Content-Type", "text/plain");
+  int code = http.POST((uint8_t*)c.line, strlen(c.line));
+  bool ok = false;
+  if (code == 200) {
+    SD_MMC.mkdir(String("/rory/") + c.moment);
+    String part = path + ".part";  // only becomes a clip once it's complete
+    File f = SD_MMC.open(part, FILE_WRITE);
+    if (f) {
+      int n = http.writeToStream(&f);
+      f.close();
+      ok = n > 1000 && SD_MMC.rename(part, path);
+      if (!ok) SD_MMC.remove(part);
+    }
+  } else {
+    if (code < 0) client->stop();
+    Serial.printf("[net] couldn't make \"%s\" (%d)\n", c.line, code);
+  }
+  http.end();
+  return ok;
+}
+
+void doSync() {
+  int made = 0, failed = 0;
+  for (const auto& c : kMadeClips) {
+    if (uxQueueMessagesWaiting(jobs)) {  // he's asking something: that comes first
+      syncQueued = false;
+      return;  // try again later
+    }
+    String path = String("/rory/") + c.moment + "/" + slug(c.line) + ".mp3";
+    if (SD_MMC.exists(path)) continue;
+    if (makeClip(c, path)) {
+      made++;
+      newClips = true;
+      Serial.printf("[net] made a new clip: %s \"%s\"\n", c.moment, c.line);
+    } else if (++failed >= 3) {
+      break;
+    }
+  }
+  if (made) Serial.printf("[net] made %d new clips in her voice\n", made);
+  syncDone = failed < 3;  // if the server's unhappy, try again after a restart
+  syncQueued = false;
+}
+
 void netTask(void*) {
   Job job;
   for (;;) {
@@ -219,6 +292,7 @@ void netTask(void*) {
       continue;
     }
     if (job == Job::Prepare) ensureConnected();
+    else if (job == Job::Sync) doSync();
     else doAsk();
   }
 }
@@ -247,6 +321,27 @@ void begin() {
 }
 
 bool online() { return jobs && WiFi.status() == WL_CONNECTED; }
+
+void syncClips() {
+  static uint32_t onlineSinceMs = 0;
+  if (syncDone || syncQueued || !Voice::hasCard() || !online()) {
+    if (!online()) onlineSinceMs = 0;
+    return;
+  }
+  uint32_t now = millis();
+  if (!onlineSinceMs) onlineSinceMs = now;
+  // wait until she's settled in, and never while a question is going on
+  if (now - onlineSinceMs < 5000 || (st != State::Idle && st != State::Done && st != State::Failed)) return;
+  if (Voice::speaking() || Voice::recording()) return;
+  Job j = Job::Sync;
+  if (xQueueSend(jobs, &j, 0) == pdTRUE) syncQueued = true;
+}
+
+bool clipsChanged() {
+  if (!newClips) return false;
+  newClips = false;
+  return true;
+}
 
 void prepare() {
   if (!online()) return;

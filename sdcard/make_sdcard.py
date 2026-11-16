@@ -58,7 +58,12 @@ def write_config(args) -> None:
 MADE_LINES = {
     "hmm": ["Hmm, let me think!", "Ooh, good question!", "Hmm...", "Let me see...", "Ooh, let me think about that!"],
     "look": ["Ooh, let me see!", "Let me take a look!", "Hold it up so I can see!"],  # "Rory, look!"
+    # the dizzy game, getting wilder each spin
+    "spin1": ["Whoooooa!", "Wheeeee! Here I go!", "Whoa, whoa, whoaaa!"],
+    "spin2": ["I'm getting dizzy!", "Everything is spinning!", "Oh no, I'm so dizzy!"],
+    "spin3": ["Aaarrgh! Too much spinning!", "Aaaah! The room is going round and round!", "Whoa-whoa-whoa! I can't stop!"],
 }
+# (Rory also makes any of these that are missing by herself over Wi-Fi - see firmware/src/made_clips.h)
 
 
 MEMORY_HEADER = """# What Rory remembers about her friend. She adds a line when she learns something new.

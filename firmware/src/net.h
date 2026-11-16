@@ -6,6 +6,11 @@ namespace Net {
 void begin();     // starts Wi-Fi and the network task (doesn't wait)
 bool online();    // Wi-Fi connected and server configured
 
+// Fetch any of her made-in-her-voice clips that are missing from the SD card
+// (runs quietly in the background once she's on Wi-Fi). Call every loop.
+void syncClips();
+bool clipsChanged();  // true once after new clips were saved (then rescan)
+
 // Open the secure connection early (when his finger touches her face), so it's
 // ready by the time he finishes asking. Safe to call any time.
 void prepare();

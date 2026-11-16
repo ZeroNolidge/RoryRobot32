@@ -63,6 +63,47 @@ void Face::showBattery(int percent, bool charging, uint32_t durationMs) {
   batteryUntilMs_ = nowMs_ + durationMs;
 }
 
+void Face::showVolume(int level, int levels, uint32_t durationMs) {
+  volLevel_ = level;
+  volLevels_ = levels;
+  volumeUntilMs_ = nowMs_ + durationMs;
+  batteryUntilMs_ = 0;  // one card at a time
+}
+
+void Face::drawVolume(Raster& r) {
+  auto box = [&](float x0, float y0, float x1, float y1, float rad, uint16_t c) {
+    float cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, hx = (x1 - x0) / 2 - rad, hy = (y1 - y0) / 2 - rad;
+    r.shade(x0, y0, x1, y1, c, 1.0f, [=](float x, float y) {
+      float qx = fabsf(x - cx) - hx, qy = fabsf(y - cy) - hy;
+      float ox = qx > 0 ? qx : 0, oy = qy > 0 ? qy : 0;
+      float in = qx > qy ? qx : qy;
+      return sqrtf(ox * ox + oy * oy) + (in < 0 ? in : 0) - rad;
+    });
+  };
+  uint16_t white = C(COL_WHITE);
+  box(40, 70, 200, 170, 14, C(0x1A2328));  // dark card
+  // speaker: a small box and a cone
+  box(58, 106, 76, 134, 3, white);
+  {  // solid cone: inside all four edges of the trapezoid (76,110)-(100,90)-(100,150)-(76,130)
+    const float px[4] = {76, 100, 100, 76}, py[4] = {110, 90, 150, 130};
+    r.shade(70, 86, 104, 154, white, 1.0f, [=](float x, float y) {
+      float d = -1e9f;
+      for (int i = 0; i < 4; i++) {
+        float ax = px[i], ay = py[i], bx = px[(i + 1) % 4], by = py[(i + 1) % 4];
+        float ex = bx - ax, ey = by - ay, len = sqrtf(ex * ex + ey * ey);
+        float side = ((x - ax) * ey - (y - ay) * ex) / len;  // + outside (clockwise order)
+        if (side > d) d = side;
+      }
+      return d;
+    });
+  }
+  // bars that get taller, lit up to the current level
+  for (int i = 0; i < volLevels_; i++) {
+    float x0 = 114 + i * 26, h = 22 + i * 16;
+    box(x0, 142 - h, x0 + 18, 142, 4, i < volLevel_ ? C(COL_EYE) : C(0x37474F));
+  }
+}
+
 void Face::drawBattery(Raster& r) {
   auto box = [&](float x0, float y0, float x1, float y1, float rad, uint16_t c) {
     float cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, hx = (x1 - x0) / 2 - rad, hy = (y1 - y0) / 2 - rad;
@@ -187,6 +228,7 @@ void Face::render(Raster& r) {
   }
   if (zzz_) drawZzz(r);
   if (nowMs_ < batteryUntilMs_) drawBattery(r);
+  if (nowMs_ < volumeUntilMs_) drawVolume(r);
   if (nowMs_ < sparkleUntilMs_) drawSparkles(r);
 }
 

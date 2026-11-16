@@ -34,6 +34,9 @@ const char* HIGHFIVE = "highfive";
 const char* DANCE = "dance";
 const char* WALK = "walk";
 const char* TIRED = "tired";
+const char* SPIN1 = "spin1";  // "Whoooa!"
+const char* SPIN2 = "spin2";  // "I'm getting dizzy!"
+const char* SPIN3 = "spin3";  // "Aaarrgh, too much spinning!"
 }  // namespace Moment
 
 void Brain::begin(Face& face, uint32_t now) {
@@ -300,14 +303,15 @@ void Brain::handle(const Event& e, uint32_t now) {
       lastSpinMs_ = now;
       face_->setDizzySpeed(dizzyLevel_ == 1 ? 1.0f : dizzyLevel_ == 2 ? 1.7f : 2.6f);
       if (dizzyLevel_ == 1) {
-        react({Expr::Dizzy, Moment::ONE, nullptr, 500}, now);
-        then({Expr::Dizzy, Moment::DIZZY, nullptr, 2300});
+        react({Expr::Dizzy, Moment::SPIN1, Moment::ONE, 1600}, now);
+        then({Expr::Dizzy, Moment::DIZZY, nullptr, 1200});
       } else if (dizzyLevel_ == 2) {
-        react({Expr::Dizzy, Moment::TWO, nullptr, 500}, now);
-        then({Expr::Dizzy, Moment::DIZZY, nullptr, 3000});
+        // dizzier: bigger wobbly eyes
+        react({{Eyes::Dizzy, Mouth::Wobbly, 1.08f, 1.0f, true}, Moment::SPIN2, Moment::TWO, 2600}, now);
       } else {
         dizzyLevel_ = 0;  // start counting again after the nap
-        react({Expr::Dizzy, Moment::THREE, nullptr, 500}, now);
+        // way too dizzy: huge trembling spirals, mouth wide open
+        react({{Eyes::Dizzy, Mouth::Gasp, 1.15f, 1.0f, true}, Moment::SPIN3, Moment::THREE, 1400}, now);
         then({Expr::Dizzy, Moment::OOPS, Moment::DIZZY, 1800});
         then({Expr::Asleep, nullptr, nullptr, 2600});          // topples over for a little nap
         then({Expr::Surprised, nullptr, nullptr, 450});
@@ -338,7 +342,9 @@ void Brain::handle(const Event& e, uint32_t now) {
     case Ev::BootButton:  // grown-up button: change the volume, Rory says hi to test it
       Voice::setVolumeStep(Voice::volumeStep() + 1);
       Serial.printf("[brain] volume step %d\n", Voice::volumeStep());
-      react({Expr::Cheer, Moment::HELLO, nullptr, 1200}, now);
+      Display::setBacklight(BACKLIGHT_AWAKE);
+      face_->showVolume(Voice::volumeStep() + 1, sizeof(VOLUME_STEPS) / sizeof(VOLUME_STEPS[0]), 2000);
+      react({Expr::Cheer, Moment::BOOP, Moment::HELLO, 1200}, now);  // a quick sound at the new volume
       break;
 
     case Ev::PowerHold:
@@ -511,6 +517,7 @@ void Brain::update(uint32_t now) {
       }
       if (talking) face_->setExpression(Expr::Talking);
       else face_->setExpression(Expr::Content);
+      if (Senses::imuOk() && !Senses::resting()) lastPlayMs_ = now;  // in his hands: not lonely
 #if LISTEN_WHEN_HELD
       updateEars(now, talking);
       if (mode_ != Mode::Awake) break;  // she heard him: now listening

@@ -387,6 +387,10 @@ bool begin() {
 
 bool hasCard() { return cardOk; }
 
+void rescan() {
+  if (cardOk) scanClips();
+}
+
 bool play(const char* path) { return cardOk && send(CmdType::File, path); }
 
 bool playUrl(const char* url) { return send(CmdType::Url, url); }

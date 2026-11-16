@@ -61,6 +61,8 @@ class Face {
   void setZzz(bool on) { zzz_ = on; }
   // battery gauge overlay: percent 0..100, or -1 for "no battery"
   void showBattery(int percent, bool charging, uint32_t durationMs);
+  // volume overlay: speaker with `level` of `levels` bars lit
+  void showVolume(int level, int levels, uint32_t durationMs);
   void sparkle(uint32_t durationMs);  // yellow twinkles (cheering)
   void dance(uint32_t durationMs);    // eyes bop side to side to the beat
   void setDizzySpeed(float s) { dizzySpeed_ = s; }  // spiral speed (dizzy game)
@@ -103,6 +105,9 @@ class Face {
   int batteryPct_ = -1;
   bool batteryCharging_ = false;
   void drawBattery(Raster& r);
+  uint32_t volumeUntilMs_ = 0;
+  int volLevel_ = 0, volLevels_ = 3;
+  void drawVolume(Raster& r);
   uint32_t sparkleUntilMs_ = 0;
   uint32_t danceUntilMs_ = 0;
   uint32_t seed_ = 0x9E3779B9u;

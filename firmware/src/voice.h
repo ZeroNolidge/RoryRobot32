@@ -23,6 +23,7 @@ float level();                   // 0..1 loudness, for the mouth
 void setVolumeStep(int step);    // index into VOLUME_STEPS
 int volumeStep();
 int clipCount(const char* moment);
+void rescan();                   // look for new clips on the card
 
 // --- listening
 bool startRecording();           // stops any speech, starts recording (max ~20 s)

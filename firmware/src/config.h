@@ -64,7 +64,7 @@
 // ---------------------------------------------------------------- behavior tuning
 #define FRAME_MS 33               // ~30 fps
 #ifndef SLEEPY_AFTER_MS
-#define SLEEPY_AFTER_MS (3UL * 60 * 1000)   // no play for 3 min -> yawns
+#define SLEEPY_AFTER_MS (8UL * 60 * 1000)   // no play for 8 min -> yawns (being held counts as play)
 #endif
 #ifndef ASLEEP_AFTER_MS
 #define ASLEEP_AFTER_MS (20UL * 1000)       // ...then falls asleep 20 s later

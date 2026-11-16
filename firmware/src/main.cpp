@@ -55,6 +55,8 @@ void loop() {
   while (Senses::next(e)) brain.handle(e, now);
 
   Ota::loop();  // wireless updates
+  Net::syncClips();  // fetch any new clips in her voice
+  if (Net::clipsChanged()) Voice::rescan();
 
   if (now - lastFrameMs >= FRAME_MS) {
     lastFrameMs = now;
