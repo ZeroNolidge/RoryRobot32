@@ -142,7 +142,8 @@ void Brain::answerArrived(uint32_t now) {
 
 void Brain::handle(const Event& e, uint32_t now) {
   if (mode_ == Mode::GoingOff) return;
-  bool playful = e.type != Ev::PutDown && e.type != Ev::FaceUp && e.type != Ev::None;
+  bool playful = e.type != Ev::PutDown && e.type != Ev::FaceUp && e.type != Ev::KeyButton && e.type != Ev::None;
+  if (e.type == Ev::KeyButton) Display::setBacklight(BACKLIGHT_AWAKE);  // so the gauge is readable even asleep
   bool busyTalking = mode_ == Mode::Listening || mode_ == Mode::Thinking;
   if (playful) lastPlayMs_ = now;
 
@@ -229,6 +230,15 @@ void Brain::handle(const Event& e, uint32_t now) {
     case Ev::FaceDown:
       react({Expr::Surprised, Moment::DARK, nullptr, 1500}, now);
       break;
+
+    case Ev::KeyButton: {  // grown-up button: show the battery gauge
+      float v = Power::batteryVolts();
+      bool has = Power::hasBattery(v);
+      int pct = has ? Power::percent(v) : -1;
+      Serial.printf("[brain] battery %.2f V (%d%%)%s\n", v, pct, Power::charging() ? " charging" : "");
+      face_->showBattery(pct, Power::charging(), 3500);
+      break;
+    }
 
     case Ev::BootButton:  // grown-up button: change the volume, Rory says hi to test it
       Voice::setVolumeStep(Voice::volumeStep() + 1);

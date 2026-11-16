@@ -12,7 +12,7 @@ namespace {
 QueueHandle_t events = nullptr;
 #if MOTION_DEBUG
 const char* kEvName[] = {"None", "Tap", "HoldStart", "HoldEnd", "Tickle", "Shake", "PickedUp", "PutDown", "FaceDown",
-                         "FaceUp", "HighFive", "Dance", "Walk", "Hug", "BootButton", "PowerHold"};
+                         "FaceUp", "HighFive", "Dance", "Walk", "Hug", "BootButton", "KeyButton", "PowerHold"};
 #endif
 void push(Ev t, int16_t x = 0, int16_t y = 0) {
   if (!events) return;
@@ -315,9 +315,9 @@ struct Button {
   bool wasDown = false, seenUp = false, longFired = false;
   uint32_t downMs = 0;
 };
-Button boot{PIN_BTN_BOOT}, pwr{PIN_BTN_PWR};
+Button boot{PIN_BTN_BOOT}, pwr{PIN_BTN_PWR}, key{PIN_BTN_KEY};
 
-void pollButton(Button& b, uint32_t now, bool isPower) {
+void pollButton(Button& b, uint32_t now, bool isPower, Ev shortPress = Ev::BootButton) {
   bool down = digitalRead(b.pin) == LOW;
   if (!down) b.seenUp = true;  // ignore the press that switched Rory on
   if (!b.seenUp) return;
@@ -329,7 +329,7 @@ void pollButton(Button& b, uint32_t now, bool isPower) {
     b.longFired = true;
     push(Ev::PowerHold);
   }
-  if (!down && b.wasDown && !isPower && now - b.downMs > 30 && now - b.downMs < 1000) push(Ev::BootButton);
+  if (!down && b.wasDown && !isPower && now - b.downMs > 30 && now - b.downMs < 1000) push(shortPress);
   b.wasDown = down;
 }
 }  // namespace
@@ -357,6 +357,7 @@ bool begin() {
 
   pinMode(PIN_BTN_BOOT, INPUT_PULLUP);
   pinMode(PIN_BTN_PWR, INPUT_PULLUP);
+  pinMode(PIN_BTN_KEY, INPUT_PULLUP);
   // same core as the main loop, higher priority, so it runs between drawing steps
   if (imuReady) xTaskCreatePinnedToCore(imuTask, "motion", 4096, nullptr, 2, nullptr, 1);
   return touchReady && imuReady;
@@ -366,6 +367,7 @@ void poll(uint32_t now) {
   pollTouch(now);
   pollButton(boot, now, false);
   pollButton(pwr, now, true);
+  pollButton(key, now, false, Ev::KeyButton);
 }
 
 bool next(Event& e) { return events && xQueueReceive(events, &e, 0) == pdTRUE; }

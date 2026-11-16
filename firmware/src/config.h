@@ -48,6 +48,7 @@
 #define PIN_CHARGING 3   // LOW while charging
 #define PIN_BTN_BOOT 0   // "BOOT" button (active low)
 #define PIN_BTN_PWR 5    // "PWR" button (active low)
+#define PIN_BTN_KEY 4    // "+/KEY" button (active low) - shows the battery gauge
 
 // ---------------------------------------------------------------- Rory's colors
 // Sampled from Rory in the Talk Trail app.

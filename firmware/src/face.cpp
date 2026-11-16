@@ -57,6 +57,43 @@ void Face::sparkle(uint32_t durationMs) { sparkleUntilMs_ = nowMs_ + durationMs;
 
 void Face::dance(uint32_t durationMs) { danceUntilMs_ = nowMs_ + durationMs; }
 
+void Face::showBattery(int percent, bool charging, uint32_t durationMs) {
+  batteryPct_ = percent;
+  batteryCharging_ = charging;
+  batteryUntilMs_ = nowMs_ + durationMs;
+}
+
+void Face::drawBattery(Raster& r) {
+  auto box = [&](float x0, float y0, float x1, float y1, float rad, uint16_t c) {
+    float cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, hx = (x1 - x0) / 2 - rad, hy = (y1 - y0) / 2 - rad;
+    r.shade(x0, y0, x1, y1, c, 1.0f, [=](float x, float y) {
+      float qx = fabsf(x - cx) - hx, qy = fabsf(y - cy) - hy;
+      float ox = qx > 0 ? qx : 0, oy = qy > 0 ? qy : 0;
+      float in = qx > qy ? qx : qy;
+      return sqrtf(ox * ox + oy * oy) + (in < 0 ? in : 0) - rad;
+    });
+  };
+  uint16_t white = C(COL_WHITE), bg = C(COL_SCREEN);
+  // dark card behind the gauge
+  box(40, 78, 200, 162, 14, C(0x1A2328));
+  // battery outline + nub
+  box(62, 96, 166, 144, 8, white);
+  box(66, 100, 162, 140, 5, bg);
+  box(166, 110, 176, 130, 3, white);
+  if (batteryPct_ >= 0) {
+    uint16_t fill = C(batteryPct_ > 50 ? 0x4CD964 : batteryPct_ > 20 ? COL_STAR : 0xFF5252);
+    int bars = batteryPct_ <= 0 ? 0 : (batteryPct_ + 24) / 25;  // 1..4 bars
+    if (batteryPct_ > 0 && bars < 1) bars = 1;
+    for (int i = 0; i < bars && i < 4; i++) box(71 + i * 22.5f, 105, 71 + i * 22.5f + 18, 135, 3, fill);
+  }
+  if (batteryCharging_ || batteryPct_ < 0) {  // lightning bolt: charging, or running on USB
+    uint16_t bolt = C(COL_STAR);
+    r.capsule(122, 98, 106, 122, 3.5f, bolt);
+    r.capsule(106, 122, 124, 118, 3.5f, bolt);
+    r.capsule(124, 118, 108, 142, 3.5f, bolt);
+  }
+}
+
 void Face::blink() {
   if (blinking_) return;
   blinking_ = true;
@@ -149,6 +186,7 @@ void Face::render(Raster& r) {
     r.capsule(206, 64 + dy, 206, 72 + dy, 2.2f, drop);
   }
   if (zzz_) drawZzz(r);
+  if (nowMs_ < batteryUntilMs_) drawBattery(r);
   if (nowMs_ < sparkleUntilMs_) drawSparkles(r);
 }
 

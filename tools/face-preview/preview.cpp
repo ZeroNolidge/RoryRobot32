@@ -19,7 +19,7 @@ static void save(const Raster& r, const std::string& path) {
   fclose(f);
 }
 
-struct Shot { const char* name; Expression e; float lx, ly, talk; bool zzz; bool sparkle; };
+struct Shot { const char* name; Expression e; float lx, ly, talk; bool zzz; bool sparkle; int battery = -2; bool charging = false; };
 
 int main(int argc, char** argv) {
   std::string out = argc > 1 ? argv[1] : ".";
@@ -38,6 +38,8 @@ int main(int argc, char** argv) {
       {"asleep", Expr::Asleep, 0, 0, 0, true, false},
       {"love", Expr::Love, 0, 0, 0, false, false},
       {"scared", Expr::Scared, -0.7f, 0.15f, 0, false, false},
+      {"battery-70", Expr::Content, 0, 0, 0, false, false, 70, false},
+      {"battery-15-charging", Expr::Content, 0, 0, 0, false, false, 15, true},
       {"look-left", Expr::Content, -1, 0.2f, 0, false, false},
   };
   for (auto& s : shots) {
@@ -52,6 +54,7 @@ int main(int argc, char** argv) {
     // run the animation ~1.2 s so smoothing settles, avoiding a blink frame
     for (int i = 0; i < 36; i++) { t += 33; face.update(t); }
     if (s.sparkle) face.sparkle(5000);
+    if (s.battery > -2) face.showBattery(s.battery, s.charging, 5000);
     face.update(t + 33);
     face.render(r);
     save(r, out + "/" + s.name + ".ppm");

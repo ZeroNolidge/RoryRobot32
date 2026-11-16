@@ -19,6 +19,7 @@ enum class Ev : uint8_t {
   Walk,       // gently hopped along in a rhythm
   Hug,        // held quietly in someone's hands for a few seconds
   BootButton, // short press on BOOT
+  KeyButton,  // short press on +/KEY
   PowerHold,  // PWR held ~1.5 s
 };
 
