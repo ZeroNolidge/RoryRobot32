@@ -103,7 +103,7 @@ async function think(req: Request, env: Env, canLook = false): Promise<Answer | 
   }
   const tReply = Date.now();
 
-  const newHistory = reply === LINES.didntHear || reply.refused ? history : [...history, { q: heard, a: reply.say }];
+  const newHistory = reply === LINES.didntHear || reply.refused ? history : [...history, { q: heard, a: reply.secret ? `${reply.say} [secret: ${reply.secret}]` : reply.say }];
   return { heard, reply, history: packHistory(newHistory), sttMs: tHeard - started, claudeMs: tReply - tHeard };
 }
 

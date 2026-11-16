@@ -58,7 +58,7 @@ export function bearer(req: Request): string {
   return h.startsWith("Bearer ") ? h.slice(7).trim() : "";
 }
 
-export const MAX_TURNS = 3;
+export const MAX_TURNS = 6; // enough for a round of I Spy
 
 /** The robot sends back the last few turns so Rory can follow up ("why?"). */
 export function packHistory(turns: Turn[]): string {
@@ -73,7 +73,7 @@ export function unpackHistory(packed: string | null): Turn[] {
     return raw
       .filter((t) => t && typeof t.q === "string" && typeof t.a === "string")
       .slice(-MAX_TURNS)
-      .map((t) => ({ q: t.q.slice(0, 300), a: t.a.slice(0, 400) }));
+      .map((t) => ({ q: t.q.slice(0, 300), a: t.a.slice(0, 500) }));
   } catch {
     return [];
   }

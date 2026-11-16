@@ -70,9 +70,9 @@ describe("signed speech links", () => {
 });
 
 describe("history", () => {
-  it("keeps the last three turns and survives junk", () => {
-    const turns = [1, 2, 3, 4].map((i) => ({ q: `q${i}`, a: `a${i}` }));
-    expect(unpackHistory(packHistory(turns)).map((t) => t.q)).toEqual(["q2", "q3", "q4"]);
+  it("keeps the last six turns and survives junk", () => {
+    const turns = [1, 2, 3, 4, 5, 6, 7].map((i) => ({ q: `q${i}`, a: `a${i}` }));
+    expect(unpackHistory(packHistory(turns)).map((t) => t.q)).toEqual(["q2", "q3", "q4", "q5", "q6", "q7"]);
     expect(unpackHistory("not-base64!!")).toEqual([]);
     expect(unpackHistory(b64urlEncode('{"q":1}'))).toEqual([]);
     expect(b64urlDecode(b64urlEncode("héllo"))).toBe("héllo");
@@ -135,5 +135,12 @@ describe("memory", () => {
     expect(note).toContain("- His name is Sam.");
     expect(note).toContain("- He loves sharks.");
     expect(note).not.toContain("grown-up note");
+  });
+});
+
+describe("games", () => {
+  it("keeps her I Spy answer secret but remembered", () => {
+    const r = parseReply("[excited] I spy, with my little robot eye, someone fast and blue! [secret: Sonic]");
+    expect(r).toEqual({ face: "excited", say: "I spy, with my little robot eye, someone fast and blue!", secret: "Sonic" });
   });
 });
