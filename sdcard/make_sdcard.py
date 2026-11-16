@@ -78,7 +78,9 @@ def make_thinking_clips(card: str, server: str, token: str) -> None:
         if os.path.exists(dest):
             continue
         req = urllib.request.Request(server.rstrip("/") + "/say", data=line.encode("utf-8"), method="POST",
-                                     headers={"Authorization": "Bearer " + token, "Content-Type": "text/plain"})
+                                     headers={"Authorization": "Bearer " + token, "Content-Type": "text/plain",
+                                              # Cloudflare blocks Python's default "Python-urllib" name (403)
+                                              "User-Agent": "RorySDCard/1.0"})
         try:
             with urllib.request.urlopen(req, timeout=60) as r, open(dest, "wb") as f:
                 f.write(r.read())
