@@ -9,7 +9,7 @@ export async function transcribe(wav: ArrayBuffer, apiKey: string, fetchFn: type
   form.append("language", "en");
   form.append("response_format", "json");
   // A hint helps with little voices and Rory's name.
-  form.append("prompt", "A young child is talking to Rory, a friendly toy robot.");
+  form.append("prompt", "A young child is talking to Rory, a friendly toy robot. They play I spy with Sonic, Tails, Knuckles, Amy, Shadow and Knight Owl.");
 
   const res = await fetchFn("https://api.openai.com/v1/audio/transcriptions", {
     method: "POST",
