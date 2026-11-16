@@ -59,6 +59,7 @@ void Brain::show(const Reaction& r, uint32_t now) {
   if (ai_ == Ai::Recording) Voice::stopRecording();
   ai_ = Ai::None;
   handsFree_ = false;
+  armed_ = false;
   mode_ = Mode::Reacting;
   modeSinceMs_ = now;
   showing_ = r.expr;
@@ -166,6 +167,65 @@ bool Brain::listenHandsFree(uint32_t now) {
   return true;
 }
 
+// He's holding her up: quietly record, and if he talks to her (close and loud,
+// not a bump or voices across the room) switch to listening. The recording
+// started before he spoke, so his first words aren't lost. If he doesn't talk,
+// the recording is thrown away and nothing is sent.
+void Brain::updateEars(uint32_t now, bool talking) {
+  float dt = lastEarsMs_ ? (float)(now - lastEarsMs_) : 0;
+  lastEarsMs_ = now;
+  if (armed_) {
+    int16_t tx, ty;
+    if (talking || !Senses::heldUp() || Senses::touching(tx, ty)) {  // a finger on her face takes over
+      stopEars(now);
+      return;
+    }
+    float lvl = Voice::micLevel();
+    uint32_t t = now - armedMs_;
+    if (t < 400) {
+      if (lvl > noiseFloor_) noiseFloor_ = lvl;  // how loud the room is
+      return;
+    }
+    if (lvl > fmaxf(HELD_SPEECH_LEVEL, noiseFloor_ * 3.0f)) loudMs_ += dt;
+    else loudMs_ = fmaxf(0, loudMs_ - dt * 0.5f);
+    if (loudMs_ >= HELD_SPEECH_MS) {
+      armed_ = false;
+      mode_ = Mode::Listening;
+      modeSinceMs_ = now - 400;  // room level already measured
+      lastLoudMs_ = now;
+      handsFree_ = true;
+      heardHim_ = true;
+      lastPlayMs_ = now;
+      face_->setAutoLook(false);
+      face_->lookAt(0, -0.35f);
+      face_->setExpression(Expr::Listening);
+      showing_ = Expr::Listening;
+      Net::prepare();
+      Serial.printf("[brain] he's holding me and talking (room %.2f) - listening\n", noiseFloor_);
+    } else if (t > 8000) {
+      stopEars(now);  // start fresh, so a long wait doesn't fill her memory
+      nextArmMs_ = now + 200;
+    }
+  } else if (ai_ == Ai::None && !talking && now >= nextArmMs_ && Senses::heldUp() && Net::online() &&
+             Net::state() != Net::State::Busy && Net::state() != Net::State::Looking &&
+             Net::state() != Net::State::Speaking) {
+    if (Voice::startRecording()) {
+      armed_ = true;
+      ai_ = Ai::Recording;
+      armedMs_ = now;
+      noiseFloor_ = 0;
+      loudMs_ = 0;
+    }
+  }
+}
+
+void Brain::stopEars(uint32_t now) {
+  if (ai_ == Ai::Recording) Voice::stopRecording();  // thrown away, never sent
+  ai_ = Ai::None;
+  armed_ = false;
+  nextArmMs_ = now + 600;
+}
+
 void Brain::handle(const Event& e, uint32_t now) {
   if (mode_ == Mode::GoingOff) return;
   bool playful = e.type != Ev::PutDown && e.type != Ev::FaceUp && e.type != Ev::KeyButton && e.type != Ev::None;
@@ -205,6 +265,7 @@ void Brain::handle(const Event& e, uint32_t now) {
       // "Talk to Rory": listen while his finger stays on her face.
       if (mode_ == Mode::Thinking) break;  // still answering the last one
       listenNext_ = false;
+      armed_ = false;
       if (mode_ == Mode::Listening && handsFree_) {
         handsFree_ = false;  // already listening: now his finger decides when he's done
         break;
@@ -450,7 +511,14 @@ void Brain::update(uint32_t now) {
       }
       if (talking) face_->setExpression(Expr::Talking);
       else face_->setExpression(Expr::Content);
-      if (now - lastPlayMs_ > SLEEPY_AFTER_MS && !talking) goSleepy(now);
+#if LISTEN_WHEN_HELD
+      updateEars(now, talking);
+      if (mode_ != Mode::Awake) break;  // she heard him: now listening
+#endif
+      if (now - lastPlayMs_ > SLEEPY_AFTER_MS && !talking) {
+        if (armed_) stopEars(now);
+        goSleepy(now);
+      }
       break;
     }
 

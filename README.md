@@ -20,6 +20,7 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | pick her up | surprised, then *"Up up up it goes!"* or *"Hooray!"* |
 | tilt her while holding | her eyes roll "downhill" |
 | shake her | spiral dizzy eyes, wobbly mouth — *"It goes round and round!"* |
+| hold her up to his face and talk to her | no finger needed: once she hears him talking close by, she shows her listening face, waits for him to pause, then answers |
 | answer when **she asks him a question** | no finger needed: her "o" face means she's listening; she waits up to 6 s for him to start, and when he stops talking for a moment she answers, so they can keep chatting back and forth |
 | hold her face and say *"Rory, look!"* / *"What's this?"* | *"Let me take a look!"* — wide eyes, her camera blinks its light and takes **one** photo, then she tells him what she sees (or pretends to be terrified of his shark 🦈) |
 | shake her again… and again | **the dizzy game:** she counts *"one!"*, *"two!"* with faster spirals, and on *"three!"* says *"oops!"*, topples into a little nap, then wakes up: *"Rory is awake!"* |
@@ -173,5 +174,9 @@ Rory (board) ──Wi-Fi──► Rory's cloud server (Cloudflare Workers)
   enclosed in the case.
 * Volume steps are capped low on purpose.
 * Grown-ups: the BOOT and PWR buttons are the only controls. Rory only goes
-  online if `rory/config.txt` has Wi-Fi details, and she only records while a
-  finger is held on her face.
+  online if `rory/config.txt` has Wi-Fi details. She sends a recording only
+  when he's talking to her: with a finger on her face, right after she asks him
+  something, or while he holds her up and talks close to her. Then she shows her
+  listening "o" face. While he holds her she checks for his voice in memory and
+  throws that audio away if he doesn't talk. Turn these off in `my_config.h` with
+  `#define LISTEN_WHEN_HELD 0` / `#define KEEP_LISTENING 0`.

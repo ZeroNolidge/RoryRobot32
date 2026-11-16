@@ -35,6 +35,7 @@ bool next(Event& e);         // pop the next event, false if none
 bool touching(int16_t& x, int16_t& y);
 void gravity(float& x, float& y);  // tilt, -1..1, mapped so +x = right, +y = down
 bool resting();              // sitting still on a table
+bool heldUp();               // in someone's hands, fairly still, face turned toward them
 bool imuOk();
 bool touchOk();
 }  // namespace Senses

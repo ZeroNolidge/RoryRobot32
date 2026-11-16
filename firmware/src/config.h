@@ -87,6 +87,18 @@
 #ifndef LISTEN_SPEECH_LEVEL
 #define LISTEN_SPEECH_LEVEL 0.10f // mic level (0..1) that counts as him talking
 #endif
+// Held up and talked to: while he holds her (face toward him) she quietly
+// checks for close, loud speech; if she hears him she shows her listening face
+// and records until he pauses. Nothing is sent unless she heard him.
+#ifndef LISTEN_WHEN_HELD
+#define LISTEN_WHEN_HELD 1
+#endif
+#ifndef HELD_SPEECH_LEVEL
+#define HELD_SPEECH_LEVEL 0.18f   // louder than LISTEN_SPEECH_LEVEL: he's right next to her
+#endif
+#ifndef HELD_SPEECH_MS
+#define HELD_SPEECH_MS 300        // this much talking (not a bump or a clap) starts it
+#endif
 #ifndef BACKLIGHT_AWAKE
 #define BACKLIGHT_AWAKE 100       // percent
 #endif

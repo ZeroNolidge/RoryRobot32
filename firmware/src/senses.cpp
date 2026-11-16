@@ -118,6 +118,7 @@ uint32_t lastDanceMs = 0, lastWalkMs = 0;
 
 // hugs
 uint32_t heldCalmSinceMs = 0;
+volatile bool heldUpNow = false;  // read by the brain
 bool hugFired = false;
 
 void checkRhythm(uint32_t now) {
@@ -275,6 +276,10 @@ void pollImu(uint32_t now) {
     faceDownFired = false;
   }
 
+  // --- held up to his face (for listening without a finger): in his hands,
+  //     not jiggling, screen upright or tilted back toward him
+  heldUpNow = !isResting && heldCalmSinceMs && now - heldCalmSinceMs > 800 && out > -0.3f && out < 0.85f;
+
   // --- lying on her back, still
   if (out > 0.8f && dyn < 0.08f) {
     if (!faceUpSinceMs) faceUpSinceMs = now;
@@ -386,6 +391,7 @@ void gravity(float& x, float& y) {
 }
 
 bool resting() { return isResting; }
+bool heldUp() { return heldUpNow; }
 bool imuOk() { return imuReady; }
 bool touchOk() { return touchReady; }
 

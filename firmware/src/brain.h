@@ -35,6 +35,8 @@ class Brain {
   void finishListening(uint32_t now);
   void answerArrived(uint32_t now);
   bool listenHandsFree(uint32_t now);
+  void updateEars(uint32_t now, bool talking);
+  void stopEars(uint32_t now);
 
   Face* face_ = nullptr;
   Mode mode_ = Mode::Awake;
@@ -56,4 +58,8 @@ class Brain {
   bool listenNext_ = false, handsFree_ = false, heardHim_ = false;
   uint32_t lastLoudMs_ = 0;
   float noiseFloor_ = 0;
+  // Held-up ears: quietly recording while he holds her, waiting for him to talk.
+  bool armed_ = false;
+  uint32_t armedMs_ = 0, nextArmMs_ = 0, lastEarsMs_ = 0;
+  float loudMs_ = 0;
 };
