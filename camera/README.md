@@ -3,9 +3,14 @@
 Firmware for the **ESP32S3 CAM V1.2** board with the **OV3660** camera — the
 board that will sit in Rory's body so she can look at what he shows her.
 
-Right now it's a **camera test**: it joins your Wi-Fi and shows what the
-camera sees on a web page. Later Rory's main board fetches a single photo from
-it when he says *"Rory, look!"*.
+It joins your Wi-Fi and makes one photo whenever Rory asks — when he says
+*"Rory, look!"* or *"What's this?"*. Its two white LEDs blink softly while it
+takes the photo, so he can see her looking. The test page at
+`http://rory-eyes.local/` shows what it sees.
+
+Rory finds it by the name `rory-eyes` on your Wi-Fi. If she can't (some
+routers block those names), add its address to `rory/config.txt` on her SD
+card, e.g. `eyes = 192.168.1.250`.
 
 ## Try it
 

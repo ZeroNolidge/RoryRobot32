@@ -18,9 +18,11 @@ namespace {
 
 WebServer server(80);
 bool cameraOk = false;
-const int kStatusLed = 2;  // the white LED marked IO2
+const int kStatusLed = 2;  // the small LED marked IO2
+const int kFlashLed = 3;   // the two white "flash" LEDs (per NULLLAB's pinout)
+const int kFlashLevel = 70;  // gentle: 0..255, so it's a friendly blink, not a camera flash in his eyes
 
-// Print to both USB and the serial pins, whichever this board's USB-C uses.
+// Messages go out over the board's native USB (pins 43/44 stay free for the antenna LED).
 void logf(const char* fmt, ...) {
   char buf[256];
   va_list ap;
@@ -28,7 +30,6 @@ void logf(const char* fmt, ...) {
   vsnprintf(buf, sizeof(buf), fmt, ap);
   va_end(ap);
   Serial.print(buf);
-  Serial0.print(buf);
 }
 
 // Camera wiring. The ESP32-S3-EYE layout is the only common one that leaves
@@ -79,11 +80,18 @@ void handleCapture() {
     server.send(503, "text/plain", "camera not working");
     return;
   }
+  // ?flash=1: a soft blink of the white LEDs so he can see Rory is looking
+  bool flash = server.hasArg("flash") && server.arg("flash") == "1";
+  if (flash) {
+    analogWrite(kFlashLed, kFlashLevel);
+    delay(120);
+  }
   camera_fb_t* fb = esp_camera_fb_get();
   if (fb) {  // drop a possibly stale frame and take a fresh one
     esp_camera_fb_return(fb);
     fb = esp_camera_fb_get();
   }
+  if (flash) analogWrite(kFlashLed, 0);
   if (!fb) {
     server.send(500, "text/plain", "photo failed");
     return;
@@ -105,8 +113,9 @@ img{max-width:100%;border-radius:12px;border:4px solid #52DAE8}</style></head><b
 
 void setup() {
   Serial.begin(115200);
-  Serial0.begin(115200);
   pinMode(kStatusLed, OUTPUT);
+  pinMode(kFlashLed, OUTPUT);
+  digitalWrite(kFlashLed, LOW);
   for (uint32_t t0 = millis(); !Serial && millis() - t0 < 1500;) delay(10);
   logf("\n== Rory's eyes ==\n");
   logf("[eyes] PSRAM: %u KB\n", (unsigned)(ESP.getPsramSize() / 1024));

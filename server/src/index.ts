@@ -12,7 +12,7 @@
 // Secrets (set with `npx wrangler secret put NAME`):
 //   ANTHROPIC_API_KEY, OPENAI_API_KEY, RORY_DEVICE_TOKEN (a long random password shared with the robot)
 import Anthropic from "@anthropic-ai/sdk";
-import { askRory, LINES, type Reply } from "./rory";
+import { askRory, LINES, type Look, type Reply, wantsLook } from "./rory";
 import { heardNothing, transcribe } from "./stt";
 import { bearer, packHistory, safeEqual, signSpeakUrl, unpackHistory, verifySpeakUrl } from "./util";
 import { PCM_RATE, speak } from "./voice";
@@ -27,6 +27,14 @@ export interface Env {
 }
 
 const MAX_AUDIO_BYTES = 1_000_000; // ~30 s of 16 kHz mono 16-bit audio
+const MAX_PHOTO_BYTES = 2_000_000;
+
+function toBase64(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
 const DEFAULT_MODEL = "claude-opus-5-5";
 
 function json(data: unknown, status = 200): Response {
@@ -41,15 +49,26 @@ interface Answer {
   claudeMs: number;
 }
 
-/** Hear the question and decide Rory's reply (shared by /ask and /talk). */
-async function think(req: Request, env: Env): Promise<Answer | Response> {
+/**
+ * Hear the question and decide Rory's reply (shared by /ask and /talk).
+ * With `canLook`, a question like "Rory, look!" that came without a photo
+ * gets a quick 202 + X-Rory-Look asking the robot to send one.
+ */
+async function think(req: Request, env: Env, canLook = false): Promise<Answer | Response> {
   const started = Date.now();
   const type = req.headers.get("Content-Type") ?? "";
   const history = unpackHistory(req.headers.get("X-Rory-History"));
+  const look: Look = { eyesOff: req.headers.get("X-Rory-Eyes") === "off" };
 
   // 1. what did he say?
   let heard: string;
-  if (type.startsWith("text/plain")) {
+  if (type.startsWith("image/jpeg")) {
+    // second step of "Rory, look!": the photo, with the question we already heard
+    const photo = await req.arrayBuffer();
+    if (photo.byteLength > MAX_PHOTO_BYTES) return json({ error: "photo too big" }, 413);
+    look.photo = toBase64(photo);
+    heard = decodeURIComponent(req.headers.get("X-Rory-Question") ?? "").trim().slice(0, 500);
+  } else if (type.startsWith("text/plain")) {
     heard = (await req.text()).trim().slice(0, 500); // handy for testing with curl
   } else {
     const audio = await req.arrayBuffer();
@@ -59,6 +78,14 @@ async function think(req: Request, env: Env): Promise<Answer | Response> {
   }
   const tHeard = Date.now();
 
+  if (canLook && !look.photo && !look.eyesOff && wantsLook(heard)) {
+    console.log(JSON.stringify({ event: "look", sttMs: tHeard - started }));
+    return new Response(null, {
+      status: 202,
+      headers: { "X-Rory-Look": "1", "X-Rory-Heard": encodeURIComponent(heard), "Cache-Control": "no-store" },
+    });
+  }
+
   // 2. what does Rory say back?
   let reply: Reply;
   if (heardNothing(heard)) {
@@ -66,7 +93,7 @@ async function think(req: Request, env: Env): Promise<Answer | Response> {
   } else {
     try {
       const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1 });
-      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history, env.RORY_FRIENDS);
+      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history, env.RORY_FRIENDS, look);
     } catch (err) {
       if (err instanceof Anthropic.RateLimitError) console.error("Claude rate limited");
       else if (err instanceof Anthropic.APIError) console.error(`Claude API error ${err.status}: ${err.message}`);
@@ -91,11 +118,12 @@ async function handleAsk(req: Request, env: Env): Promise<Response> {
 }
 
 async function handleTalk(req: Request, env: Env): Promise<Response> {
-  const a = await think(req, env);
+  const a = await think(req, env, req.headers.get("X-Rory-Can-Look") === "1");
   if (a instanceof Response) return a;
   const t0 = Date.now();
   const res = await speak(a.reply.say, env.OPENAI_API_KEY, env.TTS_FALLBACK_VOICE || "coral", fetch, "pcm");
-  console.log(JSON.stringify({ event: "talk", sttMs: a.sttMs, claudeMs: a.claudeMs, voiceMs: Date.now() - t0, face: a.reply.face }));
+  const looked = (req.headers.get("Content-Type") ?? "").startsWith("image/jpeg");
+  console.log(JSON.stringify({ event: "talk", looked, sttMs: a.sttMs, claudeMs: a.claudeMs, voiceMs: Date.now() - t0, face: a.reply.face }));
   const headers = {
     "X-Rory-Face": a.reply.face,
     "X-Rory-Say": encodeURIComponent(a.reply.say),

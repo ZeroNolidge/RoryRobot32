@@ -55,7 +55,10 @@ def write_config(args) -> None:
 
 # Thinking sounds, made in Rory's own voice by your server (needs --server/--token,
 # or a config.txt already on the card).
-THINKING_LINES = ["Hmm, let me think!", "Ooh, good question!", "Hmm...", "Let me see...", "Ooh, let me think about that!"]
+MADE_LINES = {
+    "hmm": ["Hmm, let me think!", "Ooh, good question!", "Hmm...", "Let me see...", "Ooh, let me think about that!"],
+    "look": ["Ooh, let me see!", "Let me take a look!", "Hold it up so I can see!"],  # "Rory, look!"
+}
 
 
 def read_config(card: str) -> dict:
@@ -70,10 +73,18 @@ def read_config(card: str) -> dict:
 
 
 def make_thinking_clips(card: str, server: str, token: str) -> None:
-    folder = os.path.join(card, "rory", "hmm")
+    made = 0
+    for moment, lines in MADE_LINES.items():
+        made += make_clips(card, server, token, moment, lines)
+    if made:
+        print(f"Made {made} clips in Rory's voice")
+
+
+def make_clips(card: str, server: str, token: str, moment: str, lines: list) -> int:
+    folder = os.path.join(card, "rory", moment)
     os.makedirs(folder, exist_ok=True)
     made = 0
-    for line in THINKING_LINES:
+    for line in lines:
         dest = os.path.join(folder, slug(line) + ".mp3")
         if os.path.exists(dest):
             continue
@@ -85,11 +96,10 @@ def make_thinking_clips(card: str, server: str, token: str) -> None:
             with urllib.request.urlopen(req, timeout=60) as r, open(dest, "wb") as f:
                 f.write(r.read())
             made += 1
-            print(f"  hmm        {line}")
+            print(f"  {moment:10s} {line}")
         except Exception as e:  # keep going; Rory just thinks quietly without these
             print(f"  (couldn't make \"{line}\": {e})")
-    if made:
-        print(f"Made {made} thinking clips in Rory's voice")
+    return made
 
 
 def main() -> int:

@@ -50,4 +50,5 @@ class Brain {
   uint8_t dizzyLevel_ = 0;     // the dizzy game: spins in a row
   uint32_t lastSpinMs_ = 0;
   uint32_t hugs_ = 0;
+  bool looking_ = false;  // taking a photo for "Rory, look!"
 };

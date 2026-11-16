@@ -20,6 +20,7 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | pick her up | surprised, then *"Up up up it goes!"* or *"Hooray!"* |
 | tilt her while holding | her eyes roll "downhill" |
 | shake her | spiral dizzy eyes, wobbly mouth — *"It goes round and round!"* |
+| hold her face and say *"Rory, look!"* / *"What's this?"* | *"Let me take a look!"* — wide eyes, her camera blinks its light and takes **one** photo, then she tells him what she sees (or pretends to be terrified of his shark 🦈) |
 | shake her again… and again | **the dizzy game:** she counts *"one!"*, *"two!"* with faster spirals, and on *"three!"* says *"oops!"*, topples into a little nap, then wakes up: *"Rory is awake!"* |
 | put her face-down | *"The sky is still dark!"* |
 | tap her hand or head (not the screen) | **high five!** cheer face, sparkles, *"Yay!"* / *"Great playing!"* |

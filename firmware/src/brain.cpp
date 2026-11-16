@@ -28,6 +28,7 @@ const char* THREE = "three";
 const char* OOPS = "oops";
 const char* OWL = "owl";
 const char* HMM = "hmm";
+const char* LOOK = "look";
 const char* HIGHFIVE = "highfive";
 const char* DANCE = "dance";
 const char* WALK = "walk";
@@ -183,7 +184,8 @@ void Brain::handle(const Event& e, uint32_t now) {
       face_->lookAt(0, -0.35f);
       face_->setExpression(Expr::Listening);
       showing_ = Expr::Listening;
-      if (Net::online() && Net::state() != Net::State::Busy && Net::state() != Net::State::Speaking &&
+      if (Net::online() && Net::state() != Net::State::Busy && Net::state() != Net::State::Looking &&
+          Net::state() != Net::State::Speaking &&
           Voice::startRecording()) {
         ai_ = Ai::Recording;  // the "o" face is his cue to talk
         Net::prepare();       // open the connection to the server while he talks
@@ -332,13 +334,22 @@ void Brain::update(uint32_t now) {
         }
       } else if (ai_ == Ai::Uploading) {
         Net::State st = Net::state();
-        if (st == Net::State::Speaking || st == Net::State::Done) {
+        if (st == Net::State::Looking && !looking_) {
+          // "Rory, look!" - wide eyes, straight ahead, while her camera takes the photo
+          looking_ = true;
+          say(Moment::LOOK, Moment::HMM);
+          face_->setExpression(Expr::Surprised);
+          showing_ = Expr::Surprised;
+          face_->lookAt(0, 0.1f);
+        } else if (st == Net::State::Speaking || st == Net::State::Done) {
+          looking_ = false;
           answerArrived(now);
-        } else if (st == Net::State::Failed || now - modeSinceMs_ > 25000) {
+        } else if (st == Net::State::Failed || now - modeSinceMs_ > 30000) {
+          looking_ = false;
           // Couldn't reach her brain: a friendly clip instead of silence.
           Net::reset();
           react({Expr::Happy, Moment::CHAT, Moment::GIGGLE, 800}, now);
-        } else if (now - modeSinceMs_ > 1500) {
+        } else if (now - modeSinceMs_ > 1500 && !looking_) {
           // "hmm..." - glance around while thinking
           float t = now * 0.002f;
           face_->lookAt(0.5f + 0.3f * sinf(t), -0.75f);

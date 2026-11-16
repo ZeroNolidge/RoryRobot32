@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildMessages, cleanForSpeech, friendsNote, parseReply } from "../src/rory";
+import { buildMessages, cleanForSpeech, friendsNote, parseReply, wantsLook } from "../src/rory";
 import { heardNothing } from "../src/stt";
 import { b64urlDecode, b64urlEncode, packHistory, signSpeakUrl, unpackHistory, verifySpeakUrl } from "../src/util";
 import { fallbackSpeechBody, mainSpeechBody, speak, TTS_INSTRUCTIONS } from "../src/voice";
@@ -81,6 +81,23 @@ describe("history", () => {
     const m = buildMessages("why?", [{ q: "is the sky blue?", a: "Yes!" }]);
     expect(m.map((x) => x.role)).toEqual(["user", "assistant", "user"]);
     expect(m[2].content).toBe("why?");
+  });
+});
+
+describe("Rory, look!", () => {
+  it("spots looking questions", () => {
+    for (const q of ["Rory, look!", "Look at this", "What's this?", "what is this rory", "Can you see my shark?", "What am I holding?", "Watch me!"])
+      expect(wantsLook(q)).toBe(true);
+    for (const q of ["Why is the sky blue?", "Do you like dinosaurs?", "Tell me a story", "seesaw", "See you later, Rory!"]) expect(wantsLook(q)).toBe(false);
+  });
+  it("puts the photo before the question", () => {
+    const m = buildMessages("what is this?", [], { photo: "QUJD" });
+    const c = m[0].content as any[];
+    expect(c[0]).toEqual({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: "QUJD" } });
+    expect(c[1].text).toContain("what is this?");
+  });
+  it("tells her when her eyes aren't working", () => {
+    expect(buildMessages("look!", [], { eyesOff: true })[0].content).toContain("camera eyes aren't working");
   });
 });
 

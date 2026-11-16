@@ -13,6 +13,7 @@ void prepare();
 enum class State : uint8_t {
   Idle,
   Busy,      // sending the question / server thinking
+  Looking,   // he asked her to look: taking a photo with her camera eyes
   Speaking,  // the answer has arrived and her voice is streaming to the speaker
   Done,      // finished speaking
   Failed,    // couldn't get an answer

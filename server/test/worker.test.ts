@@ -124,6 +124,37 @@ describe("POST /talk", () => {
   });
 });
 
+describe("Rory, look!", () => {
+  const talk = (body: BodyInit, headers: Record<string, string>) =>
+    worker.fetch(new Request("https://rory.example/talk", {
+      method: "POST", body, headers: { Authorization: "Bearer robot-password", ...headers },
+    }), env);
+
+  it("asks the robot for a photo when he says look (only robots that can)", async () => {
+    installFakeApis();
+    const res = await talk("Rory, look at my shark!", { "Content-Type": "text/plain", "X-Rory-Can-Look": "1" });
+    expect(res.status).toBe(202);
+    expect(res.headers.get("X-Rory-Look")).toBe("1");
+    expect(decodeURIComponent(res.headers.get("X-Rory-Heard")!)).toBe("Rory, look at my shark!");
+    expect(claudeBodies).toHaveLength(0); // no thinking yet
+    const plain = await talk("Rory, look at my shark!", { "Content-Type": "text/plain" });
+    expect(plain.status).toBe(200); // curl / no camera: answer normally
+  });
+
+  it("answers with the photo", async () => {
+    installFakeApis();
+    claudeText = "[scared] Eek! A giant shark! ...Oh, it's a friendly one!";
+    const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+    const res = await talk(jpeg, { "Content-Type": "image/jpeg", "X-Rory-Question": encodeURIComponent("Rory, look at my shark!") });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("X-Rory-Face")).toBe("scared");
+    const content = claudeBodies[0].body.messages.at(-1).content;
+    expect(content[0].type).toBe("image");
+    expect(content[0].source.media_type).toBe("image/jpeg");
+    expect(content[1].text).toContain("Rory, look at my shark!");
+  });
+});
+
 describe("POST /say", () => {
   it("needs the password and returns MP3 in Rory's voice", async () => {
     installFakeApis();

@@ -1,4 +1,5 @@
 #include "net.h"
+#include <ESPmDNS.h>
 #include <HTTPClient.h>
 #include <NetworkClientSecure.h>
 #include <WiFi.h>
@@ -60,53 +61,147 @@ class SpeakerSink : public Stream {
   int peek() override { return -1; }
 };
 
-void doAsk() {
-  const auto& cfg = Settings::get();
+// ---- her camera eyes -------------------------------------------------------
+uint8_t* photo = nullptr;  // one JPEG, in PSRAM
+const size_t kPhotoMax = 300 * 1024;
+IPAddress eyesIp;
+bool mdnsStarted = false;
+
+bool findEyes() {
+  if (eyesIp != IPAddress()) return true;
+  const String& e = Settings::get().eyes;
+  if (eyesIp.fromString(e)) return true;  // an address like 192.168.1.250
+  if (!mdnsStarted) mdnsStarted = MDNS.begin("rory");
+  String name = e;
+  name.replace(".local", "");
+  IPAddress ip = MDNS.queryHost(name.c_str(), 2000);
+  if (ip == IPAddress()) {
+    Serial.printf("[net] can't find her camera \"%s\" on the Wi-Fi\n", e.c_str());
+    return false;
+  }
+  eyesIp = ip;
+  Serial.printf("[net] camera eyes at %s\n", ip.toString().c_str());
+  return true;
+}
+
+// One photo from the camera board (it blinks its light so he sees her look).
+size_t takePhoto() {
+  if (!photo) photo = (uint8_t*)heap_caps_malloc(kPhotoMax, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+  if (!photo || !findEyes()) return 0;
   uint32_t t0 = millis();
-  static const char* kHeaders[] = {"X-Rory-Face", "X-Rory-Say", "X-Rory-Heard", "X-Rory-History"};
-  bool ok = false;
-  for (int attempt = 0; attempt < 2 && !ok; attempt++) {
+  WiFiClient plain;
+  HTTPClient http;
+  http.setTimeout(5000);
+  http.begin(plain, "http://" + eyesIp.toString() + "/capture?flash=1");
+  int code = http.GET();
+  size_t got = 0;
+  if (code == 200) {
+    int len = http.getSize();
+    WiFiClient* s = http.getStreamPtr();
+    while (http.connected() && got < kPhotoMax && (len < 0 || (int)got < len)) {
+      size_t n = s->readBytes(photo + got, min((size_t)4096, kPhotoMax - got));
+      if (n == 0) break;
+      got += n;
+    }
+  } else {
+    Serial.printf("[net] camera said %d\n", code);
+    eyesIp = IPAddress();  // look it up again next time
+  }
+  http.end();
+  Serial.printf("[net] photo: %u bytes in %lu ms\n", (unsigned)got, (unsigned long)(millis() - t0));
+  return got;
+}
+
+String urlEncode(const String& s) {
+  String out;
+  const char* hex = "0123456789ABCDEF";
+  for (size_t i = 0; i < s.length(); i++) {
+    uint8_t c = s[i];
+    if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') out += (char)c;
+    else {
+      out += '%';
+      out += hex[c >> 4];
+      out += hex[c & 15];
+    }
+  }
+  return out;
+}
+
+// One request to /talk. Returns 200 (she spoke), 202 (she wants to look; the
+// question is in ans.heard) or an error.
+enum class Body { Wav, Photo, NoEyes };
+int talk(Body kind, const uint8_t* body, size_t len) {
+  const auto& cfg = Settings::get();
+  static const char* kHeaders[] = {"X-Rory-Face", "X-Rory-Say", "X-Rory-Heard", "X-Rory-History", "X-Rory-Look"};
+  for (int attempt = 0; attempt < 2; attempt++) {
     if (!ensureConnected()) continue;
     HTTPClient http;
     http.setReuse(true);  // keep the connection for the next question
     http.setTimeout(20000);
-    http.collectHeaders(kHeaders, 4);
+    http.collectHeaders(kHeaders, 5);
     if (!http.begin(*client, cfg.server + "/talk")) continue;
     http.addHeader("Authorization", "Bearer " + cfg.token);
-    http.addHeader("Content-Type", "audio/wav");
     if (!history.isEmpty() && millis() - historyMs < kHistoryKeepMs) http.addHeader("X-Rory-History", history);
-    int code = http.POST(const_cast<uint8_t*>(reqWav), reqLen);
+    if (kind == Body::Wav) {
+      http.addHeader("Content-Type", "audio/wav");
+      http.addHeader("X-Rory-Can-Look", "1");
+    } else if (kind == Body::Photo) {
+      http.addHeader("Content-Type", "image/jpeg");
+      http.addHeader("X-Rory-Question", urlEncode(ans.heard));
+    } else {
+      http.addHeader("Content-Type", "text/plain");
+      http.addHeader("X-Rory-Eyes", "off");
+    }
+    int code = kind == Body::NoEyes ? http.POST(ans.heard) : http.POST(const_cast<uint8_t*>(body), len);
     if (code < 0) {  // the kept-open connection had gone stale: reconnect and try once more
       Serial.printf("[net] %s - retrying\n", http.errorToString(code).c_str());
       http.end();
       client->stop();
       continue;
     }
+    if (code == 202 && http.header("X-Rory-Look") == "1") {
+      ans.heard = urlDecode(http.header("X-Rory-Heard"));
+      http.getString();  // finish the (empty) reply so the connection can be reused
+      http.end();
+      return 202;
+    }
     if (code == 200) {
       ans.face = http.header("X-Rory-Face");
       ans.say = urlDecode(http.header("X-Rory-Say"));
-      ans.heard = urlDecode(http.header("X-Rory-Heard"));
+      if (kind == Body::Wav) ans.heard = urlDecode(http.header("X-Rory-Heard"));
       String h = http.header("X-Rory-History");
       if (!h.isEmpty()) {
         history = h;
         historyMs = millis();
       }
-      Serial.printf("[net] answer after %lu ms: heard \"%s\"\n", (unsigned long)(millis() - t0), ans.heard.c_str());
       if (Voice::streamBegin()) {
         st = Net::State::Speaking;  // the brain shows her face now
         SpeakerSink sink;
         int n = http.writeToStream(&sink);
         Voice::streamEnd();
         if (n < 0) Serial.printf("[net] voice stream ended early: %s\n", http.errorToString(n).c_str());
-        ok = true;
       }
     } else {
       Serial.printf("[net] server said %d\n", code);
     }
     http.end();
-    break;
+    return code;
   }
-  st = ok ? Net::State::Done : Net::State::Failed;
+  return -1;
+}
+
+void doAsk() {
+  uint32_t t0 = millis();
+  int code = talk(Body::Wav, reqWav, reqLen);
+  if (code == 202) {
+    // "Rory, look!" - take one photo and ask again with it
+    st = Net::State::Looking;
+    Serial.printf("[net] he asked her to look: \"%s\"\n", ans.heard.c_str());
+    size_t n = takePhoto();
+    code = n ? talk(Body::Photo, photo, n) : talk(Body::NoEyes, nullptr, 0);
+  }
+  Serial.printf("[net] question took %lu ms until her voice ended (code %d)\n", (unsigned long)(millis() - t0), code);
+  st = code == 200 ? Net::State::Done : Net::State::Failed;
 }
 
 void netTask(void*) {
@@ -154,7 +249,7 @@ void prepare() {
 }
 
 bool ask(const uint8_t* wav, size_t len) {
-  if (!online() || st == State::Busy || st == State::Speaking) return false;
+  if (!online() || st == State::Busy || st == State::Looking || st == State::Speaking) return false;
   reqWav = wav;
   reqLen = len;
   ans = Answer();

@@ -28,6 +28,7 @@ bool load() {
     else if (key == "wifi_password") values.wifiPassword = val;
     else if (key == "server") values.server = val;
     else if (key == "token") values.token = val;
+    else if (key == "eyes" && !val.isEmpty()) values.eyes = val;
   }
   f.close();
   while (values.server.endsWith("/")) values.server.remove(values.server.length() - 1);

@@ -26,6 +26,7 @@ How you talk:
 - He is practising talking: praise his trying, never correct his speech or grammar. If a word was unclear, guess kindly or ask him to say it again. Often (not always) end with one easy question so he keeps talking.
 - What he says comes from speech-to-text and may have mistakes. Go with the most likely meaning.
 - Pretend play: if he's playing a scary game with a toy (a shark, a monster, a dinosaur roar), you may act silly-scared with [scared] ("Eek! A shark!"), then quickly turn brave or make friends with it. It's always a game; never try to really frighten him.
+- Your eyes are a little camera. When he asks you to look, you get a photo of what he's showing you: say simply and warmly what you see, and if you're not sure, make a friendly guess and ask him. About people in a photo, say only friendly basics (like "I see a big smile!"); never guess who they are, their age, or comment on their body. Don't read out writing that looks private (addresses, names, screens).
 - You are a robot and proud of it. Never pretend to be a person, never say you can see him, and don't claim to do things a toy can't do.
 
 Keeping him safe (always):
@@ -72,14 +73,36 @@ export function cleanForSpeech(text: string): string {
     .slice(0, 400);
 }
 
-export function buildMessages(question: string, history: Turn[]): Anthropic.Beta.BetaMessageParam[] {
+export interface Look {
+  photo?: string; // base64 JPEG from her camera eyes
+  eyesOff?: boolean; // he asked her to look, but her camera isn't working
+}
+
+export function buildMessages(question: string, history: Turn[], look: Look = {}): Anthropic.Beta.BetaMessageParam[] {
   const messages: Anthropic.Beta.BetaMessageParam[] = [];
   for (const t of history) {
     messages.push({ role: "user", content: t.q });
     messages.push({ role: "assistant", content: t.a });
   }
-  messages.push({ role: "user", content: question });
+  if (look.photo) {
+    messages.push({
+      role: "user",
+      content: [
+        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: look.photo } },
+        { type: "text", text: `(This is what your camera eyes see right now.) ${question}` },
+      ],
+    });
+  } else if (look.eyesOff) {
+    messages.push({ role: "user", content: `${question}\n(Your camera eyes aren't working right now, so you can't see it - say so kindly and ask him to tell you about it.)` });
+  } else {
+    messages.push({ role: "user", content: question });
+  }
   return messages;
+}
+
+/** Does this sound like he wants Rory to look at something? */
+export function wantsLook(text: string): boolean {
+  return /\b(look|looking|see(?!\s+you\b)|watch|show you|what('?s| is) (this|that|it)|what am i (holding|showing)|guess what (this|i have)|check (this|it) out)\b/i.test(text);
 }
 
 /**
@@ -99,6 +122,7 @@ export async function askRory(
   question: string,
   history: Turn[],
   friends?: string,
+  look: Look = {},
 ): Promise<Reply> {
   const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }];
   const note = friendsNote(friends);
@@ -113,7 +137,7 @@ export async function askRory(
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
     system,
-    messages: buildMessages(question, history),
+    messages: buildMessages(question, history, look),
   });
 
   if (response.stop_reason === "refusal") {
