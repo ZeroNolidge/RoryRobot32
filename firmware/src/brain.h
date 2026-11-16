@@ -34,6 +34,7 @@ class Brain {
   void tuckIn(uint32_t now);
   void finishListening(uint32_t now);
   void answerArrived(uint32_t now);
+  bool listenHandsFree(uint32_t now);
 
   Face* face_ = nullptr;
   Mode mode_ = Mode::Awake;
@@ -51,4 +52,8 @@ class Brain {
   uint32_t lastSpinMs_ = 0;
   uint32_t hugs_ = 0;
   bool looking_ = false;  // taking a photo for "Rory, look!"
+  // Hands-free follow-up: she asked him something, so she listens without a finger.
+  bool listenNext_ = false, handsFree_ = false, heardHim_ = false;
+  uint32_t lastLoudMs_ = 0;
+  float noiseFloor_ = 0;
 };

@@ -25,7 +25,7 @@ int volumeStep();
 int clipCount(const char* moment);
 
 // --- listening
-bool startRecording();           // stops any speech, starts recording (max ~12 s)
+bool startRecording();           // stops any speech, starts recording (max ~20 s)
 void stopRecording();
 bool recording();                // still recording (stops itself when full)
 bool recordingReady();           // a finished recording is waiting

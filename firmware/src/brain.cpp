@@ -57,6 +57,7 @@ void Brain::show(const Reaction& r, uint32_t now) {
   // Anything else happening (a shake, a high five...) ends a question.
   if (ai_ == Ai::Recording) Voice::stopRecording();
   ai_ = Ai::None;
+  handsFree_ = false;
   mode_ = Mode::Reacting;
   modeSinceMs_ = now;
   showing_ = r.expr;
@@ -106,6 +107,7 @@ void Brain::tuckIn(uint32_t now) {
 
 void Brain::finishListening(uint32_t now) {
   if (ai_ == Ai::Recording) Voice::stopRecording();
+  handsFree_ = false;
   mode_ = Mode::Thinking;
   modeSinceMs_ = now;
   face_->lookAt(0.6f, -0.8f);
@@ -137,6 +139,29 @@ void Brain::answerArrived(uint32_t now) {
   else face_->lookAt(0, 0);
   face_->setAutoLook(false);
   lastPlayMs_ = now;
+  String said = a.say;
+  said.trim();
+  listenNext_ = KEEP_LISTENING && said.endsWith("?");
+}
+
+// She asked him a question: listen for his answer without a finger on her face.
+bool Brain::listenHandsFree(uint32_t now) {
+  if (!Net::online() || Net::state() == Net::State::Busy || Net::state() == Net::State::Looking ||
+      Net::state() == Net::State::Speaking || !Voice::startRecording())
+    return false;
+  mode_ = Mode::Listening;
+  modeSinceMs_ = lastLoudMs_ = now;
+  ai_ = Ai::Recording;
+  handsFree_ = true;
+  heardHim_ = false;
+  noiseFloor_ = 0;
+  face_->setAutoLook(false);
+  face_->lookAt(0, -0.35f);
+  face_->setExpression(Expr::Listening);  // the "o" face is his cue to answer
+  showing_ = Expr::Listening;
+  Net::prepare();
+  Serial.println("[brain] she asked him something - listening hands-free");
+  return true;
 }
 
 void Brain::handle(const Event& e, uint32_t now) {
@@ -177,6 +202,11 @@ void Brain::handle(const Event& e, uint32_t now) {
     case Ev::HoldStart:
       // "Talk to Rory": listen while his finger stays on her face.
       if (mode_ == Mode::Thinking) break;  // still answering the last one
+      listenNext_ = false;
+      if (mode_ == Mode::Listening && handsFree_) {
+        handsFree_ = false;  // already listening: now his finger decides when he's done
+        break;
+      }
       Voice::stop();
       mode_ = Mode::Listening;
       modeSinceMs_ = now;
@@ -196,7 +226,7 @@ void Brain::handle(const Event& e, uint32_t now) {
       break;
 
     case Ev::HoldEnd:
-      if (mode_ != Mode::Listening) break;
+      if (mode_ != Mode::Listening || handsFree_) break;
       finishListening(now);
       break;
 
@@ -311,6 +341,13 @@ void Brain::update(uint32_t now) {
       if (now >= until_ && !talking) {
         if (chainPos_ < chainLen_) {
           show(chain_[chainPos_++], now);
+        } else if (listenNext_) {
+          listenNext_ = false;
+          if (!listenHandsFree(now)) {
+            mode_ = Mode::Awake;
+            modeSinceMs_ = now;
+            face_->setExpression(Expr::Content);
+          }
         } else {
           face_->setDizzySpeed(1);
           mode_ = Mode::Awake;
@@ -365,8 +402,30 @@ void Brain::update(uint32_t now) {
       Expression e = Expr::Listening;
       if (ai_ == Ai::Recording) {
         // her eyes grow a little when she hears him
-        e.eyeScale += 0.15f * Voice::micLevel();
-        if (!Voice::recording()) finishListening(now);  // 12 s is the most she'll listen
+        float lvl = Voice::micLevel();
+        e.eyeScale += 0.15f * lvl;
+        if (!Voice::recording()) {
+          finishListening(now);  // 20 s is the most she'll listen
+        } else if (handsFree_) {
+          uint32_t t = now - modeSinceMs_;
+          if (t < 400) {
+            if (lvl > noiseFloor_) noiseFloor_ = lvl;  // how loud the room is
+          } else {
+            float speech = fmaxf(LISTEN_SPEECH_LEVEL, noiseFloor_ * 2.5f);
+            if (lvl > speech) {
+              heardHim_ = true;
+              lastLoudMs_ = now;
+            }
+            if (heardHim_ && now - lastLoudMs_ > LISTEN_QUIET_MS) {
+              Serial.printf("[brain] he finished talking (room %.2f)\n", noiseFloor_);
+              finishListening(now);
+            } else if (!heardHim_ && t > LISTEN_WAIT_MS) {
+              Serial.printf("[brain] no answer (room %.2f) - back to playing\n", noiseFloor_);
+              react({Expr::Content, nullptr, nullptr, 300}, now);  // stops the recording
+              break;
+            }
+          }
+        }
       } else if (talking) {
         e.mouth = Mouth::Talk;  // the offline "I can hear you" clip
       }

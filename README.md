@@ -20,6 +20,7 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | pick her up | surprised, then *"Up up up it goes!"* or *"Hooray!"* |
 | tilt her while holding | her eyes roll "downhill" |
 | shake her | spiral dizzy eyes, wobbly mouth — *"It goes round and round!"* |
+| answer when **she asks him a question** | no finger needed: her "o" face means she's listening; she waits up to 6 s for him to start, and when he stops talking for a moment she answers, so they can keep chatting back and forth |
 | hold her face and say *"Rory, look!"* / *"What's this?"* | *"Let me take a look!"* — wide eyes, her camera blinks its light and takes **one** photo, then she tells him what she sees (or pretends to be terrified of his shark 🦈) |
 | shake her again… and again | **the dizzy game:** she counts *"one!"*, *"two!"* with faster spirals, and on *"three!"* says *"oops!"*, topples into a little nap, then wakes up: *"Rory is awake!"* |
 | put her face-down | *"The sky is still dark!"* |
@@ -145,7 +146,7 @@ Rory (board) ──Wi-Fi──► Rory's cloud server (Cloudflare Workers)
    (or edit `rory/config.txt` on the card by hand). The ESP32 needs a
    **2.4 GHz** Wi-Fi network.
 3. **Ask!** Hold a finger on her face, talk, let go. She listens for up to
-   12 seconds, shows her thinking face, then answers with a matching
+   20 seconds, shows her thinking face, then answers with a matching
    expression. Follow-up questions ("why?") work for 3 minutes.
    She knows his toy friends (`RORY_FRIENDS` on the server, e.g. Knight
    Owl) and brings them into games and stories.

@@ -72,6 +72,21 @@
 #ifndef POWER_OFF_AFTER_MS
 #define POWER_OFF_AFTER_MS (30UL * 60 * 1000)  // asleep 30 min -> power off (battery only)
 #endif
+// Conversations: when Rory's answer ends with a question, she keeps listening
+// without a finger on her face. She waits LISTEN_WAIT_MS for him to start, and
+// stops once he's been quiet for LISTEN_QUIET_MS. (Set KEEP_LISTENING 0 to turn off.)
+#ifndef KEEP_LISTENING
+#define KEEP_LISTENING 1
+#endif
+#ifndef LISTEN_WAIT_MS
+#define LISTEN_WAIT_MS 6000
+#endif
+#ifndef LISTEN_QUIET_MS
+#define LISTEN_QUIET_MS 1500      // kids pause mid-sentence - don't cut him off too soon
+#endif
+#ifndef LISTEN_SPEECH_LEVEL
+#define LISTEN_SPEECH_LEVEL 0.10f // mic level (0..1) that counts as him talking
+#endif
 #ifndef BACKLIGHT_AWAKE
 #define BACKLIGHT_AWAKE 100       // percent
 #endif

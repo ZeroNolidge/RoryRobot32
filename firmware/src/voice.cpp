@@ -34,7 +34,7 @@ volatile float micLvl = 0;
 
 // recording: 16 kHz, 16-bit, mono WAV in PSRAM
 const uint32_t kRate = 16000;
-const uint32_t kMaxSeconds = 12;
+const uint32_t kMaxSeconds = 20;  // room for a whole story, not just a sentence
 const size_t kHeader = 44;
 const size_t kMaxBytes = kHeader + kRate * 2 * kMaxSeconds;
 uint8_t* recBuf = nullptr;
