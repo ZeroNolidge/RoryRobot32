@@ -532,9 +532,8 @@ void Brain::update(uint32_t now) {
 
     case Mode::Asleep:
       if (now - modeSinceMs_ > POWER_OFF_AFTER_MS && !Power::charging()) {
-        Display::setBacklight(0);
-        Power::off();  // on USB power this does nothing; she just keeps sleeping
-        modeSinceMs_ = now;
+        Power::off();  // on USB power this does nothing: she keeps sleeping with her
+        modeSinceMs_ = now;  // screen dimly lit, so she never looks switched off
       }
       break;
 
