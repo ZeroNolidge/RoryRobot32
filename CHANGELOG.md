@@ -14,6 +14,11 @@ shows no number, she has v1.7 or older.
 
 ---
 
+## Server update (Nov 17, 2026): Server only
+- I Spy: Rory knows each Sonic character's parts and colors (Sonic's red
+  shoes with a white stripe, Tails' two tails, Knuckles' white chest crescent...)
+  and gives clues that point to just one character.
+
 ## v1.12 (Nov 17, 2026): Upload
 - Fix (second part of v1.11): the web request code also closes and reopens her
   connection, which wiped the certificate list again. Now the list is

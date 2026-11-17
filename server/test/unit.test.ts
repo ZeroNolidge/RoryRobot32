@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildMessages, cleanForSpeech, friendsNote, memoryNote, parseReply, safeMemory, wantsLook } from "../src/rory";
+import { buildMessages, cleanForSpeech, friendsNote, memoryNote, parseReply, safeMemory, SYSTEM_PROMPT, wantsLook } from "../src/rory";
 import { heardNothing } from "../src/stt";
 import { b64urlDecode, b64urlEncode, packHistory, signSpeakUrl, unpackHistory, verifySpeakUrl } from "../src/util";
 import { fallbackSpeechBody, mainSpeechBody, speak, TTS_INSTRUCTIONS } from "../src/voice";
@@ -139,6 +139,10 @@ describe("memory", () => {
 });
 
 describe("games", () => {
+  it("knows the Sonic character cards", () => {
+    expect(SYSTEM_PROMPT).toContain("red shoes with a white stripe");
+    expect(SYSTEM_PROMPT).toContain("TWO fluffy tails");
+  });
   it("keeps her I Spy answer secret but remembered", () => {
     const r = parseReply("[excited] I spy, with my little robot eye, someone fast and blue! [secret: Sonic]");
     expect(r).toEqual({ face: "excited", say: "I spy, with my little robot eye, someone fast and blue!", secret: "Sonic" });
