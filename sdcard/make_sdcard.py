@@ -58,6 +58,7 @@ def write_config(args) -> None:
 MADE_LINES = {
     "hmm": ["Hmm, let me think!", "Ooh, good question!", "Hmm...", "Let me see...", "Ooh, let me think about that!"],
     "look": ["Ooh, let me see!", "Let me take a look!", "Hold it up so I can see!"],  # "Rory, look!"
+    "yes": ["Yes?", "I'm listening!", "What is it?"],  # tap to talk
     # the dizzy game, getting wilder each spin
     "spin1": ["Whoooooa!", "Wheeeee! Here I go!", "Whoa, whoa, whoaaa!"],
     "spin2": ["I'm getting dizzy!", "Everything is spinning!", "Oh no, I'm so dizzy!"],

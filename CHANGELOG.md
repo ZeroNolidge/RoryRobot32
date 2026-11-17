@@ -1,8 +1,8 @@
 # Rory's versions
 
 Press **BOOT** (volume) and the small grey number under the speaker shows
-which version Rory has, e.g. **v1.13**. It's also printed at the top of the
-Serial Monitor when she starts: `== Rory the Robot v1.13 ==`.
+which version Rory has, e.g. **v1.14**. It's also printed at the top of the
+Serial Monitor when she starts: `== Rory the Robot v1.14 ==`.
 
 Each version says what you need to do to install it:
 - **Upload**: `git pull`, then Upload to Rory (cable, or `rory-wifi`)
@@ -13,6 +13,14 @@ Versions before v1.8 didn't show a number on her face. If the volume card
 shows no number, she has v1.7 or older.
 
 ---
+
+## v1.14 (Nov 17, 2026): Upload
+- **Tap to talk:** one tap on her face and she says "Yes?" (or "I'm
+  listening!"), then listens hands-free until he pauses. No more holding a
+  finger on her while talking (that still works too). She makes the "Yes?"
+  clips herself over Wi-Fi.
+- "Hold her up and talk" now notices a softer voice.
+- Offline (no Wi-Fi), a tap is still "Beep boop!".
 
 ## v1.13 (Nov 17, 2026): Upload + Server
 - **More patient listening:** she waits up to 10 seconds for him to start

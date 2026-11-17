@@ -12,8 +12,8 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | You… | Rory… |
 |---|---|
 | switch her on | opens her eyes, sparkles, says *"Hi friend!"* or *"It's Rory!"* |
-| tap her face | *"Beep boop!"* with happy `^ ^` eyes |
-| tap 3 times quickly | gets heart eyes — *"I love you!"* |
+| **tap her face** | **tap to talk:** she says *"Yes?"* with her listening face, then he just talks. She waits up to 10 s for him to start and answers when he pauses. (Offline: *"Beep boop!"* with happy `^ ^` eyes) |
+| tap 3 times quickly (offline) | gets heart eyes — *"I love you!"* (online, a hug does this) |
 | rub/tickle her face | *"Silly!"*, *"Yay!"*, sparkles |
 | slide a finger on the screen | her eyes follow your finger |
 | hold a finger on her face and ask something | listening face (her eyes grow when she hears him), thinking face, then **she answers** with her AI brain — or, offline, *"Rory can hear you now!"* and a friendly clip |

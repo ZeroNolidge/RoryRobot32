@@ -18,6 +18,10 @@ static const MadeClip kMadeClips[] = {
     {"look", "Ooh, let me see!"},
     {"look", "Let me take a look!"},
     {"look", "Hold it up so I can see!"},
+    // tap to talk
+    {"yes", "Yes?"},
+    {"yes", "I'm listening!"},
+    {"yes", "What is it?"},
     // the dizzy game, getting wilder each spin
     {"spin1", "Whoooooa!"},
     {"spin1", "Wheeeee! Here I go!"},

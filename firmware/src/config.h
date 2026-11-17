@@ -90,11 +90,16 @@
 // Held up and talked to: while he holds her (face toward him) she quietly
 // checks for close, loud speech; if she hears him she shows her listening face
 // and records until he pauses. Nothing is sent unless she heard him.
+// Tap to talk: one tap on her face and she listens (instead of "Beep boop!").
+// Holding a finger on her face still works too.
+#ifndef TAP_TO_TALK
+#define TAP_TO_TALK 1
+#endif
 #ifndef LISTEN_WHEN_HELD
 #define LISTEN_WHEN_HELD 1
 #endif
 #ifndef HELD_SPEECH_LEVEL
-#define HELD_SPEECH_LEVEL 0.18f   // louder than LISTEN_SPEECH_LEVEL: he's right next to her
+#define HELD_SPEECH_LEVEL 0.12f   // a bit louder than LISTEN_SPEECH_LEVEL: he's right next to her
 #endif
 #ifndef HELD_SPEECH_MS
 #define HELD_SPEECH_MS 300        // this much talking (not a bump or a clap) starts it

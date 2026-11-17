@@ -34,6 +34,7 @@ const char* HIGHFIVE = "highfive";
 const char* DANCE = "dance";
 const char* WALK = "walk";
 const char* TIRED = "tired";
+const char* YES = "yes";      // "Yes?" - tap to talk
 const char* SPIN1 = "spin1";  // "Whoooa!"
 const char* SPIN2 = "spin2";  // "I'm getting dizzy!"
 const char* SPIN3 = "spin3";  // "Aaarrgh, too much spinning!"
@@ -245,6 +246,19 @@ void Brain::handle(const Event& e, uint32_t now) {
   switch (e.type) {
     case Ev::Tap: {
       if (mode_ == Mode::Listening || mode_ == Mode::Thinking) break;
+#if TAP_TO_TALK
+      // Tap to talk: one tap on her face, she says "Yes?" and listens until he
+      // pauses - no need to keep a finger on her. (Offline she just boops.)
+      if (Net::online() && Net::state() != Net::State::Busy && Net::state() != Net::State::Looking &&
+          Net::state() != Net::State::Speaking) {
+        taps_ = 0;
+        face_->setAutoLook(false);
+        face_->lookAt(0, -0.35f);
+        react({Expr::Listening, Moment::YES, nullptr, 250}, now);
+        listenNext_ = true;  // starts listening as soon as "Yes?" is said
+        break;
+      }
+#endif
       // three quick boops = love eyes
       if (now - firstTapMs_ > 2000) {
         taps_ = 0;
