@@ -34,7 +34,7 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | leave her alone 8 min (on the table, not in his hands) | yawns, gets droopy eyes, *"night night"*, sleeps with floating Zzz (screen dims) |
 | touch or pick her up while asleep | wakes up: *"Rory is awake!"* |
 | hold **PWR** ~1.5 s | *"See you next time!"* and switches off (on battery) |
-| press **BOOT** | changes the volume (3 kid-safe levels): a speaker with 1-3 bars shows on her face and she beeps at the new volume |
+| press **BOOT** | changes the volume (3 kid-safe levels): a speaker with 1-3 bars shows on her face, plus her software version (see [CHANGELOG.md](CHANGELOG.md)), and she beeps at the new volume |
 
 Her voice is the **same voice as the app** (OpenAI `gpt-4o-mini-tts`, voice
 `marin`) — the firmware plays the app's own clips from the microSD card, and

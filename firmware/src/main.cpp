@@ -16,6 +16,7 @@
 #include "power.h"
 #include "senses.h"
 #include "settings.h"
+#include "version.h"
 #include "voice.h"
 
 static Face face;
@@ -27,7 +28,7 @@ void setup() {
   Serial.begin(115200);
   // Give the Serial Monitor a moment to reconnect so the start-up report isn't missed.
   for (uint32_t t0 = millis(); !Serial && millis() - t0 < 1500;) delay(10);
-  Serial.println("\n== Rory the Robot ==");
+  Serial.println("\n== Rory the Robot v" RORY_VERSION " ==");
 
   if (!Display::begin()) Serial.println("[main] display init failed");
   Senses::begin();

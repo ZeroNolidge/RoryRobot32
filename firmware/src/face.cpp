@@ -1,4 +1,6 @@
 #include "face.h"
+#include <string.h>
+#include "version.h"
 #include "config.h"
 
 namespace {
@@ -70,6 +72,28 @@ void Face::showVolume(int level, int levels, uint32_t durationMs) {
   batteryUntilMs_ = 0;  // one card at a time
 }
 
+// Tiny 3x5 pixel font for the version number ("v1.8").
+static void drawText(Raster& r, const char* text, float cx, float y, float px, uint16_t c) {
+  static const char* digits[10] = {"111101101101111", "010110010010111", "111001111100111", "111001111001111",
+                                   "101101111001001", "111100111001111", "111100111101111", "111001001001001",
+                                   "111101111101111", "111101111001111"};
+  auto glyph = [&](char ch) -> const char* {
+    if (ch >= '0' && ch <= '9') return digits[ch - '0'];
+    if (ch == '.') return "000000000000010";
+    if (ch == 'v') return "000000101101010";
+    return "000000000000000";
+  };
+  size_t n = strlen(text);
+  float w = n * 4 * px - px, x = cx - w / 2;
+  for (size_t i = 0; i < n; i++, x += 4 * px) {
+    const char* g = glyph(text[i]);
+    for (int k = 0; k < 15; k++)
+      if (g[k] == '1')
+        for (int yy = 0; yy < (int)px; yy++)
+          for (int xx = 0; xx < (int)px; xx++) r.dot((int)(x + (k % 3) * px) + xx, (int)(y + (k / 3) * px) + yy, c);
+  }
+}
+
 void Face::drawVolume(Raster& r) {
   auto box = [&](float x0, float y0, float x1, float y1, float rad, uint16_t c) {
     float cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, hx = (x1 - x0) / 2 - rad, hy = (y1 - y0) / 2 - rad;
@@ -81,7 +105,7 @@ void Face::drawVolume(Raster& r) {
     });
   };
   uint16_t white = C(COL_WHITE);
-  box(40, 70, 200, 170, 14, C(0x1A2328));  // dark card
+  box(40, 66, 200, 184, 14, C(0x1A2328));  // dark card
   // speaker: a small box and a cone
   box(58, 106, 76, 134, 3, white);
   {  // solid cone: inside all four edges of the trapezoid (76,110)-(100,90)-(100,150)-(76,130)
@@ -102,6 +126,7 @@ void Face::drawVolume(Raster& r) {
     float x0 = 114 + i * 26, h = 22 + i * 16;
     box(x0, 142 - h, x0 + 18, 142, 4, i < volLevel_ ? C(COL_EYE) : C(0x37474F));
   }
+  drawText(r, "v" RORY_VERSION, 120, 156, 3, C(0x90A4AE));  // software version, small and grey
 }
 
 void Face::drawBattery(Raster& r) {
