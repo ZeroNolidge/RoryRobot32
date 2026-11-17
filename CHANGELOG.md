@@ -1,8 +1,8 @@
 # Rory's versions
 
 Press **BOOT** (volume) and the small grey number under the speaker shows
-which version Rory has, e.g. **v1.9**. It's also printed at the top of the
-Serial Monitor when she starts: `== Rory the Robot v1.9 ==`.
+which version Rory has, e.g. **v1.10**. It's also printed at the top of the
+Serial Monitor when she starts: `== Rory the Robot v1.10 ==`.
 
 Each version says what you need to do to install it:
 - **Upload**: `git pull`, then Upload to Rory (cable, or `rory-wifi`)
@@ -13,6 +13,12 @@ Versions before v1.8 didn't show a number on her face. If the volume card
 shows no number, she has v1.7 or older.
 
 ---
+
+## v1.10 (Nov 17, 2026): Upload
+- Fix: she gave up waiting for her server's reply after 0.02 seconds instead
+  of 20, so questions failed ("Play again"). This bug came with the speed-ups
+  in v1.4.
+- Clearer messages in the Serial Monitor when a question fails.
 
 ## v1.9 (Nov 17, 2026): Upload
 - Fix: if her server couldn't make her new clips, she kept retrying nonstop,

@@ -141,7 +141,11 @@ int talk(Body kind, const uint8_t* body, size_t len) {
   const auto& cfg = Settings::get();
   static const char* kHeaders[] = {"X-Rory-Face", "X-Rory-Say", "X-Rory-Heard", "X-Rory-History", "X-Rory-Look", "X-Rory-Remember"};
   for (int attempt = 0; attempt < 2; attempt++) {
-    if (!ensureConnected()) continue;
+    if (!ensureConnected()) {
+      Serial.printf("[net] couldn't reach the server (free memory %u)\n", (unsigned)ESP.getFreeHeap());
+      client->stop();
+      continue;
+    }
     HTTPClient http;
     http.setReuse(true);  // keep the connection for the next question
     http.setTimeout(20000);
@@ -201,6 +205,7 @@ int talk(Body kind, const uint8_t* body, size_t len) {
 
 void doAsk() {
   uint32_t t0 = millis();
+  Serial.printf("[net] asking the server (%u bytes of his voice)...\n", (unsigned)reqLen);
   int code = talk(Body::Wav, reqWav, reqLen);
   if (code == 202) {
     // "Rory, look!" - take one photo and ask again with it
@@ -310,7 +315,7 @@ void begin() {
 
   client = new NetworkClientSecure();
   client->setCACertBundle(x509_crt_bundle_start, x509_crt_bundle_end - x509_crt_bundle_start);
-  client->setTimeout(20);  // seconds
+  client->setTimeout(20000);  // milliseconds (Arduino-ESP32 3.x; was wrongly 20 = 0.02 s)
   jobs = xQueueCreate(4, sizeof(Job));
   // TLS needs a roomy stack; runs on core 0 next to the audio task.
   xTaskCreatePinnedToCore(netTask, "net", 12288, nullptr, 3, nullptr, 0);
