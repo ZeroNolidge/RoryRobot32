@@ -1,5 +1,39 @@
 # Rory's body (3D printed)
 
+## New: Rory's head (v2) — print this one
+
+`rory_head.scad` is the new head, made to go on a separate body (coming
+next, with room for the camera board and battery). The board's white case
+slides in from the back, the screen is her face, a back plate screws on, and a
+**clear antenna glows** from an LED inside.
+
+<img src="preview-head.png" width="600">
+
+| File | Print | Filament | Notes |
+|---|---|---|---|
+| `stl/rory_head_fit_test.stl` | 1, **first** | any | ~20 min. Push the white case into it: snug, but not forced? Window lined up with the screen? |
+| `stl/rory_head_head.stl` | 1 | almond yellow | face **down** on the plate (as exported). Supports: **on, build plate only** (for the neck) |
+| `stl/rory_head_back.stl` | 1 | almond yellow | flat, as exported. No supports |
+| `stl/rory_head_antenna.stl` | 1 | clear | standing up, as exported. No supports |
+
+Settings: 0.2 mm layers, 3 walls, 15-20 % infill. Plus **4 × M3 × 12 mm
+self-tapping screws** for the back plate.
+
+**If the fit test is too tight or loose:** change `clr` at the top of
+`rory_head.scad` (0.4 = normal; try 0.6 if tight, 0.25 if loose), or tell
+Claude what you see, and re-export.
+
+**Putting it together:** push the LED module's 5 mm LED up through the small
+hole in the top from inside (its rim stops it), slide the board's case in from
+the back (screen first, buttons up), run the USB-C cable and the LED wires
+down through the neck, and screw on the back plate. Press the clear antenna
+onto the top, over the LED.
+
+---
+
+## Older one-piece design
+
+
 A small Rory, about **10 cm tall**, shaped like Rory in the app. The
 Waveshare board stays in its own white case; the whole case slides into
 Rory's head from the back, the screen becomes her face, and the back cover
