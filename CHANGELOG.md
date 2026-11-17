@@ -1,8 +1,8 @@
 # Rory's versions
 
 Press **BOOT** (volume) and the small grey number under the speaker shows
-which version Rory has, e.g. **v1.11**. It's also printed at the top of the
-Serial Monitor when she starts: `== Rory the Robot v1.11 ==`.
+which version Rory has, e.g. **v1.12**. It's also printed at the top of the
+Serial Monitor when she starts: `== Rory the Robot v1.12 ==`.
 
 Each version says what you need to do to install it:
 - **Upload**: `git pull`, then Upload to Rory (cable, or `rory-wifi`)
@@ -13,6 +13,12 @@ Versions before v1.8 didn't show a number on her face. If the volume card
 shows no number, she has v1.7 or older.
 
 ---
+
+## v1.12 (Nov 17, 2026): Upload
+- Fix (second part of v1.11): the web request code also closes and reopens her
+  connection, which wiped the certificate list again. Now the list is
+  re-attached whenever the connection closes, and her early-opened
+  connection is reused (that's the speed-up).
 
 ## v1.11 (Nov 17, 2026): Upload
 - Fix: she couldn't connect to her server at all ("No CAChain is set").

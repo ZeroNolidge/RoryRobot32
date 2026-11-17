@@ -27,7 +27,25 @@ QueueHandle_t jobs = nullptr;
 const uint8_t* reqWav = nullptr;
 size_t reqLen = 0;
 
-NetworkClientSecure* client = nullptr;  // kept open between questions
+// Her secure connection to the server, kept open between questions.
+// In Arduino-ESP32 3.x, stop() wipes the TLS settings (including the trusted
+// certificate list) - and HTTPClient calls stop() itself - so re-attach the
+// list every time the connection is closed, whoever closes it.
+class RoryTls : public NetworkClientSecure {
+ public:
+  void attachCerts() {
+    setCACertBundle(x509_crt_bundle_start, x509_crt_bundle_end - x509_crt_bundle_start);
+    setTimeout(20000);  // milliseconds
+  }
+  void stop() override {
+    NetworkClientSecure::stop();
+    // the list itself is still loaded; just hook it back up (no new memory)
+    attach_ssl_certificate_bundle(sslclient.get(), true);
+    setTimeout(20000);
+  }
+};
+RoryTls* client = nullptr;
+HTTPClient web;  // one request object for all requests, so the open connection is reused
 String host;
 
 String urlDecode(const String& s) {
@@ -47,11 +65,7 @@ String urlDecode(const String& s) {
 
 bool ensureConnected() {
   if (client->connected()) return true;
-  client->stop();
-  // stop() wipes the TLS settings (Arduino-ESP32 3.x), including the trusted
-  // certificate list, so attach it again before every new connection.
-  client->setCACertBundle(x509_crt_bundle_start, x509_crt_bundle_end - x509_crt_bundle_start);
-  client->setTimeout(20000);
+  client->stop();  // (re-attaches the certificate list)
   uint32_t t0 = millis();
   bool ok = client->connect(host.c_str(), 443);
   Serial.printf("[net] %s %s in %lu ms\n", ok ? "connected to" : "could not connect to", host.c_str(),
@@ -150,7 +164,7 @@ int talk(Body kind, const uint8_t* body, size_t len) {
       client->stop();
       continue;
     }
-    HTTPClient http;
+    HTTPClient& http = web;
     http.setReuse(true);  // keep the connection for the next question
     http.setTimeout(20000);
     http.collectHeaders(kHeaders, 6);
@@ -244,7 +258,7 @@ String slug(const char* text) {
 bool makeClip(const MadeClip& c, const String& path) {
   const auto& cfg = Settings::get();
   if (!ensureConnected()) return false;
-  HTTPClient http;
+  HTTPClient& http = web;
   http.setReuse(true);
   http.setTimeout(30000);
   if (!http.begin(*client, cfg.server + "/say")) return false;
@@ -317,9 +331,8 @@ void begin() {
   int slash = host.indexOf('/');
   if (slash >= 0) host = host.substring(0, slash);
 
-  client = new NetworkClientSecure();
-  client->setCACertBundle(x509_crt_bundle_start, x509_crt_bundle_end - x509_crt_bundle_start);
-  client->setTimeout(20000);  // milliseconds (Arduino-ESP32 3.x; was wrongly 20 = 0.02 s)
+  client = new RoryTls();
+  client->attachCerts();
   jobs = xQueueCreate(4, sizeof(Job));
   // TLS needs a roomy stack; runs on core 0 next to the audio task.
   xTaskCreatePinnedToCore(netTask, "net", 12288, nullptr, 3, nullptr, 0);
