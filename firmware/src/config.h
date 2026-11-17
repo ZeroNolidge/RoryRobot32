@@ -79,13 +79,13 @@
 #define KEEP_LISTENING 1
 #endif
 #ifndef LISTEN_WAIT_MS
-#define LISTEN_WAIT_MS 6000
+#define LISTEN_WAIT_MS 10000     // time for him to start answering
 #endif
 #ifndef LISTEN_QUIET_MS
-#define LISTEN_QUIET_MS 1500      // kids pause mid-sentence - don't cut him off too soon
+#define LISTEN_QUIET_MS 2500      // he talks slowly with pauses - don't cut him off
 #endif
 #ifndef LISTEN_SPEECH_LEVEL
-#define LISTEN_SPEECH_LEVEL 0.10f // mic level (0..1) that counts as him talking
+#define LISTEN_SPEECH_LEVEL 0.08f // mic level (0..1) that counts as him talking
 #endif
 // Held up and talked to: while he holds her (face toward him) she quietly
 // checks for close, loud speech; if she hears him she shows her listening face

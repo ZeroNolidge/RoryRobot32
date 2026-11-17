@@ -1,8 +1,8 @@
 # Rory's versions
 
 Press **BOOT** (volume) and the small grey number under the speaker shows
-which version Rory has, e.g. **v1.12**. It's also printed at the top of the
-Serial Monitor when she starts: `== Rory the Robot v1.12 ==`.
+which version Rory has, e.g. **v1.13**. It's also printed at the top of the
+Serial Monitor when she starts: `== Rory the Robot v1.13 ==`.
 
 Each version says what you need to do to install it:
 - **Upload**: `git pull`, then Upload to Rory (cable, or `rory-wifi`)
@@ -13,6 +13,17 @@ Versions before v1.8 didn't show a number on her face. If the volume card
 shows no number, she has v1.7 or older.
 
 ---
+
+## v1.13 (Nov 17, 2026): Upload + Server
+- **More patient listening:** she waits up to 10 seconds for him to start
+  answering (was 6), and lets him pause for 2.5 seconds mid-sentence before
+  she answers (was 1.5). She also notices a softer voice.
+- **Understands him better:** speech-to-text now uses the more accurate model,
+  and is told he's little and still learning to talk, the words he uses
+  (Sonic names, Knight Owl...), what she remembers about him, and the question
+  she just asked. So "boo" after "What color?" becomes "blue".
+- She works out sound-alike words kindly ("Did you say blue?") and never
+  corrects how he talks.
 
 ## Server update (Nov 17, 2026): Server only
 - I Spy: Rory knows each Sonic character's parts and colors (Sonic's red

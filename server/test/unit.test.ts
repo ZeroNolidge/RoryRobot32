@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { buildMessages, cleanForSpeech, friendsNote, memoryNote, parseReply, safeMemory, SYSTEM_PROMPT, wantsLook } from "../src/rory";
-import { heardNothing } from "../src/stt";
+import { heardNothing, sttPrompt } from "../src/stt";
 import { b64urlDecode, b64urlEncode, packHistory, signSpeakUrl, unpackHistory, verifySpeakUrl } from "../src/util";
 import { fallbackSpeechBody, mainSpeechBody, speak, TTS_INSTRUCTIONS } from "../src/voice";
 
@@ -146,5 +146,14 @@ describe("games", () => {
   it("keeps her I Spy answer secret but remembered", () => {
     const r = parseReply("[excited] I spy, with my little robot eye, someone fast and blue! [secret: Sonic]");
     expect(r).toEqual({ face: "excited", say: "I spy, with my little robot eye, someone fast and blue!", secret: "Sonic" });
+  });
+});
+
+describe("speech-to-text hints", () => {
+  it("includes what Rory just asked and what she remembers", () => {
+    const p = sttPrompt({ lastReply: "What color is Sonic?", memory: "# note\nHis name is Nathan." });
+    expect(p).toContain('Rory just said: "What color is Sonic?"');
+    expect(p).toContain("His name is Nathan.");
+    expect(p).not.toContain("# note");
   });
 });

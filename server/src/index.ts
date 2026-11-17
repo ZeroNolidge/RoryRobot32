@@ -24,6 +24,7 @@ export interface Env {
   RORY_MODEL?: string;
   TTS_FALLBACK_VOICE?: string;
   RORY_FRIENDS?: string;
+  STT_MODEL?: string; // e.g. "gpt-4o-mini-transcribe" (faster, a little less accurate)
 }
 
 const MAX_AUDIO_BYTES = 1_000_000; // ~30 s of 16 kHz mono 16-bit audio
@@ -74,7 +75,14 @@ async function think(req: Request, env: Env, canLook = false): Promise<Answer | 
     const audio = await req.arrayBuffer();
     if (audio.byteLength > MAX_AUDIO_BYTES) return json({ error: "recording too long" }, 413);
     if (audio.byteLength < 1000) heard = "";
-    else heard = await transcribe(audio, env.OPENAI_API_KEY);
+    else
+      heard = await transcribe(
+        audio,
+        env.OPENAI_API_KEY,
+        fetch,
+        { lastReply: history.at(-1)?.a.replace(/\[secret:[^\]]*\]/gi, "").trim(), memory: readMemory(req) },
+        env.STT_MODEL || undefined,
+      );
   }
   const tHeard = Date.now();
 
