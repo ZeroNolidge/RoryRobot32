@@ -48,6 +48,10 @@ String urlDecode(const String& s) {
 bool ensureConnected() {
   if (client->connected()) return true;
   client->stop();
+  // stop() wipes the TLS settings (Arduino-ESP32 3.x), including the trusted
+  // certificate list, so attach it again before every new connection.
+  client->setCACertBundle(x509_crt_bundle_start, x509_crt_bundle_end - x509_crt_bundle_start);
+  client->setTimeout(20000);
   uint32_t t0 = millis();
   bool ok = client->connect(host.c_str(), 443);
   Serial.printf("[net] %s %s in %lu ms\n", ok ? "connected to" : "could not connect to", host.c_str(),
