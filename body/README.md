@@ -17,7 +17,9 @@ slides in from the back, the screen is her face, a back plate screws on, and a
 | `stl/rory_head_antenna.stl` | 1 | clear | standing up, as exported. No supports |
 
 Settings: 0.2 mm layers, 3 walls, 15-20 % infill. Plus **4 × M3 × 12 mm
-self-tapping screws** for the back plate.
+screws** for the back plate (self-tapping for plastic is best; machine screws
+also work). Socket or flat heads up to 6.2 mm wide sink into pockets in the
+plate, so they sit **flush**. Drive them in slowly and stop when snug.
 
 **If the fit test is too tight or loose:** change `clr` at the top of
 `rory_head.scad` (0.4 = normal; try 0.6 if tight, 0.25 if loose), or tell

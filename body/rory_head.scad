@@ -37,6 +37,8 @@ win   = 40.6;  // face window (the black glass is ~40 mm)
 win_r = 3;
 back_space = 16;   // room behind the case for the LED module and wires
 plate_t = 2.4;     // back plate thickness
+pad_h = 2;         // the plate is thicker around each screw...
+head_pocket = 3.2; // ...so the screw heads sink in flush (socket or flat heads, up to 6.2 mm wide)
 
 head_w = case_w + 2 * (clr + wall);     // 53.2 mm
 head_r = case_r + clr + wall;
@@ -95,36 +97,40 @@ module head() {
   translate([0, case_back - 0.01, 0]) rrect(head_w - 0.4, head_w - 0.4, head_r - 0.2, back_space + 0.01);
   for (b = bosses) translate([b[0], case_back, b[1]]) difference() {
     hull() {
-      rotate([-90, 0, 0]) cylinder(d = boss_d, h = back_space);
+      rotate([-90, 0, 0]) cylinder(d = boss_d, h = back_space - pad_h);
       // tie each boss into the corner walls so it's strong
-      translate([sign(b[0]) * 3, 0, sign(b[1]) * 3]) rotate([-90, 0, 0]) cylinder(d = boss_d, h = back_space);
+      translate([sign(b[0]) * 3, 0, sign(b[1]) * 3]) rotate([-90, 0, 0]) cylinder(d = boss_d, h = back_space - pad_h);
     }
-    translate([0, back_space - 11, 0]) rotate([-90, 0, 0]) cylinder(d = pilot, h = 12);
+    translate([0, back_space - pad_h - 11, 0]) rotate([-90, 0, 0]) cylinder(d = pilot, h = 12);
   }
   }
 }
 
 /* ---------- back plate ---------- */
 module back_plate() {
+  inner = case_w + 2 * clr - 0.6;  // just inside the head's opening
   difference() {
     union() {
       rrect(head_w, head_w, head_r, plate_t);
       // a lip that fits just inside the head, so the plate lines up by itself
       translate([0, -1.2, 0]) difference() {
-        rrect(case_w + 2 * clr - 0.6, case_w + 2 * clr - 0.6, case_r + clr - 0.3, 1.2);
+        rrect(inner, inner, case_r + clr - 0.3, 1.2);
         rrect(case_w + 2 * clr - 4, case_w + 2 * clr - 4, case_r, 1.2);
+      }
+      // thicker pads around the screws (they meet the head's screw posts)
+      intersection() {
+        translate([0, -pad_h, 0]) rrect(inner, inner, case_r + clr - 0.3, pad_h + 0.01);
+        for (b = bosses) translate([b[0], -pad_h, b[1]]) rotate([-90, 0, 0]) cylinder(d = boss_d + 1, h = pad_h + 0.01);
       }
     }
     // speaker / microphone holes (a round grille)
     for (x = [-12 : 4 : 12], z = [-12 : 4 : 12]) if (x * x + z * z <= 13 * 13)
       translate([x, -2, z]) rotate([-90, 0, 0]) cylinder(d = 2.2, h = plate_t + 4, $fn = 16);
-    // screw holes, countersunk a little
-    for (b = bosses) translate([b[0], -2, b[1]]) rotate([-90, 0, 0]) {
-      cylinder(d = screw_clear, h = plate_t + 4);
-      translate([0, 0, 2 + plate_t - 1]) cylinder(d1 = screw_clear, d2 = 6.2, h = 1.01);
+    // screw holes, with a pocket so the heads sit flush
+    for (b = bosses) translate([b[0], 0, b[1]]) rotate([-90, 0, 0]) {
+      translate([0, 0, -pad_h - 1]) cylinder(d = screw_clear, h = pad_h + plate_t + 2);
+      translate([0, 0, plate_t - head_pocket]) cylinder(d = 6.4, h = head_pocket + 1);
     }
-    // keep the corner bosses clear of the inner lip
-    for (b = bosses) translate([b[0], -1.3, b[1]]) rotate([-90, 0, 0]) cylinder(d = boss_d + 1, h = 1.31);
   }
 }
 
