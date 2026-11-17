@@ -279,7 +279,8 @@ void doSync() {
     }
   }
   if (made) Serial.printf("[net] made %d new clips in her voice\n", made);
-  syncDone = failed < 3;  // if the server's unhappy, try again after a restart
+  if (failed >= 3) Serial.println("[net] the server couldn't make her clips - will try again after a restart");
+  syncDone = true;  // finished (or gave up until the next restart): never loop
   syncQueued = false;
 }
 
