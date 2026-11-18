@@ -62,9 +62,9 @@ screws = [for (sx = [-1, 1], sz = [-1, 1]) [sx * screw_xz, sz * screw_xz]];
 pilot = 2.5;  screw_clear = 3.4;  screw_len = 12;
 
 // antenna / LED
-led_y = case_back + back_space / 2;
+led_y = case_back + 2.9;           // as far forward as the LED rim allows, behind the case
 led_hole = 5.1;                     // 5 mm LED, press fit from inside (its rim stops it)
-socket_d = 8.4;  socket_h = 1.6;    // the antenna's peg sits in this
+socket_d = 8.0;  socket_h = 1.6;    // the antenna's peg sits in this (stays clear of the back edge)
 
 // neck (open underneath: USB-C plug, microSD, LED wires)
 neck_in_w = 18;                     // fits a USB-C plug, straight or flat 90-degree
