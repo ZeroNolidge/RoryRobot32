@@ -113,8 +113,8 @@ module shell() {
     // camera window in the chest, softly chamfered
     translate([lens_x, -1, z_lens]) rotate([-90, 0, 0]) cylinder(d = 7, h = wall + 2);
     translate([lens_x, -0.01, z_lens]) rotate([-90, 0, 0]) cylinder(d1 = 9, d2 = 7, h = 1);
-    // pinhole for the camera board's PWR button (press with a pen)
-    translate([pwr_x, -1, z_board + pwr_up]) rotate([-90, 0, 0]) cylinder(d = 3.2, h = wall + 2);
+    // pinholes for the camera board's PWR (right) and BOOT (left) buttons - press with a pen
+    for (x = [pwr_x, -pwr_x]) translate([x, -1, z_board + pwr_up]) rotate([-90, 0, 0]) cylinder(d = 3.2, h = wall + 2);
   }
   // a little extra thickness under the top wall around the head-lock screws
   for (sx = [-1, 1]) difference() {

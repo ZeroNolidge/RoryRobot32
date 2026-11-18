@@ -98,7 +98,8 @@ gold paint (shoulder bolts and a dot above the chest panel), and two USB-C
    screws up** through the two holes in the body's top into the head's bottom.
    That locks the head on.
 8. **Battery** in (step 6), then screw on the **back panel** with the 4 M3 × 12 screws.
-9. **Eyes on/off:** poke the small pinhole low on her chest with a pen.
+9. **Eyes on/off:** poke the small pinhole low on her chest, on the right, with a pen
+   (PWR). The one on the left is BOOT, only needed if a USB upload to the eyes gets stuck.
 
 **Cable routes:** the head's flat USB cable leaves its port pointing back,
 folds down into the body, crosses over the battery, runs down the channel behind
