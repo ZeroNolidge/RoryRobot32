@@ -43,6 +43,49 @@ what you see.
 4. Press the clear antenna onto the top, over the LED.
 5. Charge through the neck with a straight or flat 90° USB-C cable.
 
+## New: Rory's body (v1) — goes under the v3 head
+
+`rory_torso.scad`: about 46 × 34 × 54 mm. With the head on top, Rory is
+about **11.3 cm tall** (plus the antenna). Inside, front to back: the camera
+board with its camera looking out of her chest, a thin holder plate, the
+battery (up to 10 × 30 × 41 mm, e.g. 102540), and a back panel with her two
+USB-C charging ports.
+
+<img src="preview-body.png" width="700">
+
+| File | Print | Filament | Notes |
+|---|---|---|---|
+| `stl/rory_body_shell.stl` | 1 | almond yellow | chest **down** (as exported). Supports: **on, build plate only** (feet and neck plug) |
+| `stl/rory_body_back.stl` | 1 | almond yellow | flat, outside down. No supports |
+| `stl/rory_body_holder.stl` | 1 | any (hidden) | flat, fingers up. No supports |
+
+Plus **4 × M3 × 12 mm screws** (flush, like the head) and **2 × USB-C 90°
+male-to-female flat extension cables** (4 inch).
+
+**Putting it together:**
+1. **Camera:** fold the camera onto the front of the camera board (over the
+   microSD slot) and stick it down with a small square of double-sided tape,
+   lens facing straight out.
+2. **USB cables:** plug one extension's angled end into the camera board's
+   USB-C port (cable pointing back), and the other into the head's port
+   (through the neck, cable pointing back). Lay both female ends in the two
+   cradles on the floor of the body, ports facing out the back.
+3. **Camera board:** camera side first, push it onto the 4 pins inside the
+   chest, so the lens lines up with the chest window.
+4. **Holder:** drop it in behind the board, fingers toward the board (the
+   notch on the right, for the LED wires).
+5. **Battery:** plug it into the board's **BAT** socket (red on +!), then set
+   it behind the holder.
+6. **Head:** run the head's USB cable and the LED wires down through the neck
+   plug, and push the head's neck collar onto the plug.
+7. **Back panel:** screw it on. The two ports come through the holes at the bottom.
+8. **Switching the eyes on/off:** poke the small pinhole in her chest
+   (bottom right) with a pen. That's the camera board's PWR button.
+
+**Check first:** `cam_stack` (7 mm) at the top of `rory_torso.scad` is how
+far the folded camera sticks out from the board. If the camera doesn't reach
+the window, or presses too hard, measure it and tell Claude.
+
 ---
 
 ## Older one-piece design
