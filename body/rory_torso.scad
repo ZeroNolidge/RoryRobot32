@@ -52,13 +52,13 @@ y_cam = wall;                              // front of the folded camera (touche
 y_pcb = y_cam + cam_stack;                 // board's front face
 y_plate = y_pcb + board_t + back_parts;    // holder plate (front face)
 y_bat = y_plate + plate_t;                 // battery front
-y_back = y_bat + bat[1] + 0.8;             // back of the shell (back panel goes on here)
+y_back = y_bat + bat[1] + 2.3;             // 2.3 mm channel behind the battery for the head's flat USB cable             // back of the shell (back panel goes on here)
 D = y_back + panel_t;                      // total depth
 
 z_port = wall;                             // ports lie on the floor
 z_board = wall + usb_drop;                 // board's bottom edge
 z_bat = z_port + port[2] + 0.8;            // battery sits just above the port cradles
-z_top_in = max(z_board + board, z_bat + bat[2]) + 0.6;
+z_top_in = max(z_board + board, z_bat + bat[2]) + 3.0;  // room above for the cables to cross over
 H = z_top_in + wall;                       // shell height
 zc = z_board + board / 2;                  // board center
 z_lens = z_board + board - lens_down;
@@ -212,8 +212,8 @@ module back_panel() {
         rrect_xz(in_w - 0.6, H - 2 * wall - 0.6, 1.2, 1.2);
         rrect_xz(in_w - 4, H - 2 * wall - 4, 0.5, 1.2);
       }
-      // pads that keep the battery from rattling
-      for (x = [-9, 9]) translate([x - 3, -(y_back - (y_bat + bat[1])) + 0.2, z_bat + bat[2] / 2 - 10]) cube([6, y_back - (y_bat + bat[1]) - 0.2 + 0.01, 20]);
+      // pads that keep the battery from rattling (on the right: the head's USB cable runs down the left)
+      for (x = [3, 11]) translate([x - 3, -(y_back - (y_bat + bat[1])) + 0.2, z_bat + bat[2] / 2 - 10]) cube([6, y_back - (y_bat + bat[1]) - 0.2 + 0.01, 20]);
     }
     // the two USB-C ports pass through
     for (sx = [-1, 1]) translate([sx * port_x, -2, z_port + port[2] / 2]) rotate([-90, 0, 0])

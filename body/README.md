@@ -45,8 +45,9 @@ what you see.
 
 ## New: Rory's body (v1) — goes under the v3 head
 
-`rory_torso.scad`: about 46 × 34 × 54 mm. With the head on top, Rory is
-about **11.3 cm tall** (plus the antenna). Inside, front to back: the camera
+`rory_torso.scad`: about 46 × 35.5 × 56 mm, the same depth as the head (they're
+flush front and back). With the head on top, Rory is about **11.5 cm tall**
+(plus the antenna). Inside, front to back: the camera
 board with its camera looking out of her chest, a thin holder plate, the
 battery (up to 10 × 30 × 41 mm, e.g. 102540), and a back panel with her two
 USB-C charging ports.
@@ -87,6 +88,19 @@ cables** (4 inch). Her arms are molded onto her sides, so they can't be pulled o
 7. **Back panel:** screw it on. The two ports come through the holes at the bottom.
 8. **Switching the eyes on/off:** poke the small pinhole in her chest
    (bottom right) with a pen. That's the camera board's PWR button.
+
+**Cable routes:**
+- **Head USB cable** (flat): from the head's port it points backward, folds
+  down through the neck (in front of the neck bolts), crosses over the top of
+  the battery, runs down the **channel behind the battery on the left** (the
+  battery pads on the back panel are on the right, so they don't pinch it),
+  then folds forward under the battery into the **left** port. About 9 cm, so
+  the 4-inch cable just reaches; the 8-inch one is easier.
+- **Camera board USB cable:** from the board's port it points backward under
+  the battery, then loops into the **right** port.
+- **LED wires:** from behind the head's screen, down through the gap between
+  the neck bolts, over the battery, and down the right side of the camera
+  board to its UART socket (through the notch in the holder plate).
 
 **Check first:** `cam_stack` (7 mm) at the top of `rory_torso.scad` is how
 far the folded camera sticks out from the board. If the camera doesn't reach
