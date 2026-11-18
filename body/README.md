@@ -37,6 +37,7 @@ what you see.
    and out through the neck.
 2. Slide the board's case in from the back: screen first, buttons on top.
 3. Screw on the back plate (the gap in its rim goes at the bottom, over the wires).
+   Its 4 short posts hold the case gently against the face so it can't rattle.
 4. Press the clear antenna onto the top, over the LED.
 5. Charge through the neck with a straight or flat 90° USB-C cable.
 

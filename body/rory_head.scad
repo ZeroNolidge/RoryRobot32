@@ -42,6 +42,8 @@ win_r = 3;
 back_space = 7;  // behind the case: LED module standing upright + wires
 plate_t = 4;     // back plate
 screw_pocket = 2.9;  // the screw heads sink this deep (M3 socket heads are 3 mm tall)
+holder_xz = 16;      // the back plate's 4 holding posts, near the case's corners
+holder_gap = 0.3;    // leaves the posts just short of the case (no rattling, no squeezing)
 
 head_w = case_w + 2 * (clr + wall);   // 53.6 mm
 pocket_w = case_w + 2 * clr;
@@ -119,6 +121,10 @@ module back_plate() {
         // gap at the bottom so the wires can go down the neck
         translate([-neck_in_w / 2, -1, -head_w / 2]) cube([neck_in_w, 3, 6]);
       }
+      // posts that press the case gently against the face (clear of the LED
+      // module in the top middle and the wires in the bottom middle)
+      for (x = [-1, 1], z = [-1, 1]) translate([x * holder_xz, -(back_space - holder_gap), z * holder_xz])
+        rotate([-90, 0, 0]) cylinder(d = 6, h = back_space - holder_gap + 0.01);
     }
     for (s = screws) translate([s[0], 0, s[1]]) rotate([-90, 0, 0]) {
       translate([0, 0, -1]) cylinder(d = screw_clear, h = plate_t + 2);
