@@ -135,6 +135,8 @@ void Brain::tuckIn(uint32_t now) {
 
 void Brain::finishListening(uint32_t now) {
   if (ai_ == Ai::Recording) Voice::stopRecording();
+  // hands-free she waits for a quiet gap, so he really stopped a bit earlier
+  Net::markSpeechEnd(handsFree_ ? lastLoudMs_ : now);
   handsFree_ = false;
   mode_ = Mode::Thinking;
   modeSinceMs_ = now;

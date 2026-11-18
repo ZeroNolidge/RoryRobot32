@@ -1,8 +1,8 @@
 # Rory's versions
 
 Press **BOOT** (volume) and the small grey number under the speaker shows
-which version Rory has, e.g. **v1.16**. It's also printed at the top of the
-Serial Monitor when she starts: `== Rory the Robot v1.16 ==`.
+which version Rory has, e.g. **v1.17**. It's also printed at the top of the
+Serial Monitor when she starts: `== Rory the Robot v1.17 ==`.
 
 Each version says what you need to do to install it:
 - **Upload**: `git pull`, then Upload to Rory (cable, or `rory-wifi`)
@@ -13,6 +13,11 @@ Versions before v1.8 didn't show a number on her face. If the volume card
 shows no number, she has v1.7 or older.
 
 ---
+
+## v1.17 (Nov 18, 2026): Upload
+- Timing report: after each answer the Serial Monitor shows where the wait
+  went, e.g. `[time] he stopped talking -> sent: 2500 ms | server (hearing +
+  thinking + voice): 3100 ms | first word: 600 ms later | TOTAL WAIT: 6.2 s`.
 
 ## v1.16 (Nov 18, 2026): Upload
 - **Smoother answers:** she now collects about 0.6 s of her answer before she

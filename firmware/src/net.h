@@ -26,6 +26,8 @@ enum class State : uint8_t {
 // Send a WAV recording to the server. Returns false if a question is already
 // in flight or Rory is offline. `wav` must stay valid until the state leaves Busy.
 bool ask(const uint8_t* wav, size_t len);
+// When he actually stopped talking (for the timing report in the Serial Monitor).
+void markSpeechEnd(uint32_t ms);
 State state();
 void reset();     // back to Idle once Done or Failed
 

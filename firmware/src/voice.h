@@ -39,5 +39,6 @@ float micLevel();                // 0..1 how loud he is right now
 // network task as it arrives and played almost immediately (no decoding)
 bool streamBegin();              // get the speaker ready (lets a "hmm" clip finish first)
 size_t streamWrite(const uint8_t* data, size_t len);  // waits while the buffer is full; 0 = stopped
-void streamEnd();                // that's all; plays out what's left
+void streamEnd();
+uint32_t streamFirstSoundMs();   // millis() when the current answer started playing (0 = not yet)                // that's all; plays out what's left
 }  // namespace Voice

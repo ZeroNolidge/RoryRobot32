@@ -52,6 +52,7 @@ const size_t kPrebufferBytes = kStreamRate * 2 * STREAM_PREBUFFER_MS / 1000;
 const size_t kRebufferBytes = kStreamRate * 2 * 300 / 1000;
 const size_t kLowWaterBytes = 1024;  // ~20 ms left: about to run dry
 size_t startAt = 0;                  // bytes to wait for before (re)starting
+volatile uint32_t firstSoundMs = 0;  // when this answer's first sound played (for timing)
 StreamBufferHandle_t sbuf = nullptr;
 StaticStreamBuffer_t sbufStruct;
 I2SClass* spk = nullptr;
@@ -235,6 +236,7 @@ void beginStream() {
   streamActive = true;
   streamStarted = false;
   startAt = 0;
+  firstSoundMs = 0;
   hasCarry = false;
   running = true;
 }
@@ -248,6 +250,7 @@ void pumpStream() {
       return;
     }
     streamStarted = true;
+    if (!firstSoundMs) firstSoundMs = millis();
   } else if (more && xStreamBufferBytesAvailable(sbuf) < kLowWaterBytes) {
     // about to run dry mid-sentence: one short pause to catch up
     streamStarted = false;
@@ -463,6 +466,8 @@ const uint8_t* wav() { return recBuf; }
 size_t wavSize() { return kHeader + recLen; }
 float recordedSeconds() { return recLen / (2.0f * kRate); }
 float micLevel() { return micLvl; }
+
+uint32_t streamFirstSoundMs() { return firstSoundMs; }
 
 bool streamBegin() {
   if (!sbuf) return false;

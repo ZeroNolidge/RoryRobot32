@@ -83,6 +83,10 @@ class SpeakerSink : public Stream {
   int peek() override { return -1; }
 };
 
+// ---- timing report: where does the wait go?
+volatile uint32_t tSpeechEnd = 0;  // he stopped talking
+uint32_t tSent = 0, tReply = 0;    // question sent / server's reply arrived
+
 // ---- her camera eyes -------------------------------------------------------
 uint8_t* photo = nullptr;  // one JPEG, in PSRAM
 const size_t kPhotoMax = 300 * 1024;
@@ -183,6 +187,7 @@ int talk(Body kind, const uint8_t* body, size_t len) {
       http.addHeader("X-Rory-Eyes", "off");
     }
     int code = kind == Body::NoEyes ? http.POST(ans.heard) : http.POST(const_cast<uint8_t*>(body), len);
+    tReply = millis();
     if (code < 0) {  // the kept-open connection had gone stale: reconnect and try once more
       Serial.printf("[net] %s - retrying\n", http.errorToString(code).c_str());
       http.end();
@@ -223,6 +228,7 @@ int talk(Body kind, const uint8_t* body, size_t len) {
 
 void doAsk() {
   uint32_t t0 = millis();
+  tSent = t0;
   Serial.printf("[net] asking the server (%u bytes of his voice)...\n", (unsigned)reqLen);
   int code = talk(Body::Wav, reqWav, reqLen);
   if (code == 202) {
@@ -233,6 +239,14 @@ void doAsk() {
     code = n ? talk(Body::Photo, photo, n) : talk(Body::NoEyes, nullptr, 0);
   }
   Serial.printf("[net] question took %lu ms until her voice ended (code %d)\n", (unsigned long)(millis() - t0), code);
+  uint32_t first = Voice::streamFirstSoundMs();
+  if (code == 200 && first && tSpeechEnd) {
+    Serial.printf("[time] he stopped talking -> sent: %lu ms | server (hearing + thinking + voice): %lu ms | "
+                  "first word: %lu ms later | TOTAL WAIT: %.1f s\n",
+                  (unsigned long)(tSent - tSpeechEnd), (unsigned long)(tReply - tSent), (unsigned long)(first - tReply),
+                  (first - tSpeechEnd) / 1000.0f);
+  }
+  tSpeechEnd = 0;
   st = code == 200 ? Net::State::Done : Net::State::Failed;
 }
 
@@ -387,6 +401,8 @@ bool ask(const uint8_t* wav, size_t len) {
 }
 
 State state() { return st; }
+
+void markSpeechEnd(uint32_t ms) { tSpeechEnd = ms; }
 
 void reset() {
   if (st == State::Done || st == State::Failed) st = State::Idle;
