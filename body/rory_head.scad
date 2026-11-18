@@ -1,59 +1,70 @@
-// Rory the Robot - head (v2), for the Waveshare ESP32-S3-Touch-LCD-1.54
+// Rory the Robot - head (v3), for the Waveshare ESP32-S3-Touch-LCD-1.54
 //
 // The board stays in its own white 46 x 46 x 22.5 mm case. The case slides
-// into the head from the back, the screen becomes Rory's face, and a back
-// plate screws on. Behind the case there's room for the antenna LED, which
-// shines up into a clear antenna on top. A hollow neck at the bottom lets the
-// USB-C cable and the LED wires go down into her body (body coming later).
+// into the head from the back, the screen becomes Rory's face, and a solid
+// back plate screws on with 4 flush screws in the corners. A thin space behind
+// the case holds the antenna LED module (standing upright, LED legs bent so
+// the LED points up into the clear antenna). The open neck underneath gives
+// the USB-C port room for a cable (straight or flat 90-degree) and lets the LED
+// wires go down into the body.
+//
+// v3 (after the first test print):
+//  - nothing sticks into the case's path any more (screws are in the corners)
+//  - much shallower: 7 mm behind the case instead of 16
+//  - the neck opening sits right under the USB-C port
+//  - big side windows: the speaker grille and microphone are on the case's sides
 //
 // Parts (pick one, render with F6, export STL):
 //   part = "head"      the head shell                      almond yellow
-//   part = "back"      back plate with speaker holes       almond yellow
+//   part = "back"      solid back plate, flush screws      almond yellow
 //   part = "antenna"   antenna: stalk + ball               clear
-//   part = "fit_test"  quick 20-minute ring to check the case fits (print this first!)
+//   part = "fit_test"  the front 9 mm only, ~20 min - checks the case fits
 //   part = "all"       everything together, for looking at
-//
-// Hardware: 4 x M3 x 12 mm self-tapping screws for the back plate.
-// The LED: the DIYables RGB LED module's 5 mm LED pushes up through the hole
-// in the top from inside (press fit), and the antenna presses on over it.
 
 part = "all";
 
-/* ---------- the Waveshare case (outline drawing, mm) ---------- */
+/* ---------- the Waveshare case (mm) ---------- */
 case_w = 46;     // width and height
 case_d = 22.5;   // depth, front to back
 case_r = 5.8;    // corner radius (front view)
-// Openings - measure the real case and adjust if needed:
-btn_y = [4, 16.4];    // buttons on top, measured from the case FRONT
-usb_y = [3, 19.5];    // USB-C on the bottom, measured from the case front
-usb_w = 16;           // room for the USB-C plug (straight or right-angle)
-ear_d = 15;           // side windows (microSD slot side)
+// Openings - measured from the case FRONT (the screen side):
+btn_y = [4, 16.4];    // the three buttons on top
+usb_y = [2, 20.5];    // USB-C (and microSD slot) on the bottom: the neck is open over all of it
+side_win = [17, 34];  // side windows: depth x height (speaker grille + microphone)
 
 /* ---------- Rory's head ---------- */
-clr   = 0.4;   // clearance around the case
-wall  = 3.2;   // shell walls - strong for little hands
+clr   = 0.4;   // clearance around the case (0.6 if tight, 0.25 if loose)
+wall  = 3.4;   // side walls
+head_r = 4;    // outside corner radius: a bit squarer, which leaves room for the corner screws
 lip   = 1.6;   // frame in front of the screen
 win   = 40.6;  // face window (the black glass is ~40 mm)
 win_r = 3;
-back_space = 16;   // room behind the case for the LED module and wires
-plate_t = 2.4;     // back plate thickness
-pad_h = 2;         // the plate is thicker around each screw...
-head_pocket = 3.2; // ...so the screw heads sink in flush (socket or flat heads, up to 6.2 mm wide)
+back_space = 7;  // behind the case: LED module standing upright + wires
+plate_t = 4;     // back plate
+screw_pocket = 2.9;  // the screw heads sink this deep (M3 socket heads are 3 mm tall)
 
-head_w = case_w + 2 * (clr + wall);     // 53.2 mm
-head_r = case_r + clr + wall;
-case_back = lip + case_d + clr;         // where the case's back sits
-D = case_back + back_space;             // shell depth (the back plate goes on behind)
+head_w = case_w + 2 * (clr + wall);   // 53.6 mm
+pocket_w = case_w + 2 * clr;
+pocket_r = case_r + clr;
+case_back = lip + case_d + clr;       // where the case's back sits
+D = case_back + back_space;           // head depth; the back plate goes on behind
 
-boss_d = 7;  pilot = 2.5;  screw_clear = 3.4;
-boss_xz = case_w / 2 + clr - boss_d / 2 + 0.5;   // bosses tucked into the corners
-bosses = [for (sx = [-1, 1], sz = [-1, 1]) [sx * boss_xz, sz * boss_xz]];
+// corner screws: in the solid corners, halfway between the pocket and the outside
+diag_in = (pocket_w / 2 - pocket_r) * sqrt(2) + pocket_r;
+diag_out = (head_w / 2 - head_r) * sqrt(2) + head_r;
+screw_xz = (diag_in + diag_out) / 2 / sqrt(2);
+screws = [for (sx = [-1, 1], sz = [-1, 1]) [sx * screw_xz, sz * screw_xz]];
+pilot = 2.5;  screw_clear = 3.4;  screw_len = 12;
 
 // antenna / LED
-led_y = case_back + back_space / 2;   // over the middle of the back space
-led_hole = 5.1;                       // 5 mm LED, press fit (its rim stops it)
-socket_d = 8.4;  socket_h = 1.6;      // the antenna's peg sits in this
-neck_w = 26; neck_d = 30; neck_h = 6; // collar that will sit in the body
+led_y = case_back + back_space / 2;
+led_hole = 5.1;                     // 5 mm LED, press fit from inside (its rim stops it)
+socket_d = 8.4;  socket_h = 1.6;    // the antenna's peg sits in this
+
+// neck (open underneath: USB-C plug, microSD, LED wires)
+neck_in_w = 18;                     // fits a USB-C plug, straight or flat 90-degree
+neck_y = [lip + usb_y[0] - 1, D];   // from just in front of the port to the back
+neck_wall = 2.4;  neck_h = 6;
 
 $fn = 64;
 YELLOW = "#E9C46A"; CLEAR = "#CFEFFF"; SCREEN = "#263238"; CYAN = "#52DAE8"; WHITE = "#F5F5F5";
@@ -61,91 +72,71 @@ YELLOW = "#E9C46A"; CLEAR = "#CFEFFF"; SCREEN = "#263238"; CYAN = "#52DAE8"; WHI
 /* ---------- helpers ---------- */
 // rounded rectangle in the x-z plane, from y=0 to y=t
 module rrect(w, h, r, t) { translate([0, t, 0]) rotate([90, 0, 0]) linear_extrude(t) offset(r) square([w - 2 * r, h - 2 * r], center = true); }
-module rounded_box2d(w, d, r) { offset(r) square([w - 2 * r, d - 2 * r], center = true); }
+// rounded rectangle in the x-y plane (for the neck)
+module rbox2d(x0, x1, y0, y1, r) { translate([(x0 + x1) / 2, (y0 + y1) / 2]) offset(r) square([x1 - x0 - 2 * r, y1 - y0 - 2 * r], center = true); }
+// stadium (rounded slot) in the y-z plane, for the side windows
+module side_slot(dy, dz, len) { rotate([0, 90, 0]) linear_extrude(len, center = true) offset(dy / 2 - 0.01) square([dz - dy, 0.02], center = true); }
 
 /* ---------- head ---------- */
 module head() {
   difference() {
     union() {
       rrect(head_w, head_w, head_r, D);
-      // little ear rings on the sides
-      for (s = [-1, 1]) translate([s * head_w / 2, lip + case_d / 2, 0]) rotate([0, 90, 0])
-        cylinder(d = ear_d + 6, h = 1.6, center = true);
-      // neck collar under the head
-      translate([0, (lip + D) / 2, -head_w / 2 - neck_h + 0.01]) linear_extrude(neck_h)
-        rounded_box2d(neck_w, neck_d, 5);
+      // neck collar under the head (it will sit in the body)
+      translate([0, 0, -head_w / 2 - neck_h + 0.01]) linear_extrude(neck_h)
+        rbox2d(-neck_in_w / 2 - neck_wall, neck_in_w / 2 + neck_wall, neck_y[0] - neck_wall, D, 2);
     }
-    // the case pocket, open at the back
-    translate([0, lip, 0]) rrect(case_w + 2 * clr, case_w + 2 * clr, case_r + clr, D);
+    // the case pocket, straight through from the back - nothing in the way
+    translate([0, lip, 0]) rrect(pocket_w, pocket_w, pocket_r, D);
     // face window with a soft chamfer
     translate([0, -1, 0]) rrect(win, win, win_r, lip + 2);
     translate([0, -0.01, 0]) hull() { rrect(win + 1.6, win + 1.6, win_r + 0.8, 0.01); translate([0, 0.8, 0]) rrect(win, win, win_r, 0.01); }
-    // side windows (ears)
-    for (s = [-1, 1]) translate([s * head_w / 2, lip + case_d / 2, 0]) rotate([0, 90, 0]) cylinder(d = ear_d, h = 2 * wall + 6, center = true);
+    // big side windows (speaker grille and microphone on one side, the other side to match)
+    translate([0, lip + case_d / 2, 0]) side_slot(side_win[0], side_win[1], head_w + 2);
     // buttons on top: one long window
     translate([0, lip + (btn_y[0] + btn_y[1]) / 2, head_w / 2 - wall - 1]) hull() for (x = [-16, 16])
       translate([x, 0, 0]) scale([1, (btn_y[1] - btn_y[0]) / 8, 1]) cylinder(d = 8, h = wall + 2);
     // LED hole + antenna socket on top
     translate([0, led_y, head_w / 2 - wall - 1]) cylinder(d = led_hole, h = wall + 2);
     translate([0, led_y, head_w / 2 - socket_h]) cylinder(d = socket_d, h = socket_h + 1);
-    // neck: USB-C plug and wires go down through here
-    translate([0, (lip + D) / 2, -head_w / 2 - neck_h - 1]) linear_extrude(wall + neck_h + 2)
-      rounded_box2d(neck_w - 2 * 2.4, neck_d - 2 * 2.4, 3);
-  }
-  // corner bosses behind the case: they hold the case against the face and take the back-plate screws
-  intersection() {  // keep the bosses inside the rounded shell
-  translate([0, case_back - 0.01, 0]) rrect(head_w - 0.4, head_w - 0.4, head_r - 0.2, back_space + 0.01);
-  for (b = bosses) translate([b[0], case_back, b[1]]) difference() {
-    hull() {
-      rotate([-90, 0, 0]) cylinder(d = boss_d, h = back_space - pad_h);
-      // tie each boss into the corner walls so it's strong
-      translate([sign(b[0]) * 3, 0, sign(b[1]) * 3]) rotate([-90, 0, 0]) cylinder(d = boss_d, h = back_space - pad_h);
-    }
-    translate([0, back_space - pad_h - 11, 0]) rotate([-90, 0, 0]) cylinder(d = pilot, h = 12);
-  }
+    // neck: open from just in front of the USB-C port all the way back
+    translate([0, 0, -head_w / 2 - neck_h - 1]) linear_extrude(wall + neck_h + 2)
+      rbox2d(-neck_in_w / 2, neck_in_w / 2, neck_y[0], D + 1, 2);
+    // corner screw holes for the back plate
+    for (s = screws) translate([s[0], D - screw_len, s[1]]) rotate([-90, 0, 0]) cylinder(d = pilot, h = screw_len + 1);
   }
 }
 
-/* ---------- back plate ---------- */
+/* ---------- back plate (solid; screw heads sit flush) ---------- */
 module back_plate() {
-  inner = case_w + 2 * clr - 0.6;  // just inside the head's opening
   difference() {
     union() {
       rrect(head_w, head_w, head_r, plate_t);
-      // a lip that fits just inside the head, so the plate lines up by itself
+      // a lip that fits just inside the head so the plate lines up by itself
       translate([0, -1.2, 0]) difference() {
-        rrect(inner, inner, case_r + clr - 0.3, 1.2);
-        rrect(case_w + 2 * clr - 4, case_w + 2 * clr - 4, case_r, 1.2);
-      }
-      // thicker pads around the screws (they meet the head's screw posts)
-      intersection() {
-        translate([0, -pad_h, 0]) rrect(inner, inner, case_r + clr - 0.3, pad_h + 0.01);
-        for (b = bosses) translate([b[0], -pad_h, b[1]]) rotate([-90, 0, 0]) cylinder(d = boss_d + 1, h = pad_h + 0.01);
+        rrect(pocket_w - 0.6, pocket_w - 0.6, pocket_r - 0.3, 1.2);
+        rrect(pocket_w - 4, pocket_w - 4, pocket_r - 1.5, 1.2);
+        // gap at the bottom so the wires can go down the neck
+        translate([-neck_in_w / 2, -1, -head_w / 2]) cube([neck_in_w, 3, 6]);
       }
     }
-    // speaker / microphone holes (a round grille)
-    for (x = [-12 : 4 : 12], z = [-12 : 4 : 12]) if (x * x + z * z <= 13 * 13)
-      translate([x, -2, z]) rotate([-90, 0, 0]) cylinder(d = 2.2, h = plate_t + 4, $fn = 16);
-    // screw holes, with a pocket so the heads sit flush
-    for (b = bosses) translate([b[0], 0, b[1]]) rotate([-90, 0, 0]) {
-      translate([0, 0, -pad_h - 1]) cylinder(d = screw_clear, h = pad_h + plate_t + 2);
-      translate([0, 0, plate_t - head_pocket]) cylinder(d = 6.4, h = head_pocket + 1);
+    for (s = screws) translate([s[0], 0, s[1]]) rotate([-90, 0, 0]) {
+      translate([0, 0, -1]) cylinder(d = screw_clear, h = plate_t + 2);
+      translate([0, 0, plate_t - screw_pocket]) cylinder(d = 6.4, h = screw_pocket + 1);
     }
   }
 }
 
 /* ---------- antenna (clear) ---------- */
-// Prints standing up, ball on top. The LED's dome slides into the bore; the
-// solid clear plastic above it carries the light up into the ball.
-ant_h = 16;      // stalk height above the head
-ball_d = 13;
+// Prints standing up. The LED's dome slides into the bore; the clear plastic
+// above it carries the light up into the ball.
+ant_h = 16;  ball_d = 13;
 module antenna() {
   difference() {
     union() {
       translate([0, 0, -socket_h]) cylinder(d = socket_d - 0.25, h = socket_h + 0.01);  // peg (press fit)
       cylinder(d1 = 10, d2 = 7, h = ant_h);
-      // ball, with a cone underneath so it prints without supports
-      hull() {
+      hull() {  // ball, with a cone underneath so it prints without supports
         translate([0, 0, ant_h + ball_d / 2 - 1.5]) sphere(d = ball_d);
         translate([0, 0, ant_h - 2]) cylinder(d = 7, h = 0.1);
       }
@@ -154,12 +145,9 @@ module antenna() {
   }
 }
 
-/* ---------- fit test: just the front 9 mm of the head ---------- */
+/* ---------- fit test: the front 9 mm of the head ---------- */
 module fit_test() {
-  intersection() {
-    head();
-    translate([-50, -1, -head_w / 2]) cube([100, lip + 7.4, 100]);
-  }
+  intersection() { head(); translate([-50, -1, -head_w / 2]) cube([100, lip + 7.4, 100]); }
 }
 
 /* ---------- preview extras ---------- */
@@ -176,11 +164,11 @@ module preview_case() {
 }
 
 /* ---------- output (each part placed flat for printing) ---------- */
-if (part == "head") rotate([90, 0, 0]) head();                                // face down on the plate
-else if (part == "back") translate([0, 0, plate_t]) rotate([-90, 0, 0]) back_plate();  // flat, outside down
+if (part == "head") rotate([90, 0, 0]) head();                                  // face down on the plate
+else if (part == "back") translate([0, 0, plate_t]) rotate([-90, 0, 0]) back_plate();  // outside down
 else if (part == "antenna") translate([0, 0, socket_h]) antenna();
 else if (part == "fit_test") rotate([90, 0, 0]) fit_test();
-else if (part == "headonly") { color(YELLOW) head(); preview_case(); }  // preview: back open
+else if (part == "headonly") { color(YELLOW) head(); preview_case(); }          // preview: back open
 else {
   color(YELLOW) head();
   color(YELLOW) translate([0, D, 0]) back_plate();

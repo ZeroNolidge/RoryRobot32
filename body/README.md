@@ -1,35 +1,44 @@
 # Rory's body (3D printed)
 
-## New: Rory's head (v2) — print this one
+## New: Rory's head (v3) — print this one
 
 `rory_head.scad` is the new head, made to go on a separate body (coming
 next, with room for the camera board and battery). The board's white case
-slides in from the back, the screen is her face, a back plate screws on, and a
-**clear antenna glows** from an LED inside.
+slides in from the back, the screen is her face, a solid back plate screws on
+with 4 flush corner screws, and a **clear antenna glows** from an LED inside.
+About 54 × 54 × 36 mm.
 
-<img src="preview-head.png" width="600">
+<img src="preview-head.png" width="700">
+
+**v3, after the first test print:** nothing blocks the case sliding in (the
+screws are in the corners), the head is 9 mm shallower, the neck opening is
+right under the USB-C port (a straight or flat 90° cable fits), and the side
+windows are big because the case's speaker grille and microphone are on its sides.
 
 | File | Print | Filament | Notes |
 |---|---|---|---|
-| `stl/rory_head_fit_test.stl` | 1, **first** | any | ~20 min. Push the white case into it: snug, but not forced? Window lined up with the screen? |
-| `stl/rory_head_head.stl` | 1 | almond yellow | face **down** on the plate (as exported). Supports: **on, build plate only** (for the neck) |
-| `stl/rory_head_back.stl` | 1 | almond yellow | flat, as exported. No supports |
-| `stl/rory_head_antenna.stl` | 1 | clear | standing up, as exported. No supports |
+| `stl/rory_head_fit_test.stl` | 1, **first** | any | ~20 min. Push the white case in from the back: snug, not forced? Screen centered in the window? |
+| `stl/rory_head_head.stl` | 1 | almond yellow | face **down** (as exported). Supports: **on, build plate only** (for the neck) |
+| `stl/rory_head_back.stl` | 1 | almond yellow | flat, outside down (as exported). No supports |
+| `stl/rory_head_antenna.stl` | 1 | clear | standing up (as exported). No supports |
 
 Settings: 0.2 mm layers, 3 walls, 15-20 % infill. Plus **4 × M3 × 12 mm
-screws** for the back plate (self-tapping for plastic is best; machine screws
-also work). Socket or flat heads up to 6.2 mm wide sink into pockets in the
-plate, so they sit **flush**. Drive them in slowly and stop when snug.
+screws** (self-tapping for plastic is best). Their heads sink into pockets in
+the back plate, so they sit **flush**. Drive them in slowly; stop when snug.
 
 **If the fit test is too tight or loose:** change `clr` at the top of
-`rory_head.scad` (0.4 = normal; try 0.6 if tight, 0.25 if loose), or tell
-Claude what you see, and re-export.
+`rory_head.scad` (0.4 = normal; 0.6 if tight, 0.25 if loose), or tell Claude
+what you see.
 
-**Putting it together:** push the LED module's 5 mm LED up through the small
-hole in the top from inside (its rim stops it), slide the board's case in from
-the back (screen first, buttons up), run the USB-C cable and the LED wires
-down through the neck, and screw on the back plate. Press the clear antenna
-onto the top, over the LED.
+**Putting it together:**
+1. **LED:** bend the RGB LED's legs 90° so the LED points *up* when the module
+   stands upright (flat against the back). Push the LED up through the small
+   hole in the top from inside; its rim stops it. The wires go down the back
+   and out through the neck.
+2. Slide the board's case in from the back: screen first, buttons on top.
+3. Screw on the back plate (the gap in its rim goes at the bottom, over the wires).
+4. Press the clear antenna onto the top, over the LED.
+5. Charge through the neck with a straight or flat 90° USB-C cable.
 
 ---
 
