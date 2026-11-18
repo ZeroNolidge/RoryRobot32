@@ -43,68 +43,68 @@ what you see.
 4. Press the clear antenna onto the top, over the LED.
 5. Charge through the neck with a straight or flat 90° USB-C cable.
 
-## New: Rory's body (v1) — goes under the v3 head
+## New: Rory's body (v1) — goes under the v3.1 head
 
-`rory_torso.scad`: about 46 × 35.5 × 56 mm, the same depth as the head (they're
-flush front and back). With the head on top, Rory is about **11.5 cm tall**
-(plus the antenna). Inside, front to back: the camera
-board with its camera looking out of her chest, a thin holder plate, the
-battery (up to 10 × 30 × 41 mm, e.g. 102540), and a back panel with her two
-USB-C charging ports.
+`rory_torso.scad`. Shaped like Rory in the app: the head sits right on the
+body (its neck collar slides down into a socket, so there's no visible neck),
+chunky arms with a bolt at each shoulder, tan hands, big tan feet, and her pale
+blue chest panel with a teal and a yellow button. Her camera looks out between
+the two buttons.
 
-<img src="preview-body.png" width="700">
+<img src="preview-body.png" width="800">
+
+About 46 × 35.5 × 55 mm (the same depth as the head, flush front and back).
+With head and feet, Rory is about **12 cm tall** (plus the antenna).
+
+Inside, front to back: the camera board (camera folded onto its front), a thin
+holder plate, the battery **lying sideways** (up to 40 × 10 × 30 mm, e.g. a
+102540), and the back panel with her two USB-C charging ports.
 
 | File | Print | Filament | Notes |
 |---|---|---|---|
-| `stl/rory_body_front_test.stl` | 1, **first** | any | ~30 min: just the chest and the 4 board pins. Push the camera board onto the pins (camera folded on): does the lens show in the window? |
-| `stl/rory_body_shell.stl` | 1 | almond yellow | chest **down** (as exported). Supports: **on, build plate only** (feet and neck plug) |
+| `stl/rory_body_front_test.stl` | 1, **first** | any | ~30 min: just the chest and the 4 board pins. Push the camera board on (camera folded down): does the lens show in the window? |
+| `stl/rory_body_shell.stl` | 1 | almond yellow | chest **down** (as exported). Supports: **build plate only** (arms) |
 | `stl/rory_body_back.stl` | 1 | almond yellow | flat, outside down. No supports |
 | `stl/rory_body_holder.stl` | 1 | any (hidden) | flat, fingers up. No supports |
-| `stl/rory_body_hands.stl` | 1 (two hands) | **brown** | flat, pegs up. No supports. Push each peg into the hole at the end of an arm, with a drop of superglue |
+| `stl/rory_body_panel.stl` | 1 | pale blue | flat, buttons up. Paint the left button teal and the right one yellow |
+| `stl/rory_body_hands.stl` | 1 (two hands) | brown or tan | lying on a side, as exported |
+| `stl/rory_body_feet.stl` | 1 (two feet) | tan | flat side down, as exported |
+| `stl/rory_head_head.stl` | 1 | almond yellow | **v3.1** (new collar for the socket), face down, supports build plate only |
 
-Plus **4 × M3 × 12 mm screws** (flush, like the head), **2 × M3 × 8 mm screws**
-for the "neck bolts", and **2 × USB-C 90° male-to-female flat extension
-cables** (4 inch). Her arms are molded onto her sides, so they can't be pulled off; her brown hands glue on.
+Plus: **4 × M3 × 12 mm** screws (back panel), **2 × M3 × 8 mm** (through the back
+panel into the head's collar), superglue (hands, feet, chest panel), a little
+gold paint (shoulder bolts and the dimple above the chest panel), and **2 ×
+USB-C 90° male-to-female flat extension cables**.
 
 **Putting it together:**
-1. **Camera:** fold the camera onto the front of the camera board (over the
-   microSD slot) and stick it down with a small square of double-sided tape,
-   lens facing straight out.
-2. **USB cables:** plug one extension's angled end into the camera board's
-   USB-C port (cable pointing back), and the other into the head's port
-   (through the neck, cable pointing back). Lay both female ends in the two
-   cradles on the floor of the body, ports facing out the back.
-3. **Camera board:** camera side first, push it onto the 4 pins inside the
-   chest, so the lens lines up with the chest window.
-4. **Holder:** drop it in behind the board, fingers toward the board (the
-   notch on the right, for the LED wires).
-5. **Battery:** plug it into the board's **BAT** socket (red on +!), then set
-   it behind the holder.
-6. **Head:** run the head's USB cable and the LED wires down through the neck
-   plug, push the head's neck collar onto the plug, and drive an **M3 × 8
-   screw into each side** of the neck: the "neck bolts". (The holes are in head
-   v3.1. With an older head, make a 3.4 mm hole in each side of the collar,
-   28 mm back from the face and 2.75 mm up from its bottom edge.)
-7. **Back panel:** screw it on. The two ports come through the holes at the bottom.
-8. **Switching the eyes on/off:** poke the small pinhole in her chest
-   (bottom right) with a pen. That's the camera board's PWR button.
+1. **Glue on** the hands (pegs into the bottoms of the arms), the feet (onto the
+   pegs underneath) and the chest panel (into the shallow recess, camera hole
+   over the window).
+2. **Camera:** fold it onto the front of the camera board (over the microSD
+   slot) and stick it down with a small square of double-sided tape.
+3. **USB cables:** plug one extension's angled end into the camera board's port
+   (cable pointing back), and the other into the head's port (cable pointing
+   back). Lay both female ends in the two cradles on the body's floor.
+4. **Camera board:** camera side first, onto the 4 pins behind the chest.
+5. **Holder:** in behind the board, fingers toward it (notch on the right for the LED wires).
+6. **Battery:** plug it into the board's **BAT** socket (red on +!) and lay it
+   sideways behind the holder.
+7. **Head:** feed its USB cable and the LED wires down, and lower the head's
+   collar into the socket on top of the body.
+8. **Back panel:** screw it on with the 4 M3 × 12 screws, then the 2 M3 × 8
+   screws at the top go into the back of the head's collar and lock the head on.
+9. **Eyes on/off:** poke the small pinhole low on her chest with a pen.
 
-**Cable routes:**
-- **Head USB cable** (flat): from the head's port it points backward, folds
-  down through the neck (in front of the neck bolts), crosses over the top of
-  the battery, runs down the **channel behind the battery on the left** (the
-  battery pads on the back panel are on the right, so they don't pinch it),
-  then folds forward under the battery into the **left** port. About 9 cm, so
-  the 4-inch cable just reaches; the 8-inch one is easier.
-- **Camera board USB cable:** from the board's port it points backward under
-  the battery, then loops into the **right** port.
-- **LED wires:** from behind the head's screen, down through the gap between
-  the neck bolts, over the battery, and down the right side of the camera
-  board to its UART socket (through the notch in the holder plate).
+**Cable routes:** the head's flat USB cable leaves its port pointing back,
+folds down into the body, crosses over the battery, runs down the channel behind
+the battery on the left, and folds forward under it into the left port. The
+camera board's cable goes back under the battery into the right port. The LED
+wires come down from behind the head's screen, between the collar's two screw
+lugs, and down the right side of the camera board to its UART socket.
 
-**Check first:** `cam_stack` (7 mm) at the top of `rory_torso.scad` is how
-far the folded camera sticks out from the board. If the camera doesn't reach
-the window, or presses too hard, measure it and tell Claude.
+**Check first:** `cam_stack` (7 mm) at the top of `rory_torso.scad` is how far
+the folded camera sticks out from the board. If the lens doesn't line up with
+the window, measure it and tell Claude.
 
 ---
 

@@ -3,22 +3,25 @@
 // Inside, front to back:
 //   chest wall (camera window)  ->  camera board (Waveshare ESP32-S3-CAM-OV3660,
 //   37 x 37 mm, camera folded onto its front, facing out through the chest)
-//   ->  board holder plate  ->  battery (up to 10 x 30 x 41 mm, e.g. 102540)
+//   ->  board holder plate  ->  battery, lying sideways (up to 40 wide x 10 thick x 30 tall, e.g. 102540)
 //   ->  back panel with Rory's two USB-C charging ports.
 // Underneath the battery: two USB-C extension cables (male ends in the head and
 // the camera board, female ends sticking out through the back panel).
-// On top: a neck plug that the head's neck collar slides onto.
+// On top: a socket that the head's neck collar slides down into (no visible neck),
+// locked by 2 screws through the back panel into the back of the collar.
 //
 // Parts (pick one, render with F6, export STL):
 //   part = "shell"    the body                         almond yellow
 //   part = "holder"   plate behind the camera board    any color (hidden)
 //   part = "back"     back panel with the 2 USB ports  almond yellow
-//   part = "feet"     two feet (print in tan, glue on) tan   (or leave them on the shell)
-//   part = "hands"    her two hands, glued onto her arms  brown
+//   part = "feet"     her two big feet, glued on underneath  tan
+//   part = "panel"    chest panel with two buttons           pale blue (paint the buttons teal and yellow)
+//   part = "hands"    her two hands, glued onto her arms     tan (or brown)
 //   part = "front_test"  just the chest + board pins (~30 min): check the camera lines up
 //   part = "all"      everything together, with the head
 //
-// Hardware: 4 x M3 x 12 mm screws (back panel), flush like the head's.
+// Hardware: 4 x M3 x 12 mm screws (back panel), flush like the head's;
+// 2 x M3 x 8 through the back panel into the head; superglue for the hands and feet.
 
 use <rory_head.scad>
 
@@ -35,7 +38,7 @@ lens_down = 9;         // lens center below the board's top edge (centered left-
 pwr_x = 11.2;          // PWR button: right of center (seen from the front)...
 pwr_up = 1.6;          // ...and this far above the board's bottom edge
 usb_drop = 9;          // room under the board for its right-angle USB-C plug
-bat = [30.5, 10.5, 41.5];   // battery space: width, thickness, height (fits a 102540 or smaller)
+bat = [41, 10.5, 30.5];     // battery space, lying sideways: width, thickness, height (102540, 503040...)
 port = [10.4, 19, 5.9];     // USB-C extension's female end: width, length, thickness (+0.4)
 port_x = 13;                // the two ports sit this far left/right of center
 
@@ -58,25 +61,21 @@ D = y_back + panel_t;                      // total depth
 z_port = wall;                             // ports lie on the floor
 z_board = wall + usb_drop;                 // board's bottom edge
 z_bat = z_port + port[2] + 0.8;            // battery sits just above the port cradles
-z_top_in = max(z_board + board, z_bat + bat[2]) + 3.0;  // room above for the cables to cross over
-H = z_top_in + wall;                       // shell height
+collar = [23.4, 6.3];                      // the head's neck collar slides into a socket this wide and deep
+H = max(z_board + board, z_bat + bat[2]) + 0.6 + collar[1];  // shell height: the collar clears the board
+z_top_in = H - wall;
 zc = z_board + board / 2;                  // board center
 z_lens = z_board + board - lens_down;
 
-// head placement: its neck collar sits on top of the body, centered front-to-back
+// head placement: the head sits right on the body, its collar down in the socket
 head_D = 35.5;                             // head depth incl. back plate
 head_y = -(head_D - D) / 2;                // where the head's front is, in body coords
-// the neck plug goes inside the head's collar opening (18 mm wide, from 2.6 mm behind its face)
-plug = [17.4, 5.5];                        // width, height
-plug_y = [head_y + 3.0, min(y_back - 0.3, head_y + 31.0)];
-plug_wall = 1.6;
-// neck bolts: an M3 x 8 screw through each side of the head's collar into the plug
-bolt_y = head_y + 28;                      // (same spot as in rory_head.scad)
-bolt_z = 2.75;                             // above the body's top
-bolt_boss = 4.6;                           // the plug is solid from here outward, around the bolts
+socket_y0 = head_y + 2.7;                  // socket front (the head's collar starts 3 mm behind its face)
+head_screw_x = 6.8;                        // the 2 screws into the head's collar lugs
+head_mic = [19.4, 21.6];                   // the head's bottom microphone pinholes (x, y)
 
 // back panel screws: into bosses on the side walls, near the back
-screws = [for (sx = [-1, 1], z = [z_bat + 8, z_top_in - 4]) [sx * (in_w / 2 - 1.9), z]];
+screws = [for (sx = [-1, 1], z = [z_bat + bat[2] + 3.8, z_top_in - 3.5]) [sx * (in_w / 2 - 1.9), z]];  // above the battery
 boss_d = 6.5;  boss_len = 9;  pilot = 2.5;  screw_clear = 3.4;
 
 $fn = 48;
@@ -95,28 +94,25 @@ module shell() {
     union() {
       // outer box, rounded corners seen from the front
       translate([0, 0, H / 2]) rrect_xz(W, H, corner_r, y_back);
-      // neck plug on top
-      rbox(-plug[0] / 2, plug[0] / 2, plug_y[0], plug_y[1], H - 0.01, H + plug[1], 2);
       // arms, molded onto her sides (nothing to pull off)
       for (sx = [-1, 1]) arm(sx);
     }
     // inside, open at the back
     translate([0, wall, H / 2]) rrect_xz(in_w, H - 2 * wall, 1.5, y_back);
-    // neck hollow: cables and LED wires go down from the head
-    rbox(-plug[0] / 2 + plug_wall, plug[0] / 2 - plug_wall, plug_y[0] + plug_wall, plug_y[1] - plug_wall, H - wall - 1, H + plug[1] + 1, 1);
-    hand_holes();
-    // pilot holes for the neck bolts
-    for (sx = [-1, 1]) translate([sx * (plug[0] / 2 + 1), bolt_y, H + bolt_z]) rotate([0, -sx * 90, 0]) cylinder(d = pilot, h = plug[0] / 2 - bolt_boss + 2);
+    // socket for the head's neck collar (open into the body: cables and LED wires come down through it)
+    rbox(-collar[0] / 2, collar[0] / 2, socket_y0, y_back + 1, H - collar[1], H + 1, 2.2);
+    // little grooves so the head's bottom microphone holes aren't blocked
+    for (sx = [-1, 1]) translate([sx > 0 ? head_mic[0] - 3 : -W / 2 - 1, head_y + head_mic[1] - 1.5, H - 1]) cube([W / 2 - head_mic[0] + 4, 3, 2]);
+    arm_holes();
+    // a little round dimple above the chest panel: paint it gold (the app's bolt)
+    translate([0, -0.01, panel_z + panel[1] / 2 + 4]) rotate([-90, 0, 0]) cylinder(d = 5, h = 0.6);
+    // shallow recess for the chest panel
+    translate([0, -0.01, panel_z]) rrect_xz(panel[0] + 0.4, panel[1] + 0.4, 3.2, 0.6);
     // camera window in the chest, softly chamfered
     translate([0, -1, z_lens]) rotate([-90, 0, 0]) cylinder(d = 7, h = wall + 2);
     translate([0, -0.01, z_lens]) rotate([-90, 0, 0]) cylinder(d1 = 9, d2 = 7, h = 1);
     // pinhole for the camera board's PWR button (press with a pen)
     translate([pwr_x, -1, z_board + pwr_up]) rotate([-90, 0, 0]) cylinder(d = 3.2, h = wall + 2);
-  }
-  // solid blocks inside the neck plug around the neck bolts
-  for (sx = [-1, 1]) difference() {
-    translate([sx > 0 ? bolt_boss : -plug[0] / 2 + plug_wall - 0.01, bolt_y - 3, H]) cube([plug[0] / 2 - plug_wall - bolt_boss + 0.01, 6, plug[1]]);
-    translate([sx * (plug[0] / 2 + 1), bolt_y, H + bolt_z]) rotate([0, -sx * 90, 0]) cylinder(d = pilot, h = plug[0] / 2 - bolt_boss + 2);
   }
   // posts that hold the camera board, with pins into its corner holes
   for (sx = [-1, 1], sz = [-1, 1]) translate([sx * board_hole / 2, wall - 0.01, zc + sz * board_hole / 2]) rotate([-90, 0, 0]) {
@@ -136,51 +132,83 @@ module shell() {
     }
     translate([s[0], y_back - boss_len - 1, s[1]]) rotate([-90, 0, 0]) cylinder(d = pilot, h = boss_len + 2);
   }
-  feet();
+  feet_pegs();
 }
 
-// a little arm on each side: shoulder near the top, down to the wrist.
-// The hands are separate (print them in brown) and glue onto pegs' holes.
-arm_t = 3.2;                     // how far the arm stands out from her side
-hand_d = 11;  hand_peg = [3.5, 2.0];   // hand size; its peg (diameter, length)
-function hand_pos() = [D / 2 - 3, H - 34];   // (y, z) of each hand's center
+// Arms and feet, shaped like Rory in the app: chunky arms hanging at her
+// sides with a bolt at each shoulder, tan hands, and big tan feet that stick
+// out at the front. The arms are part of the body (nothing to pull off); the
+// hands and feet print separately in tan and glue on.
+arm_w = 11;  arm_out = 7;        // arm width (front to back) and how far it stands out (outer edges line up with the head)
+hand_h = 12;                     // hand height (the tan part at the bottom of each arm)
+hand_z = 2;                      // bottom of the hands
+arm_z0 = hand_z + hand_h;        // where the yellow arm starts
+arm_y = D / 2 - 2;               // a little forward of center, so they show from the front
+peg = [3.5, 2.5];                // glue pegs: diameter, length
+module arm_shape(z0, z1, r) {    // rounded slab in y-z, extruded outward along +x from x=0
+  hull() for (y = [-arm_w / 2 + r, arm_w / 2 - r], z = [z0 + r, z1 - r]) translate([0, y, z]) rotate([0, 90, 0]) cylinder(r = r, h = arm_out);
+}
 module arm(sx) {
-  sy = D / 2;                    // shoulder
-  sz = H - 10;
-  hy = hand_pos()[0];
-  hz = hand_pos()[1];
-  k = sx > 0 ? -1 : 1;           // after the rotation below, 2D x becomes height (sign depends on the side)
-  translate([sx * (W / 2 - 0.5), 0, 0]) rotate([0, sx * 90, 0]) linear_extrude(arm_t + 0.5) difference() {
-    union() {
-      translate([k * sz, sy]) circle(d = 11);
-      hull() { translate([k * sz, sy]) circle(d = 8); translate([k * hz, hy]) circle(d = 7.5); }
-    }
-    translate([k * hz, hy]) circle(d = hand_d + 0.6);  // the hand goes here
+  mirror([sx < 0 ? 1 : 0, 0, 0]) translate([W / 2 - 0.5, arm_y, 0]) {
+    arm_shape(arm_z0, H - 3, 3.5);
+    translate([0.5, 0, 0]) arm_shape(arm_z0, H - 3, 3.5);
+    // shoulder bolt (paint it gold)
+    translate([arm_out + 0.5, 0, H - 9]) scale([0.45, 1, 1]) sphere(d = 6);
   }
 }
-// hole in her side for each hand's peg
-module hand_holes() {
-  for (sx = [-1, 1]) translate([sx * (W / 2 + 0.01), hand_pos()[0], hand_pos()[1]]) rotate([0, -sx * 90, 0])
-    cylinder(d = hand_peg[0] + 0.3, h = hand_peg[1] + 0.3);
+module arm_holes() {             // hole in the bottom of each arm for the hand's peg
+  for (sx = [-1, 1]) translate([sx * (W / 2 + arm_out / 2), arm_y, arm_z0 - 0.01]) cylinder(d = peg[0] + 0.3, h = peg[1] + 0.3);
 }
-// one hand: a round mitten, flat on the back, with a peg (printed flat, peg up)
+// one hand: a rounded tan block with a peg on top (prints lying on its flat side)
 module hand() {
-  cylinder(d = hand_d, h = arm_t - 0.6);
-  translate([0, 0, arm_t - 0.6]) cylinder(d1 = hand_d, d2 = hand_d - 1.2, h = 0.6);  // soft edge
-  // a little thumb bump
-  translate([hand_d / 2 - 1, 2.5, 0]) cylinder(d = 4.5, h = arm_t - 0.8);
-  translate([0, 0, -hand_peg[1]]) cylinder(d = hand_peg[0], h = hand_peg[1] + 0.01);
+  difference() {
+    hull() {
+      for (y = [-arm_w / 2 + 3.5, arm_w / 2 - 3.5]) translate([0, y, hand_h - 3.5]) rotate([0, 90, 0]) cylinder(r = 3.5, h = arm_out + 0.5, center = true);
+      for (y = [-arm_w / 2 + 4.5, arm_w / 2 - 4.5]) translate([0, y, 4.5]) scale([0.62, 1, 1]) sphere(r = 4.5);
+    }
+  }
+  translate([0, 0, hand_h - 0.01]) cylinder(d = peg[0], h = peg[1]);
 }
 module hands_placed() {
-  for (sx = [-1, 1]) translate([sx * W / 2, hand_pos()[0], hand_pos()[1]]) rotate([0, sx * 90, 0]) hand();
+  for (sx = [-1, 1]) translate([sx * (W / 2 + arm_out / 2), arm_y, hand_z]) hand();
 }
 
-module feet() {
-  for (sx = [-1, 1]) translate([sx * 12.5, D / 2 - 1, 0.01]) mirror([0, 0, 1]) hull() {
-    scale([1, 1.6, 1]) cylinder(d = 14, h = 0.5);
-    translate([0, 0, 3]) scale([0.9, 1.5, 1]) cylinder(d = 14, h = 1);
+// big oval feet that stick out at the front (tan); glue onto pegs under the body
+foot = [21, 32, 11];             // width, length, height
+foot_x = 11.3;  foot_y = D / 2 - 8;     // centers (forward, so the toes stick out like in the app)
+module foot() {                  // flat top at z = 0, rounded below
+  difference() {
+    hull() {
+      translate([0, 0, -0.5]) scale([foot[0] / 2, foot[1] / 2, 0.5]) cylinder(r = 1, h = 1, $fn = 64);
+      translate([0, 0, -foot[2] + foot[2] * 0.45]) scale([foot[0] / 2, foot[1] / 2, foot[2] * 0.45]) sphere(r = 1, $fn = 48);
+    }
+    for (y = [-7, 7]) translate([0, y, -peg[1] - 0.3]) cylinder(d = peg[0] + 0.3, h = peg[1] + 1);  // peg holes
   }
 }
+module feet_placed() { for (sx = [-1, 1]) translate([sx * foot_x, foot_y, 0]) foot(); }
+module feet_pegs() {   // on the body's underside
+  for (sx = [-1, 1], y = [-7, 7]) translate([sx * foot_x, foot_y + y, -peg[1]]) cylinder(d = peg[0], h = peg[1] + 0.01);
+}
+
+// Rory's chest panel, like the app: pale blue, with a teal and a yellow button
+// (paint them, or print the bumps' tops in color) and a little slot. Her camera
+// looks out between the two buttons. Glue it into the shallow recess on her chest.
+panel = [30, 22, 1.6];            // width, height, thickness
+panel_z = z_lens - 5;             // panel center height
+module chest_panel() {            // back face at y = 0, front face at y = -panel[2]
+  difference() {
+    union() {
+      translate([0, -panel[2], 0]) rrect_xz(panel[0], panel[1], 3, panel[2]);
+      intersection() {  // teal and yellow buttons (only on the front)
+        for (x = [-8, 8]) translate([x, -panel[2], 5]) scale([1, 0.6, 1]) sphere(d = 6);
+        translate([-50, -10, -50]) cube([100, 10, 100]);
+      }
+    }
+    translate([0, -5, 5]) rotate([-90, 0, 0]) cylinder(d = 7.4, h = 10);                 // camera window
+    translate([0, -panel[2] - 1, -5]) hull() for (x = [-6, 6]) translate([x, 0, 0]) rotate([-90, 0, 0]) cylinder(d = 2.4, h = 1.6);  // slot (0.6 deep)
+  }
+}
+module chest_panel_placed() { translate([0, 0.6, panel_z]) chest_panel(); }
 
 /* ---------- board holder (sits behind the camera board) ---------- */
 // A flat plate that keeps the battery off the board's plugs; 4 little fingers
@@ -218,6 +246,13 @@ module back_panel() {
     // the two USB-C ports pass through
     for (sx = [-1, 1]) translate([sx * port_x, -2, z_port + port[2] / 2]) rotate([-90, 0, 0])
       linear_extrude(panel_t + 4) offset(0.8) square([port[0] - 1.6, port[2] - 1.6], center = true);
+    // the 2 screws into the back of the head's collar (they lock the head on)
+    for (sx = [-1, 1]) translate([sx * head_screw_x, 0, H - 3]) rotate([-90, 0, 0]) {
+      translate([0, 0, -2]) cylinder(d = screw_clear, h = panel_t + 4);
+      translate([0, 0, panel_t - screw_pocket]) cylinder(d = 6.4, h = screw_pocket + 1);
+    }
+    // no lip where the head's collar comes down
+    translate([-collar[0] / 2 - 0.5, -2, H - collar[1] - 0.5]) cube([collar[0] + 1, 2.01, collar[1] + 1]);
     // screw holes with pockets, so the heads sit flush
     for (s = screws) translate([s[0], 0, s[1]]) rotate([-90, 0, 0]) {
       translate([0, 0, -2]) cylinder(d = screw_clear, h = panel_t + 4);
@@ -241,8 +276,9 @@ module preview_inside() {
 if (part == "shell") rotate([90, 0, 0]) translate([0, 0, 0]) shell();          // chest down on the plate
 else if (part == "holder") holder();
 else if (part == "back") translate([0, 0, panel_t]) rotate([-90, 0, 0]) back_panel();  // outside down
-else if (part == "feet") feet();
-else if (part == "hands") for (i = [0, 1]) translate([i * (hand_d + 6), 0, arm_t]) rotate([180, 0, 0]) mirror([i, 0, 0]) hand();  // brown: round face down, pegs up
+else if (part == "panel") rotate([-90, 0, 0]) chest_panel();  // pale blue: flat back down, buttons up
+else if (part == "feet") for (sx = [-1, 1]) translate([sx * (foot[0] / 2 + 3), 0, 0]) rotate([180, 0, 0]) foot();  // tan: flat side down
+else if (part == "hands") for (i = [0, 1]) translate([0, i * (arm_w + 6), (arm_out + 0.5) / 2]) rotate([0, 90, 0]) hand();  // tan: lying on a flat side
 else if (part == "front_test") rotate([90, 0, 0]) intersection() {  // chest down
   shell();
   translate([-50, -1, -10]) cube([100, y_pcb + board_t + 2.5, 100]);
@@ -251,7 +287,9 @@ else if (part == "open") { color(YELLOW) shell(); color(GREY) holder_placed(); p
 else {
   color(YELLOW) shell();
   color(YELLOW) translate([0, y_back, 0]) back_panel();
-  color("#7B4A2D") hands_placed();
+  color(TAN) hands_placed();
+  color(TAN) feet_placed();
+  color("#E4F1F9") chest_panel_placed();
   // the head on top
-  translate([0, head_y, H + 6 + 26.8]) { color(YELLOW) head(); color(YELLOW) translate([0, 31.5, 0]) back_plate(); color("#CFEFFF") translate([0, 27.4, 26.8]) antenna(); preview_case(); }
+  translate([0, head_y, H + 26.8]) { color(YELLOW) head(); color(YELLOW) translate([0, 31.5, 0]) back_plate(); color("#CFEFFF") translate([0, 27.4, 26.8]) antenna(); preview_case(); }
 }
