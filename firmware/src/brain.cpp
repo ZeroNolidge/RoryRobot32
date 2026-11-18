@@ -34,7 +34,29 @@ const char* HIGHFIVE = "highfive";
 const char* DANCE = "dance";
 const char* WALK = "walk";
 const char* TIRED = "tired";
-const char* YES = "yes";      // "Yes?" - tap to talk
+const char* YES = "yes";
+// lines written for each moment (made in her voice over Wi-Fi)
+const char* S_HELLO = "say-hello";
+const char* S_AWAKE = "say-awake";
+const char* S_BOOP = "say-boop";
+const char* S_TICKLE = "say-tickle";
+const char* S_LOVE = "say-love";
+const char* S_HUG = "say-hug";
+const char* S_UP = "say-up";
+const char* S_DIZZY = "say-dizzy";
+const char* S_OOPS = "say-oops";
+const char* S_DARK = "say-dark";
+const char* S_HIGHFIVE = "say-highfive";
+const char* S_DANCE = "say-dance";
+const char* S_WALK = "say-walk";
+const char* S_OWL = "say-owl";
+const char* S_YAWN = "say-yawn";
+const char* S_NIGHT = "say-night";
+const char* S_BYE = "say-bye";
+const char* S_TIRED = "say-tired";
+const char* S_VOLUME = "say-volume";
+const char* S_RETRY = "say-retry";
+const char* S_OFFLINE = "say-offline";      // "Yes?" - tap to talk
 const char* SPIN1 = "spin1";  // "Whoooa!"
 const char* SPIN2 = "spin2";  // "I'm getting dizzy!"
 const char* SPIN3 = "spin3";  // "Aaarrgh, too much spinning!"
@@ -45,7 +67,7 @@ void Brain::begin(Face& face, uint32_t now) {
   lastPlayMs_ = now;
   face.wake(now);
   face.sparkle(1800);
-  react({Expr::Cheer, Moment::HELLO, nullptr, 1800}, now);
+  react({Expr::Cheer, Moment::S_HELLO, Moment::HELLO, 1800}, now);
 }
 
 void Brain::say(const char* moment, const char* fallback) {
@@ -77,7 +99,7 @@ void Brain::wakeUp(uint32_t now) {
   face_->setZzz(false);
   face_->wake(now);
   react({Expr::Surprised, nullptr, nullptr, 500}, now);
-  then({Expr::Cheer, Moment::MORNING, Moment::HELLO, 1500});
+  then({Expr::Cheer, Moment::S_AWAKE, Moment::MORNING, 1500});
 }
 
 void Brain::goSleepy(uint32_t now) {
@@ -88,7 +110,7 @@ void Brain::goSleepy(uint32_t now) {
   face_->setExpression(Expr::Yawning);
   showing_ = Expr::Sleepy;
   until_ = now + 1800;  // yawn, then droopy eyes
-  say(Moment::YAWN);
+  say(Moment::S_YAWN, Moment::YAWN);
 }
 
 void Brain::fallAsleep(uint32_t now) {
@@ -266,16 +288,16 @@ void Brain::handle(const Event& e, uint32_t now) {
       }
       if (++taps_ >= 3) {
         taps_ = 0;
-        react({Expr::Love, Moment::LOVE, Moment::GIGGLE, 2600}, now);
+        react({Expr::Love, Moment::S_LOVE, Moment::LOVE, 2600}, now);
       } else {
         face_->lookAt((e.x - 120) / 120.0f, (e.y - 100) / 100.0f);
-        react({Expr::Happy, Moment::BOOP, Moment::GIGGLE, 1100}, now);
+        react({Expr::Happy, Moment::S_BOOP, Moment::BOOP, 1100}, now);
       }
       break;
     }
     case Ev::Tickle:
       face_->sparkle(1600);
-      react({Expr::Happy, Moment::GIGGLE, nullptr, 2000}, now);
+      react({Expr::Happy, Moment::S_TICKLE, Moment::GIGGLE, 2000}, now);
       break;
 
     case Ev::HoldStart:
@@ -301,7 +323,7 @@ void Brain::handle(const Event& e, uint32_t now) {
         Net::prepare();       // open the connection to the server while he talks
       } else {
         ai_ = Ai::None;
-        say(Moment::LISTEN);  // offline: "Rory can hear you now!" and a chat clip after
+        // offline: just the listening face; she explains when he lets go
       }
       break;
 
@@ -318,7 +340,7 @@ void Brain::handle(const Event& e, uint32_t now) {
       face_->setDizzySpeed(dizzyLevel_ == 1 ? 1.0f : dizzyLevel_ == 2 ? 1.7f : 2.6f);
       if (dizzyLevel_ == 1) {
         react({Expr::Dizzy, Moment::SPIN1, Moment::ONE, 1600}, now);
-        then({Expr::Dizzy, Moment::DIZZY, nullptr, 1200});
+        then({Expr::Dizzy, Moment::S_DIZZY, Moment::DIZZY, 1200});
       } else if (dizzyLevel_ == 2) {
         // dizzier: bigger wobbly eyes
         react({{Eyes::Dizzy, Mouth::Wobbly, 1.08f, 1.0f, true}, Moment::SPIN2, Moment::TWO, 2600}, now);
@@ -326,10 +348,10 @@ void Brain::handle(const Event& e, uint32_t now) {
         dizzyLevel_ = 0;  // start counting again after the nap
         // way too dizzy: huge trembling spirals, mouth wide open
         react({{Eyes::Dizzy, Mouth::Gasp, 1.15f, 1.0f, true}, Moment::SPIN3, Moment::THREE, 1400}, now);
-        then({Expr::Dizzy, Moment::OOPS, Moment::DIZZY, 1800});
+        then({Expr::Dizzy, Moment::S_OOPS, Moment::OOPS, 1800});
         then({Expr::Asleep, nullptr, nullptr, 2600});          // topples over for a little nap
         then({Expr::Surprised, nullptr, nullptr, 450});
-        then({Expr::Cheer, Moment::MORNING, Moment::HELLO, 1500});
+        then({Expr::Cheer, Moment::S_AWAKE, Moment::MORNING, 1500});
       }
       break;
     }
@@ -337,11 +359,11 @@ void Brain::handle(const Event& e, uint32_t now) {
     case Ev::PickedUp:
       if (mode_ == Mode::Listening || mode_ == Mode::Thinking) break;
       react({Expr::Surprised, nullptr, nullptr, 450}, now);
-      then({Expr::Cheer, Moment::WHEEE, Moment::HELLO, 1500});
+      then({Expr::Cheer, Moment::S_UP, Moment::WHEEE, 1500});
       break;
 
     case Ev::FaceDown:
-      react({Expr::Surprised, Moment::DARK, nullptr, 1500}, now);
+      react({Expr::Surprised, Moment::S_DARK, Moment::DARK, 1500}, now);
       break;
 
     case Ev::KeyButton: {  // grown-up button: show the battery gauge
@@ -358,7 +380,7 @@ void Brain::handle(const Event& e, uint32_t now) {
       Serial.printf("[brain] volume step %d\n", Voice::volumeStep());
       Display::setBacklight(BACKLIGHT_AWAKE);
       face_->showVolume(Voice::volumeStep() + 1, sizeof(VOLUME_STEPS) / sizeof(VOLUME_STEPS[0]), 2000);
-      react({Expr::Cheer, Moment::BOOP, Moment::HELLO, 1200}, now);  // a quick sound at the new volume
+      react({Expr::Cheer, Moment::S_VOLUME, Moment::BOOP, 1200}, now);  // a quick sound at the new volume
       break;
 
     case Ev::PowerHold:
@@ -366,33 +388,33 @@ void Brain::handle(const Event& e, uint32_t now) {
       modeSinceMs_ = now;
       face_->setZzz(false);
       face_->setExpression(Expr::Asleep);
-      say(Moment::BYE, Moment::GOODNIGHT);
+      say(Moment::S_BYE, Moment::BYE);
       break;
 
     case Ev::HighFive:
       if (busyTalking) break;
       face_->sparkle(1400);
-      react({Expr::Cheer, Moment::HIGHFIVE, Moment::GIGGLE, 1400}, now);
+      react({Expr::Cheer, Moment::S_HIGHFIVE, Moment::HIGHFIVE, 1400}, now);
       break;
 
     case Ev::Dance:
       if (busyTalking) break;
       face_->dance(3200);
       face_->sparkle(3200);
-      react({Expr::Happy, Moment::DANCE, Moment::GIGGLE, 3200}, now);
+      react({Expr::Happy, Moment::S_DANCE, Moment::DANCE, 3200}, now);
       break;
 
     case Ev::Walk:
       if (busyTalking) break;
       face_->lookAt(0, 0.4f);  // watching where she's going
-      react({Expr::Content, Moment::WALK, nullptr, 1500}, now);
+      react({Expr::Content, Moment::S_WALK, Moment::WALK, 1500}, now);
       break;
 
     case Ev::Hug:
       if (busyTalking) break;
-      react({Expr::Love, Moment::LOVE, Moment::GIGGLE, 2600}, now);
+      react({Expr::Love, Moment::S_HUG, Moment::LOVE, 2600}, now);
       // every third hug she says hi to her owl friend too
-      if (++hugs_ % 3 == 0) then({Expr::Happy, Moment::OWL, nullptr, 1200});
+      if (++hugs_ % 3 == 0) then({Expr::Happy, Moment::S_OWL, Moment::OWL, 1200});
       break;
 
     case Ev::FaceUp:
@@ -450,7 +472,7 @@ void Brain::update(uint32_t now) {
           ai_ = Ai::Uploading;
           say(Moment::HMM);  // "Hmm, let me think!" while the server works
         } else {
-          react({Expr::Happy, Moment::CHAT, Moment::GIGGLE, 800}, now);
+          react({Expr::Happy, Moment::S_RETRY, Moment::CHAT, 800}, now);
         }
       } else if (ai_ == Ai::Uploading) {
         Net::State st = Net::state();
@@ -468,7 +490,7 @@ void Brain::update(uint32_t now) {
           looking_ = false;
           // Couldn't reach her brain: a friendly clip instead of silence.
           Net::reset();
-          react({Expr::Happy, Moment::CHAT, Moment::GIGGLE, 800}, now);
+          react({Expr::Happy, Moment::S_RETRY, Moment::CHAT, 800}, now);
         } else if (now - modeSinceMs_ > 1500 && !looking_) {
           // "hmm..." - glance around while thinking
           float t = now * 0.002f;
@@ -476,7 +498,7 @@ void Brain::update(uint32_t now) {
         }
       } else if (ai_ == Ai::None && now >= until_) {
         // Offline: Rory answers with one of her chat clips.
-        react({Expr::Talking, Moment::CHAT, Moment::GIGGLE, 800}, now);
+        react({Expr::Talking, Moment::S_OFFLINE, Moment::CHAT, 800}, now);
         showing_ = Expr::Content;
       }
       break;
@@ -546,7 +568,7 @@ void Brain::update(uint32_t now) {
     case Mode::Sleepy:
       if (now >= until_) face_->setExpression(Expr::Sleepy);
       if (now - modeSinceMs_ > ASLEEP_AFTER_MS && !talking) {
-        say(Moment::GOODNIGHT);
+        say(Moment::S_NIGHT, Moment::GOODNIGHT);
         fallAsleep(now);
       }
       break;
@@ -577,7 +599,7 @@ void Brain::update(uint32_t now) {
     if (hasBattery && v < 3.45f && !Power::charging() && now - lastTiredMs_ > 600000 &&
         (mode_ == Mode::Awake)) {
       lastTiredMs_ = now;
-      react({Expr::Sleepy, Moment::TIRED, nullptr, 2500}, now);
+      react({Expr::Sleepy, Moment::S_TIRED, Moment::TIRED, 2500}, now);
     }
   }
 }

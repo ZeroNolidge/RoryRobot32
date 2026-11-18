@@ -1,8 +1,8 @@
 # Rory's versions
 
 Press **BOOT** (volume) and the small grey number under the speaker shows
-which version Rory has, e.g. **v1.14**. It's also printed at the top of the
-Serial Monitor when she starts: `== Rory the Robot v1.14 ==`.
+which version Rory has, e.g. **v1.15**. It's also printed at the top of the
+Serial Monitor when she starts: `== Rory the Robot v1.15 ==`.
 
 Each version says what you need to do to install it:
 - **Upload**: `git pull`, then Upload to Rory (cable, or `rory-wifi`)
@@ -13,6 +13,19 @@ Versions before v1.8 didn't show a number on her face. If the volume card
 shows no number, she has v1.7 or older.
 
 ---
+
+## v1.15 (Nov 18, 2026): Upload
+- **Lines that fit the moment.** Her short reactions used to be borrowed from
+  the app's clips ("thank you" for a hug, "play again" when she couldn't
+  think...). Now each moment has its own lines, made in her voice over Wi-Fi
+  the first few minutes after the update: "Hee hee, that tickles!" for a
+  tickle, "Hey, who turned off the lights?" face-down, "Aww, a cozy hug!" for
+  a hug, "Is this better?" for volume, and so on. Until they're made she uses
+  the old clips.
+- When she can't reach her brain she says so kindly ("Oops, my thinking cloud
+  got fuzzy. Can you ask me again?") instead of a random clip.
+- A hug now needs about 5 seconds of holding (was 3), so carrying her around
+  doesn't keep setting it off.
 
 ## v1.14 (Nov 17, 2026): Upload
 - **Tap to talk:** one tap on her face and she says "Yes?" (or "I'm

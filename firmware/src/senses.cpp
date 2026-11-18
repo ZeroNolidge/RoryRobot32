@@ -254,7 +254,7 @@ void pollImu(uint32_t now) {
   // --- hug: held (not on the table) and kept calm for a few seconds
   if (!isResting && dyn < 0.15f && spin < 30) {
     if (!heldCalmSinceMs) heldCalmSinceMs = now;
-    if (!hugFired && now - heldCalmSinceMs > 3000 && now - lastPickupMs < 60000) {
+    if (!hugFired && now - heldCalmSinceMs > 5000 && now - lastPickupMs < 60000) {
       hugFired = true;
       push(Ev::Hug);
     }

@@ -55,16 +55,21 @@ def write_config(args) -> None:
 
 # Thinking sounds, made in Rory's own voice by your server (needs --server/--token,
 # or a config.txt already on the card).
-MADE_LINES = {
-    "hmm": ["Hmm, let me think!", "Ooh, good question!", "Hmm...", "Let me see...", "Ooh, let me think about that!"],
-    "look": ["Ooh, let me see!", "Let me take a look!", "Hold it up so I can see!"],  # "Rory, look!"
-    "yes": ["Yes?", "I'm listening!", "What is it?"],  # tap to talk
-    # the dizzy game, getting wilder each spin
-    "spin1": ["Whoooooa!", "Wheeeee! Here I go!", "Whoa, whoa, whoaaa!"],
-    "spin2": ["I'm getting dizzy!", "Everything is spinning!", "Oh no, I'm so dizzy!"],
-    "spin3": ["Aaarrgh! Too much spinning!", "Aaaah! The room is going round and round!", "Whoa-whoa-whoa! I can't stop!"],
-}
-# (Rory also makes any of these that are missing by herself over Wi-Fi - see firmware/src/made_clips.h)
+def _made_lines() -> dict:
+    """The lines Rory makes in her own voice: read from the firmware's list
+    (firmware/src/made_clips.h), so there's only one list to keep up to date."""
+    path = os.path.join(HERE, "..", "firmware", "src", "made_clips.h")
+    lines = {}
+    try:
+        for moment, line in re.findall(r'\{"([^"]+)",\s*"((?:[^"\\]|\\.)*)"\}', open(path, encoding="utf-8").read()):
+            lines.setdefault(moment, []).append(line.replace('\\"', '"'))
+    except OSError:
+        pass
+    return lines
+
+
+MADE_LINES = _made_lines()
+# (Rory also makes any of these that are missing by herself over Wi-Fi.)
 
 
 MEMORY_HEADER = """# What Rory remembers about her friend. She adds a line when she learns something new.

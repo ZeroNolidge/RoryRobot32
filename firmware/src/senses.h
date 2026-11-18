@@ -17,7 +17,7 @@ enum class Ev : uint8_t {
   HighFive,   // one clear tap on her body/hands (not the screen)
   Dance,      // bounced up and down in a rhythm
   Walk,       // gently hopped along in a rhythm
-  Hug,        // held quietly in someone's hands for a few seconds
+  Hug,        // held quietly in someone's hands for ~5 seconds
   BootButton, // short press on BOOT
   KeyButton,  // short press on +/KEY
   PowerHold,  // PWR held ~1.5 s
