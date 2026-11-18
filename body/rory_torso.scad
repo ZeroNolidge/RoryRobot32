@@ -66,6 +66,7 @@ H = max(z_board + board, z_bat + bat[2]) + 0.6 + collar[1];  // shell height: th
 z_top_in = H - wall;
 zc = z_board + board / 2;                  // board center
 z_lens = z_board + board - lens_down;
+lens_x = 0;                                 // camera left/right of center (0 = centered)
 
 // head placement: the head sits right on the body, its collar down in the socket
 head_D = 35.5;                             // head depth incl. back plate
@@ -105,12 +106,12 @@ module shell() {
     for (sx = [-1, 1]) translate([sx > 0 ? head_mic[0] - 3 : -W / 2 - 1, head_y + head_mic[1] - 1.5, H - 1]) cube([W / 2 - head_mic[0] + 4, 3, 2]);
     arm_holes();
     // a little round dimple above the chest panel: paint it gold (the app's bolt)
-    translate([0, -0.01, panel_z + panel[1] / 2 + 4]) rotate([-90, 0, 0]) cylinder(d = 5, h = 0.6);
+    translate([lens_x, -0.01, panel_z + panel[1] / 2 + 4]) rotate([-90, 0, 0]) cylinder(d = 5, h = 0.6);
     // shallow recess for the chest panel
-    translate([0, -0.01, panel_z]) rrect_xz(panel[0] + 0.4, panel[1] + 0.4, 3.2, 0.6);
+    translate([lens_x, -0.01, panel_z]) rrect_xz(panel[0] + 0.4, panel[1] + 0.4, 3.2, 0.6);
     // camera window in the chest, softly chamfered
-    translate([0, -1, z_lens]) rotate([-90, 0, 0]) cylinder(d = 7, h = wall + 2);
-    translate([0, -0.01, z_lens]) rotate([-90, 0, 0]) cylinder(d1 = 9, d2 = 7, h = 1);
+    translate([lens_x, -1, z_lens]) rotate([-90, 0, 0]) cylinder(d = 7, h = wall + 2);
+    translate([lens_x, -0.01, z_lens]) rotate([-90, 0, 0]) cylinder(d1 = 9, d2 = 7, h = 1);
     // pinhole for the camera board's PWR button (press with a pen)
     translate([pwr_x, -1, z_board + pwr_up]) rotate([-90, 0, 0]) cylinder(d = 3.2, h = wall + 2);
   }
@@ -208,7 +209,7 @@ module chest_panel() {            // back face at y = 0, front face at y = -pane
     translate([0, -panel[2] - 1, -5]) hull() for (x = [-6, 6]) translate([x, 0, 0]) rotate([-90, 0, 0]) cylinder(d = 2.4, h = 1.6);  // slot (0.6 deep)
   }
 }
-module chest_panel_placed() { translate([0, 0.6, panel_z]) chest_panel(); }
+module chest_panel_placed() { translate([lens_x, 0.6, panel_z]) chest_panel(); }
 
 /* ---------- board holder (sits behind the camera board) ---------- */
 // A flat plate that keeps the battery off the board's plugs; 4 little fingers
