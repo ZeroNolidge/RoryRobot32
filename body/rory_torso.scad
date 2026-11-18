@@ -14,6 +14,7 @@
 //   part = "holder"   plate behind the camera board    any color (hidden)
 //   part = "back"     back panel with the 2 USB ports  almond yellow
 //   part = "feet"     two feet (print in tan, glue on) tan   (or leave them on the shell)
+//   part = "front_test"  just the chest + board pins (~30 min): check the camera lines up
 //   part = "all"      everything together, with the head
 //
 // Hardware: 4 x M3 x 12 mm screws (back panel), flush like the head's.
@@ -190,6 +191,10 @@ if (part == "shell") rotate([90, 0, 0]) translate([0, 0, 0]) shell();          /
 else if (part == "holder") holder();
 else if (part == "back") translate([0, 0, panel_t]) rotate([-90, 0, 0]) back_panel();  // outside down
 else if (part == "feet") feet();
+else if (part == "front_test") rotate([90, 0, 0]) intersection() {  // chest down
+  shell();
+  translate([-50, -1, -10]) cube([100, y_pcb + board_t + 2.5, 100]);
+}
 else if (part == "open") { color(YELLOW) shell(); color(GREY) holder_placed(); preview_inside(); }
 else {
   color(YELLOW) shell();

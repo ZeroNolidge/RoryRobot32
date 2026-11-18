@@ -55,6 +55,7 @@ USB-C charging ports.
 
 | File | Print | Filament | Notes |
 |---|---|---|---|
+| `stl/rory_body_front_test.stl` | 1, **first** | any | ~30 min: just the chest and the 4 board pins. Push the camera board onto the pins (camera folded on): does the lens show in the window? |
 | `stl/rory_body_shell.stl` | 1 | almond yellow | chest **down** (as exported). Supports: **on, build plate only** (feet and neck plug) |
 | `stl/rory_body_back.stl` | 1 | almond yellow | flat, outside down. No supports |
 | `stl/rory_body_holder.stl` | 1 | any (hidden) | flat, fingers up. No supports |
