@@ -115,6 +115,9 @@
 // Kept deliberately modest for little ears.
 static const uint8_t VOLUME_STEPS[] = {8, 13, 17};
 // Loudness of streamed AI answers compared with the voice clips (raise if answers are quieter)
+#ifndef STREAM_PREBUFFER_MS
+#define STREAM_PREBUFFER_MS 600   // how much of an answer to collect before she starts talking
+#endif
 #ifndef STREAM_GAIN
 #define STREAM_GAIN 1.0f
 #endif

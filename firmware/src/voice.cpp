@@ -44,7 +44,14 @@ uint32_t recStartMs = 0;
 // streaming (AI answers): network task -> stream buffer -> speaker
 const uint32_t kStreamRate = 24000;
 const size_t kStreamBufBytes = 64 * 1024;          // ~1.3 s of audio
-const size_t kPrebufferBytes = kStreamRate * 2 / 6;  // start once ~170 ms is waiting
+// Start once this much of her answer has arrived; her voice often comes in
+// uneven bursts at first, and starting too soon stutters. If she ever runs
+// almost dry mid-sentence, she pauses to re-buffer a little (one short pause
+// instead of lots of tiny stutters).
+const size_t kPrebufferBytes = kStreamRate * 2 * STREAM_PREBUFFER_MS / 1000;
+const size_t kRebufferBytes = kStreamRate * 2 * 300 / 1000;
+const size_t kLowWaterBytes = 1024;  // ~20 ms left: about to run dry
+size_t startAt = 0;                  // bytes to wait for before (re)starting
 StreamBufferHandle_t sbuf = nullptr;
 StaticStreamBuffer_t sbufStruct;
 I2SClass* spk = nullptr;
@@ -227,18 +234,26 @@ void beginStream() {
   }
   streamActive = true;
   streamStarted = false;
+  startAt = 0;
   hasCarry = false;
   running = true;
 }
 
 void pumpStream() {
+  bool more = !streamEndReq && streamOpen;  // still arriving from the server
   if (!streamStarted) {
-    // wait for a little audio to build up so it never stutters
-    if (xStreamBufferBytesAvailable(sbuf) < kPrebufferBytes && !streamEndReq && streamOpen) {
+    // wait for some audio to build up so it doesn't stutter
+    if (xStreamBufferBytesAvailable(sbuf) < (startAt ? startAt : kPrebufferBytes) && more) {
       vTaskDelay(pdMS_TO_TICKS(5));
       return;
     }
     streamStarted = true;
+  } else if (more && xStreamBufferBytesAvailable(sbuf) < kLowWaterBytes) {
+    // about to run dry mid-sentence: one short pause to catch up
+    streamStarted = false;
+    startAt = kRebufferBytes;
+    Serial.println("[voice] waiting for more of her answer...");
+    return;
   }
   uint8_t in[1025];
   size_t off = 0;
