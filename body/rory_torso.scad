@@ -108,10 +108,8 @@ module shell() {
     // little grooves so the head's bottom microphone holes aren't blocked
     for (sx = [-1, 1]) translate([sx > 0 ? head_mic[0] - 3 : -W / 2 - 1, head_y + head_mic[1] - 1.5, H - 1]) cube([W / 2 - head_mic[0] + 4, 3, 2]);
     arm_holes();
-    // a little round dimple above the chest panel: paint it gold (the app's bolt)
-    translate([lens_x, -0.01, panel_z + panel[1] / 2 + 4]) rotate([-90, 0, 0]) cylinder(d = 5, h = 0.6);
-    // shallow recess for the chest panel
-    translate([lens_x, -0.01, panel_z]) rrect_xz(panel[0] + 0.4, panel[1] + 0.4, 3.2, 0.6);
+    // (no recess for the chest panel: the chest prints face-down, so it stays flat.
+    //  The panel glues on flat, lined up by its camera hole; paint a gold dot above it.)
     // camera window in the chest, softly chamfered
     translate([lens_x, -1, z_lens]) rotate([-90, 0, 0]) cylinder(d = 7, h = wall + 2);
     translate([lens_x, -0.01, z_lens]) rotate([-90, 0, 0]) cylinder(d1 = 9, d2 = 7, h = 1);
@@ -217,7 +215,7 @@ module chest_panel() {            // back face at y = 0, front face at y = -pane
     translate([0, -panel[2] - 1, -5]) hull() for (x = [-6, 6]) translate([x, 0, 0]) rotate([-90, 0, 0]) cylinder(d = 2.4, h = 1.6);  // slot (0.6 deep)
   }
 }
-module chest_panel_placed() { translate([lens_x, 0.6, panel_z]) chest_panel(); }
+module chest_panel_placed() { translate([lens_x, 0, panel_z]) chest_panel(); }
 
 /* ---------- board holder (sits behind the camera board) ---------- */
 // A flat plate that keeps the battery off the board's plugs; 4 little fingers

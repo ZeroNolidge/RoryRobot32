@@ -73,7 +73,7 @@ holder plate, the battery **lying sideways** (up to 40 × 10 × 25 mm, e.g. a
 
 Plus: **4 × M3 × 12 mm** screws (back panel), **2 × M3 × 6 mm** (from inside,
 up into the head, to lock it on), superglue (hands, feet, chest panel), a little
-gold paint (shoulder bolts and the dimple above the chest panel), and two USB-C
+gold paint (shoulder bolts and a dot above the chest panel), and two USB-C
 90° male-to-female flat extension cables:
 - **camera board:** the **slim** kind (plug about 3.5 mm thick, e.g. NFHK "ultra
   slim flat"), because there's only 6 mm under the board;
@@ -81,8 +81,8 @@ gold paint (shoulder bolts and the dimple above the chest panel), and two USB-C
 
 **Putting it together:**
 1. **Glue on** the hands (pegs into the bottoms of the arms), the feet (onto the
-   pegs underneath) and the chest panel (into the shallow recess, camera hole
-   over the window).
+   pegs underneath) and the chest panel (flat on her chest, camera hole over the
+   window). Paint a gold dot just above the panel, like the app's bolt.
 2. **Camera:** fold it onto the front of the camera board (over the microSD
    slot) and stick it down with a small square of double-sided tape.
 3. **USB cables:** plug one extension's angled end into the camera board's port
