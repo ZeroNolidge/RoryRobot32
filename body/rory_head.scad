@@ -8,8 +8,8 @@
 // the USB-C port room for a cable (straight or flat 90-degree) and lets the LED
 // wires go down into the body.
 //
-// v3.1: no visible neck - the collar slides down into a socket in the body,
-//       and the body's back panel screws into two lugs at the back of the collar.
+// v3.1: no visible neck - a short collar slides down into a socket in the body,
+//       and 2 screws from inside the body go up into the head's bottom.
 //       (The collar's front moved back a little so the body's front wall stays solid.)
 // v3 (after the first test print):
 //  - nothing sticks into the case's path any more (screws are in the corners)
@@ -72,8 +72,8 @@ socket_d = 8.0;  socket_h = 1.6;    // the antenna's peg sits in this (stays cle
 // neck (open underneath: USB-C plug, microSD, LED wires)
 neck_in_w = 18;                     // fits a USB-C plug, straight or flat 90-degree
 neck_y = [5.4, D];                  // from just in front of the angled USB-C plug to the back
-neck_wall = 2.4;  neck_h = 6;
-lug_len = 6;  lug_in = 4.4;          // screw lugs at the back of the collar: the body's back panel screws into them
+neck_wall = 2.4;  neck_h = 3;   // short collar: it sits down in the body's socket
+lock_x = 16;  lock_y = 19.5;  lock_depth = 3.0;  // 2 screws come up from inside the body into the head's bottom here
 
 $fn = 64;
 YELLOW = "#E9C46A"; CLEAR = "#CFEFFF"; SCREEN = "#263238"; CYAN = "#52DAE8"; WHITE = "#F5F5F5";
@@ -112,14 +112,10 @@ module head() {
     // neck: open from just in front of the USB-C port all the way back
     translate([0, 0, -head_w / 2 - neck_h - 1]) linear_extrude(wall + neck_h + 2)
       rbox2d(-neck_in_w / 2, neck_in_w / 2, neck_y[0], D + 1, 2);
+    // pilot holes underneath: 2 screws from inside the body lock the head on
+    for (sx = [-1, 1]) translate([sx * lock_x, lock_y, -head_w / 2 - 1]) cylinder(d = pilot, h = lock_depth + 1);
     // corner screw holes for the back plate
     for (s = screws) translate([s[0], D - screw_len, s[1]]) rotate([-90, 0, 0]) cylinder(d = pilot, h = screw_len + 1);
-  }
-  // solid lugs at the back of the collar: the body's back panel screws into them
-  difference() {
-    for (sx = [-1, 1]) translate([sx > 0 ? neck_in_w / 2 - lug_in - 0.01 : -neck_in_w / 2 - 0.01, D - lug_len, -head_w / 2 - neck_h + 0.01])
-      cube([lug_in + 0.02, lug_len, neck_h]);
-    for (sx = [-1, 1]) translate([sx * (neck_in_w / 2 - 2.2), D - lug_len - 1, -head_w / 2 - neck_h / 2]) rotate([-90, 0, 0]) cylinder(d = pilot, h = lug_len + 2);
   }
 }
 

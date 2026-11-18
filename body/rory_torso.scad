@@ -8,7 +8,7 @@
 // Underneath the battery: two USB-C extension cables (male ends in the head and
 // the camera board, female ends sticking out through the back panel).
 // On top: a socket that the head's neck collar slides down into (no visible neck),
-// locked by 2 screws through the back panel into the back of the collar.
+// locked by 2 short screws from inside the body up into the head's bottom.
 //
 // Parts (pick one, render with F6, export STL):
 //   part = "shell"    the body                         almond yellow
@@ -21,7 +21,7 @@
 //   part = "all"      everything together, with the head
 //
 // Hardware: 4 x M3 x 12 mm screws (back panel), flush like the head's;
-// 2 x M3 x 8 through the back panel into the head; superglue for the hands and feet.
+// 2 x M3 x 6 from inside up into the head (lock it on); superglue for the hands and feet.
 
 use <rory_head.scad>
 
@@ -37,8 +37,8 @@ back_parts = 6.5;      // tallest parts on the board's back (its white sockets a
 lens_down = 9;         // lens center below the board's top edge (centered left-right)
 pwr_x = 11.2;          // PWR button: right of center (seen from the front)...
 pwr_up = 1.6;          // ...and this far above the board's bottom edge
-usb_drop = 9;          // room under the board for its right-angle USB-C plug
-bat = [41, 10.5, 30.5];     // battery space, lying sideways: width, thickness, height (102540, 503040...)
+usb_drop = 6.2;        // room under the board for its slim right-angle USB-C plug (NFHK, 3.5 mm thick)
+bat = [41, 10.5, 25.5];     // battery space, lying sideways: width, thickness, height (fits a 102540)
 port = [10.4, 19, 5.9];     // USB-C extension's female end: width, length, thickness (+0.4)
 port_x = 13;                // the two ports sit this far left/right of center
 
@@ -61,7 +61,7 @@ D = y_back + panel_t;                      // total depth
 z_port = wall;                             // ports lie on the floor
 z_board = wall + usb_drop;                 // board's bottom edge
 z_bat = z_port + port[2] + 0.8;            // battery sits just above the port cradles
-collar = [23.4, 6.3];                      // the head's neck collar slides into a socket this wide and deep
+collar = [23.4, 3.3];                      // the head's neck collar slides into a socket this wide and deep
 H = max(z_board + board, z_bat + bat[2]) + 0.6 + collar[1];  // shell height: the collar clears the board
 z_top_in = H - wall;
 zc = z_board + board / 2;                  // board center
@@ -72,7 +72,8 @@ lens_x = 0;                                 // camera left/right of center (0 = 
 head_D = 35.5;                             // head depth incl. back plate
 head_y = -(head_D - D) / 2;                // where the head's front is, in body coords
 socket_y0 = head_y + 2.7;                  // socket front (the head's collar starts 3 mm behind its face)
-head_screw_x = 6.8;                        // the 2 screws into the head's collar lugs
+head_lock = [16, 19.5];                     // 2 screws from inside go up into the head's bottom (x, y)
+lock_boss_t = 0.8;                         // extra thickness under the top wall there
 head_mic = [19.4, 21.6];                   // the head's bottom microphone pinholes (x, y)
 
 // back panel screws: into bosses on the side walls, near the back
@@ -102,6 +103,8 @@ module shell() {
     translate([0, wall, H / 2]) rrect_xz(in_w, H - 2 * wall, 1.5, y_back);
     // socket for the head's neck collar (open into the body: cables and LED wires come down through it)
     rbox(-collar[0] / 2, collar[0] / 2, socket_y0, y_back + 1, H - collar[1], H + 1, 2.2);
+    // the 2 head-lock screws go up through here
+    for (sx = [-1, 1]) translate([sx * head_lock[0], head_y + head_lock[1], H - wall - lock_boss_t - 1]) cylinder(d = screw_clear, h = wall + lock_boss_t + 2);
     // little grooves so the head's bottom microphone holes aren't blocked
     for (sx = [-1, 1]) translate([sx > 0 ? head_mic[0] - 3 : -W / 2 - 1, head_y + head_mic[1] - 1.5, H - 1]) cube([W / 2 - head_mic[0] + 4, 3, 2]);
     arm_holes();
@@ -114,6 +117,11 @@ module shell() {
     translate([lens_x, -0.01, z_lens]) rotate([-90, 0, 0]) cylinder(d1 = 9, d2 = 7, h = 1);
     // pinhole for the camera board's PWR button (press with a pen)
     translate([pwr_x, -1, z_board + pwr_up]) rotate([-90, 0, 0]) cylinder(d = 3.2, h = wall + 2);
+  }
+  // a little extra thickness under the top wall around the head-lock screws
+  for (sx = [-1, 1]) difference() {
+    translate([sx * head_lock[0], head_y + head_lock[1], H - wall - lock_boss_t]) cylinder(d = 7, h = lock_boss_t + 0.01);
+    translate([sx * head_lock[0], head_y + head_lock[1], H - wall - lock_boss_t - 1]) cylinder(d = screw_clear, h = lock_boss_t + 2);
   }
   // posts that hold the camera board, with pins into its corner holes
   for (sx = [-1, 1], sz = [-1, 1]) translate([sx * board_hole / 2, wall - 0.01, zc + sz * board_hole / 2]) rotate([-90, 0, 0]) {
@@ -247,11 +255,6 @@ module back_panel() {
     // the two USB-C ports pass through
     for (sx = [-1, 1]) translate([sx * port_x, -2, z_port + port[2] / 2]) rotate([-90, 0, 0])
       linear_extrude(panel_t + 4) offset(0.8) square([port[0] - 1.6, port[2] - 1.6], center = true);
-    // the 2 screws into the back of the head's collar (they lock the head on)
-    for (sx = [-1, 1]) translate([sx * head_screw_x, 0, H - 3]) rotate([-90, 0, 0]) {
-      translate([0, 0, -2]) cylinder(d = screw_clear, h = panel_t + 4);
-      translate([0, 0, panel_t - screw_pocket]) cylinder(d = 6.4, h = screw_pocket + 1);
-    }
     // no lip where the head's collar comes down
     translate([-collar[0] / 2 - 0.5, -2, H - collar[1] - 0.5]) cube([collar[0] + 1, 2.01, collar[1] + 1]);
     // screw holes with pockets, so the heads sit flush

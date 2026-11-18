@@ -53,11 +53,11 @@ the two buttons.
 
 <img src="preview-body.png" width="800">
 
-About 46 × 35.5 × 55 mm (the same depth as the head, flush front and back).
-With head and feet, Rory is about **12 cm tall** (plus the antenna).
+About 46 × 35.5 × 49.5 mm (the same depth as the head, flush front and back).
+With head and feet, Rory is about **11.5 cm tall** (plus the antenna).
 
 Inside, front to back: the camera board (camera folded onto its front), a thin
-holder plate, the battery **lying sideways** (up to 40 × 10 × 30 mm, e.g. a
+holder plate, the battery **lying sideways** (up to 40 × 10 × 25 mm, e.g. a
 102540), and the back panel with her two USB-C charging ports.
 
 | File | Print | Filament | Notes |
@@ -69,12 +69,15 @@ holder plate, the battery **lying sideways** (up to 40 × 10 × 30 mm, e.g. a
 | `stl/rory_body_panel.stl` | 1 | pale blue | flat, buttons up. Paint the left button teal and the right one yellow |
 | `stl/rory_body_hands.stl` | 1 (two hands) | brown or tan | lying on a side, as exported |
 | `stl/rory_body_feet.stl` | 1 (two feet) | tan | flat side down, as exported |
-| `stl/rory_head_head.stl` | 1 | almond yellow | **v3.1** (new collar for the socket), face down, supports build plate only |
+| `stl/rory_head_head.stl` | 1 | almond yellow | **v3.1** (short collar for the socket, 2 screw holes underneath), face down, supports build plate only |
 
-Plus: **4 × M3 × 12 mm** screws (back panel), **2 × M3 × 8 mm** (through the back
-panel into the head's collar), superglue (hands, feet, chest panel), a little
-gold paint (shoulder bolts and the dimple above the chest panel), and **2 ×
-USB-C 90° male-to-female flat extension cables**.
+Plus: **4 × M3 × 12 mm** screws (back panel), **2 × M3 × 6 mm** (from inside,
+up into the head, to lock it on), superglue (hands, feet, chest panel), a little
+gold paint (shoulder bolts and the dimple above the chest panel), and two USB-C
+90° male-to-female flat extension cables:
+- **camera board:** the **slim** kind (plug about 3.5 mm thick, e.g. NFHK "ultra
+  slim flat"), because there's only 6 mm under the board;
+- **head:** either kind (the 4-inch elechawk works).
 
 **Putting it together:**
 1. **Glue on** the hands (pegs into the bottoms of the arms), the feet (onto the
@@ -90,9 +93,11 @@ USB-C 90° male-to-female flat extension cables**.
 6. **Battery:** plug it into the board's **BAT** socket (red on +!) and lay it
    sideways behind the holder.
 7. **Head:** feed its USB cable and the LED wires down, and lower the head's
-   collar into the socket on top of the body.
-8. **Back panel:** screw it on with the 4 M3 × 12 screws, then the 2 M3 × 8
-   screws at the top go into the back of the head's collar and lock the head on.
+   short collar into the socket on top of the body. **Before the battery goes
+   in**, reach in through the open back with the hex key and drive the **2 M3 × 6
+   screws up** through the two holes in the body's top into the head's bottom.
+   That locks the head on.
+8. **Battery** in (step 6), then screw on the **back panel** with the 4 M3 × 12 screws.
 9. **Eyes on/off:** poke the small pinhole low on her chest with a pen.
 
 **Cable routes:** the head's flat USB cable leaves its port pointing back,
