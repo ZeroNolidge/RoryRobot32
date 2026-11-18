@@ -59,10 +59,11 @@ USB-C charging ports.
 | `stl/rory_body_shell.stl` | 1 | almond yellow | chest **down** (as exported). Supports: **on, build plate only** (feet and neck plug) |
 | `stl/rory_body_back.stl` | 1 | almond yellow | flat, outside down. No supports |
 | `stl/rory_body_holder.stl` | 1 | any (hidden) | flat, fingers up. No supports |
+| `stl/rory_body_hands.stl` | 1 (two hands) | **brown** | flat, pegs up. No supports. Push each peg into the hole at the end of an arm, with a drop of superglue |
 
 Plus **4 × M3 × 12 mm screws** (flush, like the head), **2 × M3 × 8 mm screws**
 for the "neck bolts", and **2 × USB-C 90° male-to-female flat extension
-cables** (4 inch). Her arms are molded onto her sides, so they can't be pulled off.
+cables** (4 inch). Her arms are molded onto her sides, so they can't be pulled off; her brown hands glue on.
 
 **Putting it together:**
 1. **Camera:** fold the camera onto the front of the camera board (over the

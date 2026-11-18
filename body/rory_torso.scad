@@ -14,6 +14,7 @@
 //   part = "holder"   plate behind the camera board    any color (hidden)
 //   part = "back"     back panel with the 2 USB ports  almond yellow
 //   part = "feet"     two feet (print in tan, glue on) tan   (or leave them on the shell)
+//   part = "hands"    her two hands, glued onto her arms  brown
 //   part = "front_test"  just the chest + board pins (~30 min): check the camera lines up
 //   part = "all"      everything together, with the head
 //
@@ -103,6 +104,7 @@ module shell() {
     translate([0, wall, H / 2]) rrect_xz(in_w, H - 2 * wall, 1.5, y_back);
     // neck hollow: cables and LED wires go down from the head
     rbox(-plug[0] / 2 + plug_wall, plug[0] / 2 - plug_wall, plug_y[0] + plug_wall, plug_y[1] - plug_wall, H - wall - 1, H + plug[1] + 1, 1);
+    hand_holes();
     // pilot holes for the neck bolts
     for (sx = [-1, 1]) translate([sx * (plug[0] / 2 + 1), bolt_y, H + bolt_z]) rotate([0, -sx * 90, 0]) cylinder(d = pilot, h = plug[0] / 2 - bolt_boss + 2);
     // camera window in the chest, softly chamfered
@@ -137,19 +139,40 @@ module shell() {
   feet();
 }
 
-// a little arm on each side: shoulder near the top, hand down by her hip
+// a little arm on each side: shoulder near the top, down to the wrist.
+// The hands are separate (print them in brown) and glue onto pegs' holes.
+arm_t = 3.2;                     // how far the arm stands out from her side
+hand_d = 11;  hand_peg = [3.5, 2.0];   // hand size; its peg (diameter, length)
+function hand_pos() = [D / 2 - 3, H - 34];   // (y, z) of each hand's center
 module arm(sx) {
-  t = 3.2;                       // how far it stands out from her side
   sy = D / 2;                    // shoulder
   sz = H - 10;
-  hy = D / 2 - 3;                // hand
-  hz = H - 34;
+  hy = hand_pos()[0];
+  hz = hand_pos()[1];
   k = sx > 0 ? -1 : 1;           // after the rotation below, 2D x becomes height (sign depends on the side)
-  translate([sx * (W / 2 - 0.5), 0, 0]) rotate([0, sx * 90, 0]) linear_extrude(t + 0.5) {
-    translate([k * sz, sy]) circle(d = 11);
-    hull() { translate([k * sz, sy]) circle(d = 8); translate([k * hz, hy]) circle(d = 7.5); }
-    translate([k * hz, hy]) circle(d = 11);
+  translate([sx * (W / 2 - 0.5), 0, 0]) rotate([0, sx * 90, 0]) linear_extrude(arm_t + 0.5) difference() {
+    union() {
+      translate([k * sz, sy]) circle(d = 11);
+      hull() { translate([k * sz, sy]) circle(d = 8); translate([k * hz, hy]) circle(d = 7.5); }
+    }
+    translate([k * hz, hy]) circle(d = hand_d + 0.6);  // the hand goes here
   }
+}
+// hole in her side for each hand's peg
+module hand_holes() {
+  for (sx = [-1, 1]) translate([sx * (W / 2 + 0.01), hand_pos()[0], hand_pos()[1]]) rotate([0, -sx * 90, 0])
+    cylinder(d = hand_peg[0] + 0.3, h = hand_peg[1] + 0.3);
+}
+// one hand: a round mitten, flat on the back, with a peg (printed flat, peg up)
+module hand() {
+  cylinder(d = hand_d, h = arm_t - 0.6);
+  translate([0, 0, arm_t - 0.6]) cylinder(d1 = hand_d, d2 = hand_d - 1.2, h = 0.6);  // soft edge
+  // a little thumb bump
+  translate([hand_d / 2 - 1, 2.5, 0]) cylinder(d = 4.5, h = arm_t - 0.8);
+  translate([0, 0, -hand_peg[1]]) cylinder(d = hand_peg[0], h = hand_peg[1] + 0.01);
+}
+module hands_placed() {
+  for (sx = [-1, 1]) translate([sx * W / 2, hand_pos()[0], hand_pos()[1]]) rotate([0, sx * 90, 0]) hand();
 }
 
 module feet() {
@@ -219,6 +242,7 @@ if (part == "shell") rotate([90, 0, 0]) translate([0, 0, 0]) shell();          /
 else if (part == "holder") holder();
 else if (part == "back") translate([0, 0, panel_t]) rotate([-90, 0, 0]) back_panel();  // outside down
 else if (part == "feet") feet();
+else if (part == "hands") for (i = [0, 1]) translate([i * (hand_d + 6), 0, arm_t]) rotate([180, 0, 0]) mirror([i, 0, 0]) hand();  // brown: round face down, pegs up
 else if (part == "front_test") rotate([90, 0, 0]) intersection() {  // chest down
   shell();
   translate([-50, -1, -10]) cube([100, y_pcb + board_t + 2.5, 100]);
@@ -227,6 +251,7 @@ else if (part == "open") { color(YELLOW) shell(); color(GREY) holder_placed(); p
 else {
   color(YELLOW) shell();
   color(YELLOW) translate([0, y_back, 0]) back_panel();
+  color("#7B4A2D") hands_placed();
   // the head on top
   translate([0, head_y, H + 6 + 26.8]) { color(YELLOW) head(); color(YELLOW) translate([0, 31.5, 0]) back_plate(); color("#CFEFFF") translate([0, 27.4, 26.8]) antenna(); preview_case(); }
 }
