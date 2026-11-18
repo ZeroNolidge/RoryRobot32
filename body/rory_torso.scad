@@ -283,7 +283,7 @@ else if (part == "feet") for (sx = [-1, 1]) translate([sx * (foot[0] / 2 + 3), 0
 else if (part == "hands") for (i = [0, 1]) translate([0, i * (arm_w + 6), (arm_out + 0.5) / 2]) rotate([0, 90, 0]) hand();  // tan: lying on a flat side
 else if (part == "front_test") rotate([90, 0, 0]) intersection() {  // chest down
   shell();
-  translate([-W / 2, -1, -0.01]) cube([W, y_pcb + board_t + 2.5, 100]);  // chest only: no arms or feet pegs
+  translate([-W / 2, -1, 0]) cube([W, y_pcb + board_t + 2.5, 100]);  // chest only: no arms or feet pegs
 }
 else if (part == "open") { color(YELLOW) shell(); color(GREY) holder_placed(); preview_inside(); }
 else {
