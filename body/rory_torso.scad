@@ -29,7 +29,7 @@ board_hole = 32.6;     // mounting-hole spacing
 board_pin = 2.0;       // locating pins that go into its holes
 cam_stack = 7;         // from the board's front face to the front of the folded camera (microSD slot + camera)
 board_t = 1.6;         // board thickness
-back_parts = 5.5;      // tallest parts on the board's back (plugs)
+back_parts = 6.5;      // tallest parts on the board's back (its white sockets and USB-C)
 lens_down = 9;         // lens center below the board's top edge (centered left-right)
 pwr_x = 11.2;          // PWR button: right of center (seen from the front)...
 pwr_up = 1.6;          // ...and this far above the board's bottom edge
@@ -51,7 +51,7 @@ y_cam = wall;                              // front of the folded camera (touche
 y_pcb = y_cam + cam_stack;                 // board's front face
 y_plate = y_pcb + board_t + back_parts;    // holder plate (front face)
 y_bat = y_plate + plate_t;                 // battery front
-y_back = y_bat + bat[1] + 1.8;             // back of the shell (back panel goes on here)
+y_back = y_bat + bat[1] + 0.8;             // back of the shell (back panel goes on here)
 D = y_back + panel_t;                      // total depth
 
 z_port = wall;                             // ports lie on the floor
@@ -69,6 +69,10 @@ head_y = -(head_D - D) / 2;                // where the head's front is, in body
 plug = [17.4, 5.5];                        // width, height
 plug_y = [head_y + 3.0, min(y_back - 0.3, head_y + 31.0)];
 plug_wall = 1.6;
+// neck bolts: an M3 x 8 screw through each side of the head's collar into the plug
+bolt_y = head_y + 28;                      // (same spot as in rory_head.scad)
+bolt_z = 2.75;                             // above the body's top
+bolt_boss = 4.6;                           // the plug is solid from here outward, around the bolts
 
 // back panel screws: into bosses on the side walls, near the back
 screws = [for (sx = [-1, 1], z = [z_bat + 8, z_top_in - 4]) [sx * (in_w / 2 - 1.9), z]];
@@ -92,16 +96,25 @@ module shell() {
       translate([0, 0, H / 2]) rrect_xz(W, H, corner_r, y_back);
       // neck plug on top
       rbox(-plug[0] / 2, plug[0] / 2, plug_y[0], plug_y[1], H - 0.01, H + plug[1], 2);
+      // arms, molded onto her sides (nothing to pull off)
+      for (sx = [-1, 1]) arm(sx);
     }
     // inside, open at the back
     translate([0, wall, H / 2]) rrect_xz(in_w, H - 2 * wall, 1.5, y_back);
     // neck hollow: cables and LED wires go down from the head
     rbox(-plug[0] / 2 + plug_wall, plug[0] / 2 - plug_wall, plug_y[0] + plug_wall, plug_y[1] - plug_wall, H - wall - 1, H + plug[1] + 1, 1);
+    // pilot holes for the neck bolts
+    for (sx = [-1, 1]) translate([sx * (plug[0] / 2 + 1), bolt_y, H + bolt_z]) rotate([0, -sx * 90, 0]) cylinder(d = pilot, h = plug[0] / 2 - bolt_boss + 2);
     // camera window in the chest, softly chamfered
     translate([0, -1, z_lens]) rotate([-90, 0, 0]) cylinder(d = 7, h = wall + 2);
     translate([0, -0.01, z_lens]) rotate([-90, 0, 0]) cylinder(d1 = 9, d2 = 7, h = 1);
     // pinhole for the camera board's PWR button (press with a pen)
     translate([pwr_x, -1, z_board + pwr_up]) rotate([-90, 0, 0]) cylinder(d = 3.2, h = wall + 2);
+  }
+  // solid blocks inside the neck plug around the neck bolts
+  for (sx = [-1, 1]) difference() {
+    translate([sx > 0 ? bolt_boss : -plug[0] / 2 + plug_wall - 0.01, bolt_y - 3, H]) cube([plug[0] / 2 - plug_wall - bolt_boss + 0.01, 6, plug[1]]);
+    translate([sx * (plug[0] / 2 + 1), bolt_y, H + bolt_z]) rotate([0, -sx * 90, 0]) cylinder(d = pilot, h = plug[0] / 2 - bolt_boss + 2);
   }
   // posts that hold the camera board, with pins into its corner holes
   for (sx = [-1, 1], sz = [-1, 1]) translate([sx * board_hole / 2, wall - 0.01, zc + sz * board_hole / 2]) rotate([-90, 0, 0]) {
@@ -122,6 +135,21 @@ module shell() {
     translate([s[0], y_back - boss_len - 1, s[1]]) rotate([-90, 0, 0]) cylinder(d = pilot, h = boss_len + 2);
   }
   feet();
+}
+
+// a little arm on each side: shoulder near the top, hand down by her hip
+module arm(sx) {
+  t = 3.2;                       // how far it stands out from her side
+  sy = D / 2;                    // shoulder
+  sz = H - 10;
+  hy = D / 2 - 3;                // hand
+  hz = H - 34;
+  k = sx > 0 ? -1 : 1;           // after the rotation below, 2D x becomes height (sign depends on the side)
+  translate([sx * (W / 2 - 0.5), 0, 0]) rotate([0, sx * 90, 0]) linear_extrude(t + 0.5) {
+    translate([k * sz, sy]) circle(d = 11);
+    hull() { translate([k * sz, sy]) circle(d = 8); translate([k * hz, hy]) circle(d = 7.5); }
+    translate([k * hz, hy]) circle(d = 11);
+  }
 }
 
 module feet() {

@@ -60,8 +60,9 @@ USB-C charging ports.
 | `stl/rory_body_back.stl` | 1 | almond yellow | flat, outside down. No supports |
 | `stl/rory_body_holder.stl` | 1 | any (hidden) | flat, fingers up. No supports |
 
-Plus **4 × M3 × 12 mm screws** (flush, like the head) and **2 × USB-C 90°
-male-to-female flat extension cables** (4 inch).
+Plus **4 × M3 × 12 mm screws** (flush, like the head), **2 × M3 × 8 mm screws**
+for the "neck bolts", and **2 × USB-C 90° male-to-female flat extension
+cables** (4 inch). Her arms are molded onto her sides, so they can't be pulled off.
 
 **Putting it together:**
 1. **Camera:** fold the camera onto the front of the camera board (over the
@@ -78,7 +79,10 @@ male-to-female flat extension cables** (4 inch).
 5. **Battery:** plug it into the board's **BAT** socket (red on +!), then set
    it behind the holder.
 6. **Head:** run the head's USB cable and the LED wires down through the neck
-   plug, and push the head's neck collar onto the plug.
+   plug, push the head's neck collar onto the plug, and drive an **M3 × 8
+   screw into each side** of the neck: the "neck bolts". (The holes are in head
+   v3.1. With an older head, make a 3.4 mm hole in each side of the collar,
+   28 mm back from the face and 2.75 mm up from its bottom edge.)
 7. **Back panel:** screw it on. The two ports come through the holes at the bottom.
 8. **Switching the eyes on/off:** poke the small pinhole in her chest
    (bottom right) with a pen. That's the camera board's PWR button.
