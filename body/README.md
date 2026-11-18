@@ -10,6 +10,8 @@ About 54 × 54 × 36 mm.
 
 <img src="preview-head.png" width="700">
 
+**Measured from photos of the real case:** three round button holes on top, and a pinhole for the microphone on the bottom.
+
 **v3, after the first test print:** nothing blocks the case sliding in (the
 screws are in the corners), the head is 9 mm shallower, the neck opening is
 right under the USB-C port (a straight or flat 90° cable fits), and the side

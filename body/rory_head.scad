@@ -28,7 +28,10 @@ case_w = 46;     // width and height
 case_d = 22.5;   // depth, front to back
 case_r = 5.8;    // corner radius (front view)
 // Openings - measured from the case FRONT (the screen side):
-btn_y = [4, 16.4];    // the three buttons on top
+btn_x = [-11, 0, 11]; // the three buttons on top (measured from photos)...
+btn_y = 11.8;         // ...their centers, from the case front
+btn_d = 8.5;          // hole size (the buttons are ~6 mm)
+bottom_mic = [19.4, 20];  // pinhole mic on the bottom: x from center (either side), y from the front
 usb_y = [2, 20.5];    // USB-C (and microSD slot) on the bottom: the neck is open over all of it
 side_win = [17, 34];  // side windows: depth x height (speaker grille + microphone)
 
@@ -95,9 +98,10 @@ module head() {
     translate([0, -0.01, 0]) hull() { rrect(win + 1.6, win + 1.6, win_r + 0.8, 0.01); translate([0, 0.8, 0]) rrect(win, win, win_r, 0.01); }
     // big side windows (speaker grille and microphone on one side, the other side to match)
     translate([0, lip + case_d / 2, 0]) side_slot(side_win[0], side_win[1], head_w + 2);
-    // buttons on top: one long window
-    translate([0, lip + (btn_y[0] + btn_y[1]) / 2, head_w / 2 - wall - 1]) hull() for (x = [-16, 16])
-      translate([x, 0, 0]) scale([1, (btn_y[1] - btn_y[0]) / 8, 1]) cylinder(d = 8, h = wall + 2);
+    // the three buttons on top: a round hole for each
+    for (x = btn_x) translate([x, lip + btn_y, head_w / 2 - wall - 1]) cylinder(d = btn_d, h = wall + 2);
+    // microphone pinhole on the bottom (one corner; a hole on both sides so either way round works)
+    for (sx = [-1, 1]) translate([sx * bottom_mic[0], lip + bottom_mic[1], -head_w / 2 - 1]) cylinder(d = 3, h = wall + 2);
     // LED hole + antenna socket on top
     translate([0, led_y, head_w / 2 - wall - 1]) cylinder(d = led_hole, h = wall + 2);
     translate([0, led_y, head_w / 2 - socket_h]) cylinder(d = socket_d, h = socket_h + 1);
