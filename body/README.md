@@ -79,25 +79,26 @@ gold paint (shoulder bolts and a dot above the chest panel), and two USB-C
   slim flat"), because there's only 6 mm under the board;
 - **head:** either kind (the 4-inch elechawk works).
 
-**Putting it together:**
+**Putting it together** (a 2.5 mm L-shaped hex key does every screw):
 1. **Glue on** the hands (pegs into the bottoms of the arms), the feet (onto the
    pegs underneath) and the chest panel (flat on her chest, camera hole over the
    window). Paint a gold dot just above the panel, like the app's bolt.
-2. **Camera:** fold it onto the front of the camera board (over the microSD
+2. **Head first, while the body is empty:** set the head's short collar into the
+   socket on top, with its USB cable and LED wires hanging down inside. Reach in
+   through the open back and drive the **2 M3 × 6 screws up** through the two
+   holes in the body's top into the head. (A dab of Blu Tack in the screw head
+   keeps it on the hex key.) Snug, not tight.
+3. **Camera:** fold it onto the front of the camera board (over the microSD
    slot) and stick it down with a small square of double-sided tape.
-3. **USB cables:** plug one extension's angled end into the camera board's port
-   (cable pointing back), and the other into the head's port (cable pointing
-   back). Lay both female ends in the two cradles on the body's floor.
-4. **Camera board:** camera side first, onto the 4 pins behind the chest.
-5. **Holder:** in behind the board, fingers toward it (notch on the right for the LED wires).
-6. **Battery:** plug it into the board's **BAT** socket (red on +!) and lay it
+4. **USB cables:** plug the slim extension's angled end into the camera board's
+   port (cable pointing back) and the head's extension into the head's port
+   (through the socket, cable pointing back). Lay both female ends in the two
+   cradles on the body's floor.
+5. **Camera board:** camera side first, onto the 4 pins behind the chest.
+6. **Holder:** in behind the board, fingers toward it (notch on the right for the LED wires).
+7. **Battery:** plug it into the board's **BAT** socket (red on +!) and lay it
    sideways behind the holder.
-7. **Head:** feed its USB cable and the LED wires down, and lower the head's
-   short collar into the socket on top of the body. **Before the battery goes
-   in**, reach in through the open back with the hex key and drive the **2 M3 × 6
-   screws up** through the two holes in the body's top into the head's bottom.
-   That locks the head on.
-8. **Battery** in (step 6), then screw on the **back panel** with the 4 M3 × 12 screws.
+8. **Back panel:** screw it on with the 4 M3 × 12 screws.
 9. **Eyes on/off:** poke the small pinhole low on her chest, on the right, with a pen
    (PWR). The one on the left is BOOT, only needed if a USB upload to the eyes gets stuck.
 
