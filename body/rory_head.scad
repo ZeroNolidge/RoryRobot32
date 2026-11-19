@@ -31,9 +31,9 @@ case_w = 46;     // width and height
 case_d = 22.5;   // depth, front to back
 case_r = 5.8;    // corner radius (front view)
 // Openings - measured from the case FRONT (the screen side):
-btn_x = [-11, 0, 11]; // the three buttons on top (measured from photos)...
-btn_y = 11.8;         // ...their centers, from the case front
-btn_d = 8.5;          // hole size (the buttons are ~6 mm)
+btn_x = [-10.2, 0, 10.2]; // the three buttons on top (adjusted from the first print)...
+btn_y = 10.3;         // ...their centers, from the case front
+btn_d = 8.8;          // hole size (the buttons are ~6 mm)
 bottom_mic = [19.4, 20];  // pinhole mic on the bottom: x from center (either side), y from the front
 usb_y = [2, 20.5];    // USB-C (and microSD slot) on the bottom: the neck is open over all of it
 side_win = [17, 34];  // side windows: depth x height (speaker grille + microphone)
