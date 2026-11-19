@@ -18,3 +18,17 @@
 #ifndef EYES_HOSTNAME
 #define EYES_HOSTNAME "rory-eyes"
 #endif
+
+// Which camera board (see main.cpp)
+#define EYES_BOARD_WAVESHARE 1
+#define EYES_BOARD_NULLLAB 2
+#ifndef EYES_BOARD
+#define EYES_BOARD EYES_BOARD_WAVESHARE
+#endif
+// Picture the wrong way round on the test page? Set these to 1 in my_settings.h.
+#ifndef EYES_FLIP
+#define EYES_FLIP 0
+#endif
+#ifndef EYES_MIRROR
+#define EYES_MIRROR 0
+#endif
