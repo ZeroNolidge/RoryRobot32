@@ -228,6 +228,16 @@ void setup() {
   setGlow(glowR, glowC);
   if (WiFi.status() != WL_CONNECTED) {
     logf("\n[eyes] could not join Wi-Fi - check WIFI_NAME / WIFI_PASSWORD in my_settings.h (2.4 GHz only)\n");
+    // Show what this board can actually see, to tell a typo from weak reception.
+    WiFi.disconnect();
+    int n = WiFi.scanNetworks();
+    logf("[eyes] Wi-Fi networks this board can see (%d):\n", n);
+    for (int i = 0; i < n && i < 15; i++)
+      logf("[eyes]   \"%s\"  signal %d dBm  channel %d%s\n", WiFi.SSID(i).c_str(), WiFi.RSSI(i), WiFi.channel(i),
+           WiFi.SSID(i) == WIFI_NAME ? "   <- yours" : "");
+    if (n <= 0) logf("[eyes]   (none at all - check the board's antenna)\n");
+    WiFi.scanDelete();
+    WiFi.begin(WIFI_NAME, WIFI_PASSWORD);  // keep trying in the background
     return;
   }
   MDNS.begin(EYES_HOSTNAME);
