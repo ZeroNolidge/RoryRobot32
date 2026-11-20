@@ -33,9 +33,10 @@ the back plate, so they sit **flush**. Drive them in slowly; stop when snug.
 what you see.
 
 **Putting it together:**
-1. **LED:** bend the RGB LED's legs 90° so the LED points *up* when the module
-   stands upright (flat against the back). Push the LED up through the small
-   hole in the top from inside; its rim stops it. The wires go down the back
+1. **LED:** the module **stands upright** against the back plate (not lying
+   flat), LED at the top, pins pointing down. Bend the LED's legs 90° forward
+   so the LED points *up*, and push it up through the small hole in the top
+   from inside. The back plate has a pocket for the module. The wires go down
    and out through the neck.
 2. Slide the board's case in from the back: screen first, buttons on top.
 3. Screw on the back plate (the gap in its rim goes at the bottom, over the wires).
