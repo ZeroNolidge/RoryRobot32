@@ -67,7 +67,7 @@ pilot = 2.5;  screw_clear = 3.4;  screw_len = 12;
 // antenna / LED
 led_y = case_back + 2.9;           // as far forward as the LED rim allows, behind the case
 led_hole = 5.1;                     // 5 mm LED, press fit from inside (its rim stops it)
-led_pocket = [24, 21];             // room in the back plate for the LED module (width, height); 1.2 mm skin left
+led_pocket = [18, 41];             // slot in the back plate for the upright LED module + its plugs (width, height); 1.2 mm skin left
 socket_d = 8.0;  socket_h = 1.6;    // the antenna's peg sits in this (stays clear of the back edge)
 
 // neck (open underneath: USB-C plug, microSD, LED wires)
