@@ -13,7 +13,7 @@ export interface Hints {
 export function sttPrompt(hints: Hints = {}): string {
   const parts = [
     "A five-year-old boy is talking to Rory, a friendly toy robot. He is still learning to talk: he speaks slowly, pauses, and some sounds come out differently, so write the words he most likely meant.",
-    "Words he often uses: Rory, I spy, Sonic, Tails, Knuckles, Amy, Shadow, Cream, Eggman, Knight Owl, shark.",
+    "Words he often uses: Rory, I spy, Sonic, Tails, Knuckles, Amy, Shadow, Cream, Eggman, Knight Owl, shark, Titanoboa, anaconda, swamp.",
   ];
   const facts = (hints.memory ?? "")
     .split("\n")

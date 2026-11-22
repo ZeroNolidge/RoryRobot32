@@ -139,6 +139,10 @@ describe("memory", () => {
 });
 
 describe("games", () => {
+  it("knows the Titanoboa game", () => {
+    expect(SYSTEM_PROMPT).toContain("Swamp adventure");
+    expect(sttPrompt()).toContain("Titanoboa");
+  });
   it("knows the Sonic character cards", () => {
     expect(SYSTEM_PROMPT).toContain("red shoes with a white stripe");
     expect(SYSTEM_PROMPT).toContain("TWO fluffy tails");

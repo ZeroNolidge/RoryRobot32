@@ -14,6 +14,11 @@ shows no number, she has v1.7 or older.
 
 ---
 
+## Server update (Nov 22, 2026): Server only
+- **Titanoboa games:** say "titanoboa" (or "snake game", "swamp adventure")
+  for a swamp adventure, a Titanoboa quiz, or slithering snake moves, with
+  real kid-sized facts. Speech-to-text also listens for "Titanoboa" now.
+
 ## v1.17 (Nov 18, 2026): Upload
 - Timing report: after each answer the Serial Monitor shows where the wait
   went, e.g. `[time] he stopped talking -> sent: 2500 ms | server (hearing +
