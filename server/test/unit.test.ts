@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildMessages, cleanForSpeech, friendsNote, memoryNote, parseReply, safeMemory, SYSTEM_PROMPT, wantsLook } from "../src/rory";
+import { buildMessages, cleanForSpeech, friendsNote, memoryNote, parseReply, safeMemory, SYSTEM_PROMPT, wantsLook, wantsRead } from "../src/rory";
 import { heardNothing, sttPrompt } from "../src/stt";
 import { b64urlDecode, b64urlEncode, packHistory, signSpeakUrl, unpackHistory, verifySpeakUrl } from "../src/util";
 import { fallbackSpeechBody, mainSpeechBody, speak, TTS_INSTRUCTIONS } from "../src/voice";
@@ -159,5 +159,23 @@ describe("speech-to-text hints", () => {
     expect(p).toContain('Rory just said: "What color is Sonic?"');
     expect(p).toContain("His name is Nathan.");
     expect(p).not.toContain("# note");
+  });
+});
+
+describe("read mode", () => {
+  it("knows when he wants a story read", () => {
+    expect(wantsRead("Rory, read me this book")).toBe(true);
+    expect(wantsRead("next page!")).toBe(true);
+    expect(wantsRead("what does it say")).toBe(true);
+    expect(wantsRead("why is the sky blue")).toBe(false);
+  });
+  it("lets a page be longer than a chat reply", () => {
+    const page = "[calm] " + "Once upon a time there was a very big snake. ".repeat(20);
+    expect(parseReply(page).say.length).toBeLessThanOrEqual(400);
+    expect(parseReply(page, 1500).say.length).toBeGreaterThan(800);
+  });
+  it("tells Claude it's reading a book page", () => {
+    const m = buildMessages("read this", [], { photo: "AAAA", read: true });
+    expect(JSON.stringify(m)).toContain("Read mode");
   });
 });

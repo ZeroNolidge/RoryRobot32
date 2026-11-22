@@ -68,6 +68,10 @@ static const MadeClip kMadeClips[] = {
     {"say-retry", "Hmm, I couldn't think of an answer. Try again?"},
     {"say-offline", "I can't think right now, but I love hearing you!"},
     {"say-offline", "My thinking cloud is far away. Let's play a game instead!"},
+    // read mode
+    {"read", "Ooh, a book! Hold it nice and still."},
+    {"read", "Story time! Let me see the page."},
+    {"read", "I love stories! Hold it up so I can see."},
     // tap to talk
     {"yes", "Yes?"},
     {"yes", "I'm listening!"},

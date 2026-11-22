@@ -7,6 +7,7 @@
 // Joins your Wi-Fi and serves:
 //   http://rory-eyes.local/          a test page showing what the camera sees
 //   http://rory-eyes.local/capture   one fresh JPEG photo (Rory fetches this when asked to look)
+//   http://rory-eyes.local/capture?hd=1   a sharp 1600 x 1200 photo (read mode: book pages)
 //   http://rory-eyes.local/status    battery and camera status (JSON)
 //   http://rory-eyes.local/glow?c=   antenna color: cyan, red, purple, white, off
 //
@@ -119,7 +120,7 @@ bool startCamera() {
   c.pin_pwdn = p.pwdn; c.pin_reset = p.reset;
   c.xclk_freq_hz = 20000000;
   c.pixel_format = PIXFORMAT_JPEG;
-  c.frame_size = FRAMESIZE_VGA;  // 640 x 480: plenty for "what's this?"
+  c.frame_size = FRAMESIZE_UXGA;  // allocate for the sharpest size (book pages); switched to VGA below
   c.jpeg_quality = 12;
   c.fb_count = 2;
   c.fb_location = CAMERA_FB_IN_PSRAM;
@@ -136,6 +137,7 @@ bool startCamera() {
     s->set_hmirror(s, EYES_MIRROR); // is upside down or mirrored on the test page
     s->set_brightness(s, 1);
     s->set_saturation(s, -1);
+    s->set_framesize(s, FRAMESIZE_VGA);  // 640 x 480: plenty for "what's this?"
   }
   return true;
 }
@@ -152,9 +154,13 @@ void handleCapture() {
     setGlow(255, 255);  // antenna shines bright
     delay(120);
   }
-  camera_fb_t* fb = esp_camera_fb_get();
-  if (fb) {  // drop a possibly stale frame and take a fresh one
-    esp_camera_fb_return(fb);
+  // ?hd=1: a sharp 1600 x 1200 photo, so Rory can read the words in a book
+  bool hd = server.hasArg("hd") && server.arg("hd") == "1";
+  sensor_t* s = esp_camera_sensor_get();
+  if (hd && s) s->set_framesize(s, FRAMESIZE_UXGA);
+  camera_fb_t* fb = nullptr;
+  for (int i = 0; i < (hd ? 3 : 2); i++) {  // drop stale frames (and let the size change settle)
+    if (fb) esp_camera_fb_return(fb);
     fb = esp_camera_fb_get();
   }
   if (flash) {
@@ -168,6 +174,7 @@ void handleCapture() {
   server.sendHeader("Cache-Control", "no-store");
   server.send_P(200, "image/jpeg", (const char*)fb->buf, fb->len);
   esp_camera_fb_return(fb);
+  if (hd && s) s->set_framesize(s, FRAMESIZE_VGA);
 }
 
 void handleStatus() {

@@ -1,8 +1,8 @@
 # Rory's versions
 
 Press **BOOT** (volume) and the small grey number under the speaker shows
-which version Rory has, e.g. **v1.17**. It's also printed at the top of the
-Serial Monitor when she starts: `== Rory the Robot v1.17 ==`.
+which version Rory has, e.g. **v1.18**. It's also printed at the top of the
+Serial Monitor when she starts: `== Rory the Robot v1.18 ==`.
 
 Each version says what you need to do to install it:
 - **Upload**: `git pull`, then Upload to Rory (cable, or `rory-wifi`)
@@ -13,6 +13,14 @@ Versions before v1.8 didn't show a number on her face. If the volume card
 shows no number, she has v1.7 or older.
 
 ---
+
+## v1.18 (Nov 22, 2026): Upload (head + camera) + Server
+- **Read mode:** hold a book up to Rory's chest and say "Rory, read this!",
+  "read me the story" or "what does it say?". She takes a sharp photo
+  (1600 x 1200), reads the page aloud like a bedtime story, then asks a little
+  question. Say "next page" to keep going. If the words are blurry or cut off,
+  she asks him to hold the book closer and steadier.
+- New "Ooh, a book!" clips (she makes them herself over Wi-Fi).
 
 ## Server update (Nov 22, 2026): Server only
 - **Titanoboa games:** say "titanoboa" (or "snake game", "swamp adventure")

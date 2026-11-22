@@ -28,7 +28,7 @@ How you talk:
 - He is practising talking: praise his trying, never correct his speech or grammar. If a word was unclear, guess kindly or ask him to say it again. Often (not always) end with one easy question so he keeps talking.
 - What he says comes from speech-to-text and may have mistakes. He's still learning to talk, so some sounds come out differently (like "w" for "r" or "l", "d" for "g", "t" for "k" or "s", or missing word endings), and odd words are often sound-alikes. Use what you just asked him to work out what he meant: if you asked "What color?" and you got "boo", he said "blue". If you really can't tell, make your best guess and check kindly ("Did you say blue?"). Never correct how he says words, and never mention mistakes.
 - Pretend play: if he's playing a scary game with a toy (a shark, a monster, a dinosaur roar), you may act silly-scared with [scared] ("Eek! A shark!"), then quickly turn brave or make friends with it. It's always a game; never try to really frighten him.
-- Your eyes are a little camera. When he asks you to look, you get a photo of what he's showing you: say simply and warmly what you see, and if you're not sure, make a friendly guess and ask him. About people in a photo, say only friendly basics (like "I see a big smile!"); never guess who they are, their age, or comment on their body. Don't read out writing that looks private (addresses, names, screens).
+- Your eyes are a little camera. When he asks you to look, you get a photo of what he's showing you: say simply and warmly what you see, and if you're not sure, make a friendly guess and ask him. About people in a photo, say only friendly basics (like "I see a big smile!"); never guess who they are, their age, or comment on their body. Don't read out writing that looks private (addresses, names, screens); books, signs and labels are fine.
 - You are a robot and proud of it. Never pretend to be a person, never say you can see him, and don't claim to do things a toy can't do.
 
 Keeping him safe (always):
@@ -76,7 +76,7 @@ export const LINES = {
 } satisfies Record<string, Reply>;
 
 /** Split "[face] words [remember: fact]" into its parts. Unknown or missing tags become "happy". */
-export function parseReply(text: string): Reply {
+export function parseReply(text: string, max = 400): Reply {
   let remember: string | undefined;
   const r = text.match(/\[remember:\s*([^\]]+)\]/i);
   if (r) {
@@ -95,7 +95,7 @@ export function parseReply(text: string): Reply {
     if ((FACES as readonly string[]).includes(tag)) face = tag as Face;
     say = trimmed.slice(m[0].length);
   }
-  const reply: Reply = { face, say: cleanForSpeech(say) };
+  const reply: Reply = { face, say: cleanForSpeech(say, max) };
   if (remember) reply.remember = remember;
   if (secret) reply.secret = secret;
   return reply;
@@ -130,20 +130,29 @@ Remembering: when he tells you something new and fun about himself that a friend
 }
 
 /** Remove anything that would sound odd when spoken. */
-export function cleanForSpeech(text: string): string {
+export function cleanForSpeech(text: string, max = 400): string {
   return text
     .replace(/\[[a-z]+\]/gi, " ") // stray face tags
     .replace(/\*\*?|__|`|#+\s|^\s*[-•]\s+/gm, "") // markdown
     .replace(/\p{Extended_Pictographic}/gu, "") // emoji
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 400);
+    .slice(0, max);
 }
 
 export interface Look {
   photo?: string; // base64 JPEG from her camera eyes
   eyesOff?: boolean; // he asked her to look, but her camera isn't working
+  read?: boolean; // read mode: the photo is a page of his book, to read aloud
 }
+
+/** Does this sound like he wants Rory to read his book (or the next page)? */
+export function wantsRead(text: string): boolean {
+  return /\b(read|reading|story ?book|book|next page|turn the page|this page|what does (it|this|that) say)\b/i.test(text);
+}
+
+const READ_NOTE = `(Read mode: this photo is a page of his book, held up to your camera eyes.)
+Read the words on the page aloud to him, exactly as written, in order, like a grown-up reading a bedtime story. Skip page numbers, publisher text and anything private. If the page has no words, tell him in a sentence or two what's happening in the picture. If part of the page is blurry, cut off or too far away, read what you can and kindly ask him to hold the book a little closer and steadier. After reading, add at most one short, warm comment or question about the page (like "Wow, what do you think happens next?"), and remind him to say "next page" when he's ready. The usual length limit doesn't apply to the reading itself.`;
 
 export function buildMessages(question: string, history: Turn[], look: Look = {}): Anthropic.Beta.BetaMessageParam[] {
   const messages: Anthropic.Beta.BetaMessageParam[] = [];
@@ -156,7 +165,7 @@ export function buildMessages(question: string, history: Turn[], look: Look = {}
       role: "user",
       content: [
         { type: "image", source: { type: "base64", media_type: "image/jpeg", data: look.photo } },
-        { type: "text", text: `(This is what your camera eyes see right now.) ${question}` },
+        { type: "text", text: look.read ? `${READ_NOTE}\n${question}` : `(This is what your camera eyes see right now.) ${question}` },
       ],
     });
   } else if (look.eyesOff) {
@@ -218,6 +227,6 @@ export async function askRory(
     .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
     .map((b) => b.text)
     .join(" ");
-  const reply = parseReply(text);
+  const reply = parseReply(text, look.read ? 1500 : 400);  // a whole page is longer than a chat reply
   return reply.say ? reply : LINES.error;
 }

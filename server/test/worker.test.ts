@@ -109,6 +109,16 @@ describe("POST /ask", () => {
 });
 
 describe("POST /talk", () => {
+  it("asks for a sharp photo when he wants a book read", async () => {
+    installFakeApis();
+    const res = await worker.fetch(new Request("https://rory.example/talk", {
+      method: "POST", body: "Rory, read me my book",
+      headers: { Authorization: "Bearer robot-password", "Content-Type": "text/plain", "X-Rory-Can-Look": "1" },
+    }), env);
+    expect(res.status).toBe(202);
+    expect(res.headers.get("X-Rory-Look")).toBe("read");
+  });
+
   it("remembers her secret I Spy answer in the history, without saying it", async () => {
     installFakeApis();
     claudeText = "[excited] I spy someone with two tails! [secret: Tails]";

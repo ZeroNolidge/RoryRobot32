@@ -22,6 +22,7 @@ screen for a face, built on the **Waveshare ESP32-S3-Touch-LCD-1.54** board.
 | shake her | spiral dizzy eyes, wobbly mouth — *"It goes round and round!"* |
 | hold her up to his face and talk to her | no finger needed: once she hears him talking close by, she shows her listening face, waits for him to pause, then answers |
 | answer when **she asks him a question** | no finger needed: her "o" face means she's listening; she waits up to 6 s for him to start, and when he stops talking for a moment she answers, so they can keep chatting back and forth |
+| hold up a book: *"Rory, read this!"* | **read mode:** she takes a sharp photo of the page and reads it aloud like a bedtime story; *"next page!"* to keep going (needs her camera eyes) |
 | *"Let's play I Spy!"* | plays I Spy with him (Sonic characters, animals, colors): one easy clue at a time, and she quietly remembers her secret answer. Then it's his turn to spy |
 | hold her face and say *"Rory, look!"* / *"What's this?"* | *"Let me take a look!"* — wide eyes, her camera blinks its light and takes **one** photo, then she tells him what she sees (or pretends to be terrified of his shark 🦈) |
 | shake her again… and again | **the dizzy game:** *"Whoooooa!"*, then *"I'm getting dizzy!"* with faster, wobblier spirals, and on the third spin *"Aaarrgh! Too much spinning!"*, *"oops!"*, topples into a little nap, then wakes up: *"Rory is awake!"* |

@@ -12,7 +12,7 @@
 // Secrets (set with `npx wrangler secret put NAME`):
 //   ANTHROPIC_API_KEY, OPENAI_API_KEY, RORY_DEVICE_TOKEN (a long random password shared with the robot)
 import Anthropic from "@anthropic-ai/sdk";
-import { askRory, LINES, type Look, type Reply, wantsLook } from "./rory";
+import { askRory, LINES, type Look, type Reply, wantsLook, wantsRead } from "./rory";
 import { heardNothing, transcribe } from "./stt";
 import { bearer, packHistory, safeEqual, signSpeakUrl, unpackHistory, verifySpeakUrl } from "./util";
 import { PCM_RATE, speak } from "./voice";
@@ -59,7 +59,7 @@ async function think(req: Request, env: Env, canLook = false): Promise<Answer | 
   const started = Date.now();
   const type = req.headers.get("Content-Type") ?? "";
   const history = unpackHistory(req.headers.get("X-Rory-History"));
-  const look: Look = { eyesOff: req.headers.get("X-Rory-Eyes") === "off" };
+  const look: Look = { eyesOff: req.headers.get("X-Rory-Eyes") === "off", read: req.headers.get("X-Rory-Read") === "1" };
 
   // 1. what did he say?
   let heard: string;
@@ -86,13 +86,16 @@ async function think(req: Request, env: Env, canLook = false): Promise<Answer | 
   }
   const tHeard = Date.now();
 
-  if (canLook && !look.photo && !look.eyesOff && wantsLook(heard)) {
-    console.log(JSON.stringify({ event: "look", sttMs: tHeard - started }));
+  const reading = wantsRead(heard);
+  if (canLook && !look.photo && !look.eyesOff && (reading || wantsLook(heard))) {
+    // "read" asks the robot for a sharper photo, so small print is readable
+    console.log(JSON.stringify({ event: reading ? "read" : "look", sttMs: tHeard - started }));
     return new Response(null, {
       status: 202,
-      headers: { "X-Rory-Look": "1", "X-Rory-Heard": encodeURIComponent(heard), "Cache-Control": "no-store" },
+      headers: { "X-Rory-Look": reading ? "read" : "1", "X-Rory-Heard": encodeURIComponent(heard), "Cache-Control": "no-store" },
     });
   }
+  if (look.photo && reading) look.read = true;
 
   // 2. what does Rory say back?
   let reply: Reply;

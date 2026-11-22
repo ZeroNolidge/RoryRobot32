@@ -35,6 +35,7 @@ const char* DANCE = "dance";
 const char* WALK = "walk";
 const char* TIRED = "tired";
 const char* YES = "yes";
+const char* READ = "read";    // "Ooh, a book!" - read mode
 // lines written for each moment (made in her voice over Wi-Fi)
 const char* S_HELLO = "say-hello";
 const char* S_AWAKE = "say-awake";
@@ -481,7 +482,7 @@ void Brain::update(uint32_t now) {
         if (st == Net::State::Looking && !looking_) {
           // "Rory, look!" - wide eyes, straight ahead, while her camera takes the photo
           looking_ = true;
-          say(Moment::LOOK, Moment::HMM);
+          say(Net::answer().reading ? Moment::READ : Moment::LOOK, Moment::LOOK);
           face_->setExpression(Expr::Surprised);
           showing_ = Expr::Surprised;
           face_->lookAt(0, 0.1f);

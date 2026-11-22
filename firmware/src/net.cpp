@@ -89,7 +89,7 @@ uint32_t tSent = 0, tReply = 0;    // question sent / server's reply arrived
 
 // ---- her camera eyes -------------------------------------------------------
 uint8_t* photo = nullptr;  // one JPEG, in PSRAM
-const size_t kPhotoMax = 300 * 1024;
+const size_t kPhotoMax = 700 * 1024;  // a sharp photo of a book page can be big
 IPAddress eyesIp;
 bool mdnsStarted = false;
 
@@ -114,14 +114,15 @@ bool findEyes() {
 }
 
 // One photo from the camera board (it blinks its light so he sees her look).
-size_t takePhoto() {
+size_t takePhoto(bool sharp) {
   if (!photo) photo = (uint8_t*)heap_caps_malloc(kPhotoMax, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
   if (!photo || !findEyes()) return 0;
   uint32_t t0 = millis();
   WiFiClient plain;
   HTTPClient http;
   http.setTimeout(5000);
-  http.begin(plain, "http://" + eyesIp.toString() + "/capture?flash=1");
+  http.setTimeout(8000);
+  http.begin(plain, "http://" + eyesIp.toString() + (sharp ? "/capture?flash=1&hd=1" : "/capture?flash=1"));
   int code = http.GET();
   size_t got = 0;
   if (code == 200) {
@@ -170,7 +171,7 @@ int talk(Body kind, const uint8_t* body, size_t len) {
     }
     HTTPClient& http = web;
     http.setReuse(true);  // keep the connection for the next question
-    http.setTimeout(20000);
+    http.setTimeout(30000);  // reading a whole page takes longer
     http.collectHeaders(kHeaders, 6);
     if (!http.begin(*client, cfg.server + "/talk")) continue;
     http.addHeader("Authorization", "Bearer " + cfg.token);
@@ -182,6 +183,7 @@ int talk(Body kind, const uint8_t* body, size_t len) {
     } else if (kind == Body::Photo) {
       http.addHeader("Content-Type", "image/jpeg");
       http.addHeader("X-Rory-Question", urlEncode(ans.heard));
+      if (ans.reading) http.addHeader("X-Rory-Read", "1");
     } else {
       http.addHeader("Content-Type", "text/plain");
       http.addHeader("X-Rory-Eyes", "off");
@@ -194,7 +196,9 @@ int talk(Body kind, const uint8_t* body, size_t len) {
       client->stop();
       continue;
     }
-    if (code == 202 && http.header("X-Rory-Look") == "1") {
+    String lookHdr = http.header("X-Rory-Look");
+    if (code == 202 && (lookHdr == "1" || lookHdr == "read")) {
+      ans.reading = lookHdr == "read";
       ans.heard = urlDecode(http.header("X-Rory-Heard"));
       http.getString();  // finish the (empty) reply so the connection can be reused
       http.end();
@@ -235,7 +239,7 @@ void doAsk() {
     // "Rory, look!" - take one photo and ask again with it
     st = Net::State::Looking;
     Serial.printf("[net] he asked her to look: \"%s\"\n", ans.heard.c_str());
-    size_t n = takePhoto();
+    size_t n = takePhoto(ans.reading);
     code = n ? talk(Body::Photo, photo, n) : talk(Body::NoEyes, nullptr, 0);
   }
   Serial.printf("[net] question took %lu ms until her voice ended (code %d)\n", (unsigned long)(millis() - t0), code);
