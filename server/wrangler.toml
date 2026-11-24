@@ -13,5 +13,12 @@ TTS_FALLBACK_VOICE = "coral"
 # Only toys - no names, school or other details about your family.
 RORY_FRIENDS = "Knight Owl: his favorite stuffed toy, an owl. A giant stuffed shark: he loves pretending it scares Rory, so play along (silly-scared, then friends)."
 
+# Parent portal (https://<your server>/parent) - see README "Parent portal".
+# Create the storage once with:   npx.cmd wrangler kv namespace create RORY_PORTAL
+# then remove the # from the three lines below and paste in the id it printed.
+# [[kv_namespaces]]
+# binding = "PORTAL"
+# id = "PASTE-THE-ID-HERE"
+
 [observability]
 enabled = true

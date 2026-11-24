@@ -14,6 +14,12 @@ shows no number, she has v1.7 or older.
 
 ---
 
+## Server update (Nov 24, 2026): Server only (+ one-time setup)
+- **Parent portal** at `/parent`: a password-protected page to tell Rory about
+  him, add toy friends, create your own games and skills, set answer length and
+  topics to avoid, and see what she has learned. Setup steps are in
+  `server/README.md` ("Parent portal").
+
 ## v1.18 (Nov 22, 2026): Upload (head + camera) + Server
 - **Read mode:** hold a book up to Rory's chest and say "Rory, read this!",
   "read me the story" or "what does it say?". She takes a sharp photo

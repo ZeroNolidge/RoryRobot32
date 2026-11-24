@@ -12,6 +12,7 @@
 // Secrets (set with `npx wrangler secret put NAME`):
 //   ANTHROPIC_API_KEY, OPENAI_API_KEY, RORY_DEVICE_TOKEN (a long random password shared with the robot)
 import Anthropic from "@anthropic-ai/sdk";
+import { handlePortal, loadSettings, saveLearned, type PortalEnv } from "./portal";
 import { askRory, LINES, type Look, type Reply, wantsLook, wantsRead } from "./rory";
 import { heardNothing, transcribe } from "./stt";
 import { bearer, packHistory, safeEqual, signSpeakUrl, unpackHistory, verifySpeakUrl } from "./util";
@@ -25,6 +26,8 @@ export interface Env {
   TTS_FALLBACK_VOICE?: string;
   RORY_FRIENDS?: string;
   STT_MODEL?: string; // e.g. "gpt-4o-mini-transcribe" (faster, a little less accurate)
+  PORTAL?: KVNamespace; // parent portal settings (see portal.ts)
+  PARENT_PASSWORD?: string; // parent portal password (a secret)
 }
 
 const MAX_AUDIO_BYTES = 1_000_000; // ~30 s of 16 kHz mono 16-bit audio
@@ -55,7 +58,7 @@ interface Answer {
  * With `canLook`, a question like "Rory, look!" that came without a photo
  * gets a quick 202 + X-Rory-Look asking the robot to send one.
  */
-async function think(req: Request, env: Env, canLook = false): Promise<Answer | Response> {
+async function think(req: Request, env: Env, canLook = false, ctx?: ExecutionContext): Promise<Answer | Response> {
   const started = Date.now();
   const type = req.headers.get("Content-Type") ?? "";
   const history = unpackHistory(req.headers.get("X-Rory-History"));
@@ -104,7 +107,12 @@ async function think(req: Request, env: Env, canLook = false): Promise<Answer | 
   } else {
     try {
       const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1 });
-      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history, env.RORY_FRIENDS, look, readMemory(req));
+      const parent = await loadSettings(env.PORTAL);
+      const memory = readMemory(req);
+      // keep a copy of what she's learned, for the parent portal to show
+      const saving = saveLearned(env.PORTAL, memory).catch(() => {});
+      if (ctx) ctx.waitUntil(saving);
+      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history, parent?.friends || env.RORY_FRIENDS, look, memory, parent);
     } catch (err) {
       if (err instanceof Anthropic.RateLimitError) console.error("Claude rate limited");
       else if (err instanceof Anthropic.APIError) console.error(`Claude API error ${err.status}: ${err.message}`);
@@ -129,8 +137,8 @@ function readMemory(req: Request): string | null {
   }
 }
 
-async function handleAsk(req: Request, env: Env): Promise<Response> {
-  const a = await think(req, env);
+async function handleAsk(req: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
+  const a = await think(req, env, false, ctx);
   if (a instanceof Response) return a;
   // a link the robot (or you, testing with curl) can play her voice from
   const origin = new URL(req.url).origin;
@@ -139,8 +147,8 @@ async function handleAsk(req: Request, env: Env): Promise<Response> {
   return json({ heard: a.heard, say: a.reply.say, face: a.reply.face, remember: a.reply.remember ?? null, audio: audioUrl, history: a.history });
 }
 
-async function handleTalk(req: Request, env: Env): Promise<Response> {
-  const a = await think(req, env, req.headers.get("X-Rory-Can-Look") === "1");
+async function handleTalk(req: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
+  const a = await think(req, env, req.headers.get("X-Rory-Can-Look") === "1", ctx);
   if (a instanceof Response) return a;
   const t0 = Date.now();
   const res = await speak(a.reply.say, env.OPENAI_API_KEY, env.TTS_FALLBACK_VOICE || "coral", fetch, "pcm");
@@ -183,17 +191,18 @@ async function handleSpeak(req: Request, env: Env): Promise<Response> {
 }
 
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(req.url);
+    if (url.pathname === "/parent" || url.pathname.startsWith("/parent/")) return handlePortal(req, env as PortalEnv);
     if (req.method === "GET" && url.pathname === "/") return new Response("Rory is awake!\n");
     if (req.method === "GET" && url.pathname === "/speak") return handleSpeak(req, env);
     if (req.method === "POST" && ["/ask", "/talk", "/say"].includes(url.pathname)) {
       if (!env.RORY_DEVICE_TOKEN || !safeEqual(bearer(req), env.RORY_DEVICE_TOKEN)) {
         return json({ error: "unauthorized" }, 401);
       }
-      if (url.pathname === "/talk") return handleTalk(req, env);
+      if (url.pathname === "/talk") return handleTalk(req, env, ctx);
       if (url.pathname === "/say") return handleSay(req, env);
-      return handleAsk(req, env);
+      return handleAsk(req, env, ctx);
     }
     return new Response("not found", { status: 404 });
   },

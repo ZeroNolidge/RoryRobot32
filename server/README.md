@@ -127,3 +127,34 @@ Streams `audio/mpeg`; the robot plays it as it arrives.
 npm test          # unit tests + full request flow with fake OpenAI/Claude APIs
 npm run typecheck
 ```
+
+
+## Parent portal
+
+A password-protected page where grown-ups customise Rory from a phone or
+computer: his first name and things she should know about him, his toy friends,
+**your own games and skills** (described in plain words, with trigger words),
+answer length, topics to steer away from, and other notes. It also shows what
+Rory has learned by herself (her SD-card memory). Her safety rules always come
+first, and nothing typed in the portal can switch them off.
+
+**Set up (once), in a terminal in the `server` folder:**
+
+1. Create the portal's storage:
+   ```
+   npx.cmd wrangler kv namespace create RORY_PORTAL
+   ```
+   It prints an `id = "..."`. In `wrangler.toml`, remove the `#` from the three
+   `[[kv_namespaces]]` lines and paste that id in.
+2. Choose a parent password (long, and different from Rory's device token):
+   ```
+   npx.cmd wrangler secret put PARENT_PASSWORD
+   ```
+3. `npx.cmd wrangler deploy`
+4. Open `https://rory-server.<your-subdomain>.workers.dev/parent` and log in.
+
+**Security:** the password is a Cloudflare secret; logging in sets a signed,
+HttpOnly, Secure, SameSite=Strict cookie that lasts 7 days (changing the
+password logs everyone out); after 10 wrong passwords, logins are locked for
+15 minutes; saving only works from the portal page itself. The settings and a
+copy of Rory's learned memories are stored in your own Cloudflare KV storage.

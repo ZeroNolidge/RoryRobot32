@@ -1,6 +1,7 @@
 // Rory's brain: a kid-safe persona on Claude, with short spoken answers and a
 // face tag so the robot can match her expression to what she says.
 import Anthropic from "@anthropic-ai/sdk";
+import { parentNote, type Settings } from "./portal";
 
 export const FACES = ["happy", "excited", "curious", "thinking", "silly", "calm", "love", "scared"] as const;
 export type Face = (typeof FACES)[number];
@@ -200,12 +201,15 @@ export async function askRory(
   friends?: string,
   look: Look = {},
   memory?: string | null,
+  parent?: Settings | null,
 ): Promise<Reply> {
   const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }];
   const note = friendsNote(friends);
   if (note) system.push({ type: "text", text: note });
   const remembered = memoryNote(memory);
   if (remembered) system.push({ type: "text", text: remembered });
+  const fromParents = parentNote(parent ?? null);
+  if (fromParents) system.push({ type: "text", text: fromParents });
 
   const response = await client.beta.messages.create({
     model,
