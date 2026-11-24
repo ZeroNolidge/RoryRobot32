@@ -37,6 +37,9 @@ wifi_name = {wifi_name}
 wifi_password = {wifi_password}
 server = {server}
 token = {token}
+# Extra Wi-Fi networks (e.g. your phone's hotspot, 2.4 GHz). Remove the # to use:
+# wifi_name2 = My Phone
+# wifi_password2 =
 """
 
 

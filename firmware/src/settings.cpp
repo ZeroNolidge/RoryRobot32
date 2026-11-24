@@ -29,9 +29,13 @@ bool load() {
     else if (key == "server") values.server = val;
     else if (key == "token") values.token = val;
     else if (key == "eyes" && !val.isEmpty()) values.eyes = val;
+    else if (key.startsWith("wifi_name") && key.length() == 10 && key[9] >= '2' && key[9] <= '5') values.moreNames[key[9] - '2'] = val;
+    else if (key.startsWith("wifi_password") && key.length() == 14 && key[13] >= '2' && key[13] <= '5') values.morePasswords[key[13] - '2'] = val;
   }
   f.close();
   while (values.server.endsWith("/")) values.server.remove(values.server.length() - 1);
+  for (int i = 0; i < 4; i++)
+    if (!values.moreNames[i].isEmpty()) Serial.printf("[settings] also knows Wi-Fi \"%s\"\n", values.moreNames[i].c_str());
   Serial.printf("[settings] Wi-Fi \"%s\", server %s, token %s\n", values.wifiName.c_str(),
                 values.server.isEmpty() ? "(none)" : values.server.c_str(), values.token.isEmpty() ? "missing" : "set");
   return true;

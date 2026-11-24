@@ -4,6 +4,7 @@
 #include <NetworkClientSecure.h>
 #include <SD_MMC.h>
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include "made_clips.h"
 #include "memory.h"
 #include "settings.h"
@@ -93,15 +94,25 @@ const size_t kPhotoMax = 700 * 1024;  // a sharp photo of a book page can be big
 IPAddress eyesIp;
 bool mdnsStarted = false;
 
+String eyesNetwork;  // the Wi-Fi network eyesIp was found on
+
 bool findEyes() {
+  if (WiFi.SSID() != eyesNetwork) eyesIp = IPAddress();  // moved to another network: look again
   if (eyesIp != IPAddress()) return true;
+  eyesNetwork = WiFi.SSID();
   const String& e = Settings::get().eyes;
-  if (eyesIp.fromString(e)) return true;  // an address like 192.168.1.250
+  IPAddress fixed;
+  // A fixed address (like 192.168.1.188) only works on the home network;
+  // anywhere else (e.g. a phone hotspot) she looks for "rory-eyes" by name.
+  if (fixed.fromString(e) && WiFi.SSID() == Settings::get().wifiName) {
+    eyesIp = fixed;
+    return true;
+  }
   if (!mdnsStarted) {  // (already running if wireless updates started it)
     MDNS.begin("rory");
     mdnsStarted = true;
   }
-  String name = e;
+  String name = fixed != IPAddress() ? String("rory-eyes") : e;
   name.replace(".local", "");
   IPAddress ip = MDNS.queryHost(name.c_str(), 2000);
   if (ip == IPAddress()) {
@@ -359,8 +370,31 @@ void begin() {
   xTaskCreatePinnedToCore(netTask, "net", 12288, nullptr, 3, nullptr, 0);
 
   WiFi.mode(WIFI_STA);
-  WiFi.setAutoReconnect(true);
-  WiFi.begin(Settings::get().wifiName.c_str(), Settings::get().wifiPassword.c_str());
+  const auto& cfg = Settings::get();
+  bool several = false;
+  for (int i = 0; i < 4; i++) several |= !cfg.moreNames[i].isEmpty();
+  if (!several) {
+    WiFi.setAutoReconnect(true);
+    WiFi.begin(cfg.wifiName.c_str(), cfg.wifiPassword.c_str());
+  } else {
+    // Several networks (home, phone hotspot...): join whichever is in range.
+    static WiFiMulti multi;
+    multi.addAP(cfg.wifiName.c_str(), cfg.wifiPassword.c_str());
+    for (int i = 0; i < 4; i++)
+      if (!cfg.moreNames[i].isEmpty()) multi.addAP(cfg.moreNames[i].c_str(), cfg.morePasswords[i].c_str());
+    xTaskCreatePinnedToCore(
+        [](void*) {
+          String last;
+          for (;;) {
+            if (multi.run(8000) == WL_CONNECTED && WiFi.SSID() != last) {
+              last = WiFi.SSID();
+              Serial.printf("[net] on Wi-Fi \"%s\"\n", last.c_str());
+            }
+            vTaskDelay(pdMS_TO_TICKS(WiFi.status() == WL_CONNECTED ? 5000 : 1000));
+          }
+        },
+        "wifi", 6144, nullptr, 1, nullptr, 0);
+  }
   Serial.printf("[net] joining Wi-Fi \"%s\"...\n", Settings::get().wifiName.c_str());
 }
 

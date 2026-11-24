@@ -1,8 +1,8 @@
 # Rory's versions
 
 Press **BOOT** (volume) and the small grey number under the speaker shows
-which version Rory has, e.g. **v1.19**. It's also printed at the top of the
-Serial Monitor when she starts: `== Rory the Robot v1.19 ==`.
+which version Rory has, e.g. **v1.20**. It's also printed at the top of the
+Serial Monitor when she starts: `== Rory the Robot v1.20 ==`.
 
 Each version says what you need to do to install it:
 - **Upload**: `git pull`, then Upload to Rory (cable, or `rory-wifi`)
@@ -13,6 +13,15 @@ Versions before v1.8 didn't show a number on her face. If the volume card
 shows no number, she has v1.7 or older.
 
 ---
+
+## v1.20 (Nov 25, 2026): Upload (head + camera)
+- **More Wi-Fi networks** (e.g. your phone's hotspot): Rory and her eyes join
+  whichever known network is in range. Head: add `wifi_name2` / `wifi_password2`
+  (up to 5 networks) to `rory/config.txt`. Eyes: add `WIFI_NAME2` /
+  `WIFI_PASSWORD2` to `camera/src/my_settings.h`.
+- Away from home she finds her eyes by name ("rory-eyes"); at home she still
+  uses the fixed address if one is set.
+- Her eyes keep looking for Wi-Fi instead of giving up after 30 seconds.
 
 ## v1.19 (Nov 25, 2026): Upload + Server
 - **Parent portal, new:**

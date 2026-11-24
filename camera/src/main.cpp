@@ -22,6 +22,7 @@
 #include <ESPmDNS.h>
 #include <WebServer.h>
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include <Wire.h>
 #include "esp_camera.h"
 #include "settings.h"
@@ -29,6 +30,8 @@
 namespace {
 
 WebServer server(80);
+WiFiMulti wifi;
+bool wifiWanted = false;
 bool cameraOk = false;
 
 void logf(const char* fmt, ...) {
@@ -241,51 +244,79 @@ void setup() {
   }
   WiFi.mode(WIFI_STA);
   WiFi.setHostname(EYES_HOSTNAME);
-  WiFi.begin(WIFI_NAME, WIFI_PASSWORD);
-  logf("[eyes] joining Wi-Fi \"%s\"", WIFI_NAME);
-  for (int i = 0; i < 60 && WiFi.status() != WL_CONNECTED; i++) {
-    setGlow((i & 1) ? 60 : 0, 0);  // antenna blinks red while connecting
-    delay(500);
-    logf(".");
-  }
-  setGlow(glowR, glowC);
-  if (WiFi.status() != WL_CONNECTED) {
-    logf("\n[eyes] could not join Wi-Fi - check WIFI_NAME / WIFI_PASSWORD in my_settings.h (2.4 GHz only)\n");
-    // Show what this board can actually see, to tell a typo from weak reception.
-    WiFi.disconnect();
-    int n = WiFi.scanNetworks();
-    logf("[eyes] Wi-Fi networks this board can see (%d):\n", n);
-    for (int i = 0; i < n && i < 15; i++)
-      logf("[eyes]   \"%s\"  signal %d dBm  channel %d%s\n", WiFi.SSID(i).c_str(), WiFi.RSSI(i), WiFi.channel(i),
-           WiFi.SSID(i) == WIFI_NAME ? "   <- yours" : "");
-    if (n <= 0) logf("[eyes]   (none at all - check the board's antenna)\n");
-    WiFi.scanDelete();
-    WiFi.begin(WIFI_NAME, WIFI_PASSWORD);  // keep trying in the background
-    return;
-  }
-  MDNS.begin(EYES_HOSTNAME);
-  MDNS.addService("http", "tcp", 80);
+  // Every network she knows (home, phone hotspot...); she joins whichever is in range.
+  wifi.addAP(WIFI_NAME, WIFI_PASSWORD);
+#ifdef WIFI_NAME2
+  wifi.addAP(WIFI_NAME2, WIFI_PASSWORD2);
+#endif
+#ifdef WIFI_NAME3
+  wifi.addAP(WIFI_NAME3, WIFI_PASSWORD3);
+#endif
   server.on("/", [] { server.send_P(200, "text/html", kPage); });
   server.on("/capture", handleCapture);
   server.on("/status", handleStatus);
   server.on("/glow", handleGlow);
-  server.begin();
-  logf("\n[eyes] ready! open  http://%s.local/  or  http://%s/  in a browser\n", EYES_HOSTNAME,
-       WiFi.localIP().toString().c_str());
+  wifiWanted = true;
+  logf("[eyes] looking for a known Wi-Fi network...\n");
+}
+
+// Keeps her on Wi-Fi: (re)joins any known network, and starts her web page and
+// her "rory-eyes" name each time she connects (they change with the network).
+void keepOnline() {
+  if (!wifiWanted) return;
+  static uint32_t nextTry = 0;
+  static String onNetwork;
+  static bool serving = false;
+  if (WiFi.status() != WL_CONNECTED) {
+    if (!onNetwork.isEmpty()) {
+      logf("[eyes] lost Wi-Fi \"%s\"\n", onNetwork.c_str());
+      onNetwork = "";
+    }
+    if (millis() < nextTry) return;
+    setGlow(60, 0);  // red while looking for Wi-Fi
+    wifi.run(6000);
+    nextTry = millis() + 2000;
+    if (WiFi.status() != WL_CONNECTED) {
+      setGlow(0, 0);
+      static uint32_t lastScanLog = 0;
+      if (millis() - lastScanLog > 60000) {  // once a minute: show what she can see
+        lastScanLog = millis();
+        int n = WiFi.scanNetworks();
+        logf("[eyes] no known Wi-Fi in range. Networks this board can see (%d):\n", n);
+        for (int i = 0; i < n && i < 15; i++) logf("[eyes]   \"%s\"  signal %d dBm\n", WiFi.SSID(i).c_str(), WiFi.RSSI(i));
+        WiFi.scanDelete();
+      }
+      return;
+    }
+  }
+  if (onNetwork != WiFi.SSID()) {  // just connected (maybe to a different network)
+    onNetwork = WiFi.SSID();
+    setGlow(glowR, glowC);
+    MDNS.end();
+    MDNS.begin(EYES_HOSTNAME);
+    MDNS.addService("http", "tcp", 80);
+    if (!serving) {
+      server.begin();
+      serving = true;
+    }
+    logf("[eyes] ready on \"%s\"! open  http://%s.local/  or  http://%s/  in a browser\n", onNetwork.c_str(), EYES_HOSTNAME,
+         WiFi.localIP().toString().c_str());
+  }
 }
 
 void loop() {
+  keepOnline();
   server.handleClient();
   // Repeat the status every 10 s, so it shows whenever the Serial Monitor connects.
   static uint32_t lastReport = 0;
   if (millis() - lastReport > 10000) {
     lastReport = millis();
     if (WiFi.status() == WL_CONNECTED)
-      logf("[eyes] camera %s | flip %d mirror %d | Wi-Fi OK | battery reading %u | open http://%s.local/ or http://%s/\n",
-           cameraOk ? "OK" : "NOT FOUND", EYES_FLIP, EYES_MIRROR, batteryRaw(), EYES_HOSTNAME, WiFi.localIP().toString().c_str());
+      logf("[eyes] camera %s | flip %d mirror %d | Wi-Fi \"%s\" | battery reading %u | open http://%s.local/ or http://%s/\n",
+           cameraOk ? "OK" : "NOT FOUND", EYES_FLIP, EYES_MIRROR, WiFi.SSID().c_str(), batteryRaw(), EYES_HOSTNAME, WiFi.localIP().toString().c_str());
     else
-      logf("[eyes] camera %s | Wi-Fi NOT connected to \"%s\" - check my_settings.h (2.4 GHz only)\n",
-           cameraOk ? "OK" : "NOT FOUND", WIFI_NAME);
+      logf("[eyes] camera %s | Wi-Fi not connected (looking for known networks - see my_settings.h, 2.4 GHz only)\n",
+           cameraOk ? "OK" : "NOT FOUND");
   }
   delay(2);
 }
