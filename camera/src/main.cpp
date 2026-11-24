@@ -111,6 +111,13 @@ void startGlow() {
 }
 
 /* ---------- camera ---------- */
+// Set EYES_FLIP / EYES_MIRROR in my_settings.h if the picture is upside down or
+// mirrored. Re-applied after every size change, which can reset them.
+void applyOrientation(sensor_t* s) {
+  if (!s) return;
+  s->set_vflip(s, EYES_FLIP);
+  s->set_hmirror(s, EYES_MIRROR);
+}
 bool startCamera() {
   const Pins& p = kPins;
   camera_config_t c = {};
@@ -136,11 +143,10 @@ bool startCamera() {
   sensor_t* s = esp_camera_sensor_get();
   logf("[eyes] camera found on the %s, sensor id 0x%x\n", kBoardName, s ? s->id.PID : 0);
   if (s) {
-    s->set_vflip(s, EYES_FLIP);     // set EYES_FLIP / EYES_MIRROR in my_settings.h if the picture
-    s->set_hmirror(s, EYES_MIRROR); // is upside down or mirrored on the test page
     s->set_brightness(s, 1);
     s->set_saturation(s, -1);
     s->set_framesize(s, FRAMESIZE_VGA);  // 640 x 480: plenty for "what's this?"
+    applyOrientation(s);
   }
   return true;
 }
@@ -160,7 +166,10 @@ void handleCapture() {
   // ?hd=1: a sharp 1600 x 1200 photo, so Rory can read the words in a book
   bool hd = server.hasArg("hd") && server.arg("hd") == "1";
   sensor_t* s = esp_camera_sensor_get();
-  if (hd && s) s->set_framesize(s, FRAMESIZE_UXGA);
+  if (hd && s) {
+    s->set_framesize(s, FRAMESIZE_UXGA);
+    applyOrientation(s);
+  }
   camera_fb_t* fb = nullptr;
   for (int i = 0; i < (hd ? 3 : 2); i++) {  // drop stale frames (and let the size change settle)
     if (fb) esp_camera_fb_return(fb);
@@ -177,7 +186,10 @@ void handleCapture() {
   server.sendHeader("Cache-Control", "no-store");
   server.send_P(200, "image/jpeg", (const char*)fb->buf, fb->len);
   esp_camera_fb_return(fb);
-  if (hd && s) s->set_framesize(s, FRAMESIZE_VGA);
+  if (hd && s) {
+    s->set_framesize(s, FRAMESIZE_VGA);
+    applyOrientation(s);
+  }
 }
 
 void handleStatus() {
@@ -216,6 +228,7 @@ void setup() {
   for (uint32_t t0 = millis(); !Serial && millis() - t0 < 1500;) delay(10);
   logf("\n== Rory's eyes (%s) ==\n", kBoardName);
   logf("[eyes] PSRAM: %u KB\n", (unsigned)(ESP.getPsramSize() / 1024));
+  logf("[eyes] picture settings: EYES_FLIP %d, EYES_MIRROR %d (change them in src/my_settings.h)\n", EYES_FLIP, EYES_MIRROR);
 
   startExpander();
   cameraOk = startCamera();
