@@ -71,7 +71,10 @@ void startExpander() {
 #if EYES_BOARD != EYES_BOARD_NULLLAB
   Wire.begin(kPins.sda, kPins.scl, 100000);
   expanderOk = expWrite(0x02, 0xFF)      // all its pins are outputs
-               && expWrite(0x03, 0x40);  // IO6 on (as in Waveshare's camera example), the rest off
+               // Same as Waveshare's board setup: IO5 = BAT_EN keeps the battery
+               // connected (off = the board dies when USB is unplugged), IO6 =
+               // camera on, IO0-2 = display/touch lines idle high, IO4 low.
+               && expWrite(0x03, 0x67);
   logf("[eyes] helper chip %s\n", expanderOk ? "OK" : "NOT FOUND");
   delay(50);
 #endif
