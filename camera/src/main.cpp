@@ -281,8 +281,8 @@ void loop() {
   if (millis() - lastReport > 10000) {
     lastReport = millis();
     if (WiFi.status() == WL_CONNECTED)
-      logf("[eyes] camera %s | Wi-Fi OK | battery reading %u | open http://%s.local/ or http://%s/\n",
-           cameraOk ? "OK" : "NOT FOUND", batteryRaw(), EYES_HOSTNAME, WiFi.localIP().toString().c_str());
+      logf("[eyes] camera %s | flip %d mirror %d | Wi-Fi OK | battery reading %u | open http://%s.local/ or http://%s/\n",
+           cameraOk ? "OK" : "NOT FOUND", EYES_FLIP, EYES_MIRROR, batteryRaw(), EYES_HOSTNAME, WiFi.localIP().toString().c_str());
     else
       logf("[eyes] camera %s | Wi-Fi NOT connected to \"%s\" - check my_settings.h (2.4 GHz only)\n",
            cameraOk ? "OK" : "NOT FOUND", WIFI_NAME);
