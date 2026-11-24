@@ -8,4 +8,5 @@ namespace Memory {
 void begin();                    // read the file (after the SD card is up)
 const String& text();            // all facts, one per line (sent with each question)
 void add(const String& fact);    // remember something new (saved straight away)
+void forget(const String& lines); // delete these lines (newline-separated), e.g. from the parent portal
 }  // namespace Memory

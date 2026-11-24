@@ -134,8 +134,10 @@ npm run typecheck
 A password-protected page where grown-ups customise Rory from a phone or
 computer: his first name and things she should know about him, his toy friends,
 **your own games and skills** (described in plain words, with trigger words),
-answer length, topics to steer away from, and other notes. It also shows what
-Rory has learned by herself (her SD-card memory). Her safety rules always come
+answer length, topics to steer away from, other notes, and **bedtime quiet
+hours** (soft voice, calm and sleepy). It shows what Rory has learned by herself
+(with a **Forget** button for each) and a **history of recent chats** (can be
+switched off or cleared). Her safety rules always come
 first, and nothing typed in the portal can switch them off.
 
 **Set up (once), in a terminal in the `server` folder:**

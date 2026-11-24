@@ -34,7 +34,9 @@ void reset();     // back to Idle once Done or Failed
 struct Answer {
   String heard, say, face;
   String remember;
-  bool reading = false;  // read mode: he asked her to read his book  // something new she learned about him (saved by the brain)
+  bool reading = false;  // read mode: he asked her to read his book
+  String forget;         // memories the grown-ups asked her to delete
+  bool quiet = false;    // bedtime quiet hours: soft voice  // something new she learned about him (saved by the brain)
 };
 const Answer& answer();  // valid from Speaking onward
 }  // namespace Net

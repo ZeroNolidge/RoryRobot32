@@ -75,4 +75,31 @@ void add(const String& fact) {
   Serial.printf("[memory] learned: %s\n", f.c_str());
 }
 
+void forget(const String& lines) {
+  if (!ready || lines.isEmpty()) return;
+  bool changed = false;
+  int start = 0;
+  while (start <= (int)lines.length()) {
+    int nl = lines.indexOf('\n', start);
+    String l = lines.substring(start, nl < 0 ? lines.length() : nl);
+    l.trim();
+    for (size_t i = 0; i < facts.size(); i++) {
+      String f = facts[i];
+      f.trim();
+      if (!l.isEmpty() && f.equalsIgnoreCase(l)) {
+        Serial.printf("[memory] forgot: %s\n", facts[i].c_str());
+        facts.erase(facts.begin() + i);
+        changed = true;
+        break;
+      }
+    }
+    if (nl < 0) break;
+    start = nl + 1;
+  }
+  if (changed) {
+    rebuild();
+    save();
+  }
+}
+
 }  // namespace Memory

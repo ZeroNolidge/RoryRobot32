@@ -162,7 +162,7 @@ String urlEncode(const String& s) {
 enum class Body { Wav, Photo, NoEyes };
 int talk(Body kind, const uint8_t* body, size_t len) {
   const auto& cfg = Settings::get();
-  static const char* kHeaders[] = {"X-Rory-Face", "X-Rory-Say", "X-Rory-Heard", "X-Rory-History", "X-Rory-Look", "X-Rory-Remember"};
+  static const char* kHeaders[] = {"X-Rory-Face", "X-Rory-Say", "X-Rory-Heard", "X-Rory-History", "X-Rory-Look", "X-Rory-Remember", "X-Rory-Forget", "X-Rory-Quiet"};
   for (int attempt = 0; attempt < 2; attempt++) {
     if (!ensureConnected()) {
       Serial.printf("[net] couldn't reach the server (free memory %u)\n", (unsigned)ESP.getFreeHeap());
@@ -172,7 +172,7 @@ int talk(Body kind, const uint8_t* body, size_t len) {
     HTTPClient& http = web;
     http.setReuse(true);  // keep the connection for the next question
     http.setTimeout(30000);  // reading a whole page takes longer
-    http.collectHeaders(kHeaders, 6);
+    http.collectHeaders(kHeaders, 8);
     if (!http.begin(*client, cfg.server + "/talk")) continue;
     http.addHeader("Authorization", "Bearer " + cfg.token);
     if (!history.isEmpty() && millis() - historyMs < kHistoryKeepMs) http.addHeader("X-Rory-History", history);
@@ -208,6 +208,9 @@ int talk(Body kind, const uint8_t* body, size_t len) {
       ans.face = http.header("X-Rory-Face");
       ans.say = urlDecode(http.header("X-Rory-Say"));
       ans.remember = urlDecode(http.header("X-Rory-Remember"));
+      ans.forget = urlDecode(http.header("X-Rory-Forget"));
+      ans.quiet = http.header("X-Rory-Quiet") == "1";
+      Voice::setQuiet(ans.quiet);
       if (kind == Body::Wav) ans.heard = urlDecode(http.header("X-Rory-Heard"));
       String h = http.header("X-Rory-History");
       if (!h.isEmpty()) {

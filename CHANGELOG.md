@@ -1,8 +1,8 @@
 # Rory's versions
 
 Press **BOOT** (volume) and the small grey number under the speaker shows
-which version Rory has, e.g. **v1.18**. It's also printed at the top of the
-Serial Monitor when she starts: `== Rory the Robot v1.18 ==`.
+which version Rory has, e.g. **v1.19**. It's also printed at the top of the
+Serial Monitor when she starts: `== Rory the Robot v1.19 ==`.
 
 Each version says what you need to do to install it:
 - **Upload**: `git pull`, then Upload to Rory (cable, or `rory-wifi`)
@@ -13,6 +13,15 @@ Versions before v1.8 didn't show a number on her face. If the volume card
 shows no number, she has v1.7 or older.
 
 ---
+
+## v1.19 (Nov 25, 2026): Upload + Server
+- **Parent portal, new:**
+  - **Forget** button next to each thing Rory learned: she stops using it right
+    away, and deletes it from her SD card after her next chat.
+  - **Chat history:** the last 60 chats (what he said, what she answered), with
+    an on/off switch and a "Clear history" button.
+  - **Bedtime quiet hours:** between the times you set, Rory speaks at about
+    half volume, keeps things calm and sleepy, and gently suggests goodnight.
 
 ## Server update (Nov 24, 2026): Server only (+ one-time setup)
 - **Parent portal** at `/parent`: a password-protected page to tell Rory about

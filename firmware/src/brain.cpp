@@ -171,6 +171,7 @@ void Brain::answerArrived(uint32_t now) {
   face_->setAutoLook(false);
   lastPlayMs_ = now;
   if (!a.remember.isEmpty()) Memory::add(a.remember);  // saved to the SD card
+  if (!a.forget.isEmpty()) Memory::forget(a.forget);   // the grown-ups asked her to forget these
   String said = a.say;
   said.trim();
   listenNext_ = KEEP_LISTENING && said.endsWith("?");

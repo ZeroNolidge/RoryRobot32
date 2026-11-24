@@ -12,7 +12,7 @@
 // Secrets (set with `npx wrangler secret put NAME`):
 //   ANTHROPIC_API_KEY, OPENAI_API_KEY, RORY_DEVICE_TOKEN (a long random password shared with the robot)
 import Anthropic from "@anthropic-ai/sdk";
-import { handlePortal, loadSettings, saveLearned, type PortalEnv } from "./portal";
+import { appendLog, applyForget, handlePortal, isQuiet, loadForget, loadSettings, saveLearned, stillRemembered, type PortalEnv } from "./portal";
 import { askRory, LINES, type Look, type Reply, wantsLook, wantsRead } from "./rory";
 import { heardNothing, transcribe } from "./stt";
 import { bearer, packHistory, safeEqual, signSpeakUrl, unpackHistory, verifySpeakUrl } from "./util";
@@ -51,6 +51,8 @@ interface Answer {
   history: string;
   sttMs: number;
   claudeMs: number;
+  forget: string[]; // learned lines the grown-ups want her to delete from her SD card
+  quiet: boolean; // bedtime quiet hours
 }
 
 /**
@@ -101,18 +103,21 @@ async function think(req: Request, env: Env, canLook = false, ctx?: ExecutionCon
   if (look.photo && reading) look.read = true;
 
   // 2. what does Rory say back?
+  const parent = await loadSettings(env.PORTAL);
+  const forget = await loadForget(env.PORTAL);
+  const rawMemory = readMemory(req);
+  const memory = applyForget(rawMemory, forget);
+  const quiet = isQuiet(parent, new Date());
+  // keep a copy of what she's learned, for the parent portal to show
+  const saving = saveLearned(env.PORTAL, rawMemory, forget).catch(() => {});
+  if (ctx) ctx.waitUntil(saving);
   let reply: Reply;
   if (heardNothing(heard)) {
     reply = LINES.didntHear;
   } else {
     try {
       const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 1 });
-      const parent = await loadSettings(env.PORTAL);
-      const memory = readMemory(req);
-      // keep a copy of what she's learned, for the parent portal to show
-      const saving = saveLearned(env.PORTAL, memory).catch(() => {});
-      if (ctx) ctx.waitUntil(saving);
-      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history, parent?.friends || env.RORY_FRIENDS, look, memory, parent);
+      reply = await askRory(client, env.RORY_MODEL || DEFAULT_MODEL, heard, history, parent?.friends || env.RORY_FRIENDS, look, memory, parent, quiet);
     } catch (err) {
       if (err instanceof Anthropic.RateLimitError) console.error("Claude rate limited");
       else if (err instanceof Anthropic.APIError) console.error(`Claude API error ${err.status}: ${err.message}`);
@@ -123,7 +128,14 @@ async function think(req: Request, env: Env, canLook = false, ctx?: ExecutionCon
   const tReply = Date.now();
 
   const newHistory = reply === LINES.didntHear || reply.refused ? history : [...history, { q: heard, a: reply.secret ? `${reply.say} [secret: ${reply.secret}]` : reply.say }];
-  return { heard, reply, history: packHistory(newHistory), sttMs: tHeard - started, claudeMs: tReply - tHeard };
+  if (parent?.keepLog && heard && reply !== LINES.didntHear) {
+    const logging = appendLog(env.PORTAL, { at: new Date().toISOString(), q: heard, a: reply.say, looked: !!look.photo }).catch(() => {});
+    if (ctx) ctx.waitUntil(logging);
+  }
+  return {
+    heard, reply, history: packHistory(newHistory), sttMs: tHeard - started, claudeMs: tReply - tHeard,
+    forget: stillRemembered(rawMemory, forget), quiet,
+  };
 }
 
 /** Rory's memory file from her SD card, sent along with each question (URL-encoded). */
@@ -162,6 +174,8 @@ async function handleTalk(req: Request, env: Env, ctx?: ExecutionContext): Promi
     "Cache-Control": "no-store",
   };
   if (a.reply.remember) headers["X-Rory-Remember"] = encodeURIComponent(a.reply.remember);
+  if (a.forget.length) headers["X-Rory-Forget"] = encodeURIComponent(a.forget.join("\n"));
+  if (a.quiet) headers["X-Rory-Quiet"] = "1";
   if (!res.ok || !res.body) {
     console.error(`speech failed: ${res.status}`);
     return new Response("speech failed", { status: 502, headers });

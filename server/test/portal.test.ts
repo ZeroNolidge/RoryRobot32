@@ -1,7 +1,7 @@
 // Parent portal: login, security checks, and settings reaching Rory's prompt.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import worker, { type Env } from "../src/index";
-import { cleanSettings, parentNote } from "../src/portal";
+import { applyForget, cleanSettings, isQuiet, parentNote, stillRemembered } from "../src/portal";
 
 function fakeKV() {
   const m = new Map<string, string>();
@@ -91,5 +91,44 @@ describe("parent portal", () => {
     const sys = JSON.stringify(bodies[0].system);
     expect(sys).toContain("His favorite animal is Titanoboa.");
     expect(sys).toContain("His first name is Nathan");
+  });
+});
+
+describe("portal extras", () => {
+  it("knows bedtime quiet hours across midnight, in the family's time zone", () => {
+    const s = cleanSettings({ quietStart: "19:30", quietEnd: "07:00", tz: "America/Denver" });
+    expect(isQuiet(s, new Date("2026-11-25T04:00:00Z"))).toBe(true);   // 21:00 in Denver
+    expect(isQuiet(s, new Date("2026-11-25T20:00:00Z"))).toBe(false);  // 13:00 in Denver
+    expect(isQuiet(cleanSettings({}), new Date())).toBe(false);
+    expect(parentNote(s, true)).toContain("bedtime quiet hours");
+  });
+
+  it("forgets lines, and tells the robot which ones to delete", () => {
+    const mem = "His name is Nathan.\nHe has a dog named Max.";
+    expect(applyForget(mem, ["he has a dog named max."])).toBe("His name is Nathan.");
+    expect(stillRemembered(mem, ["He has a dog named Max.", "Old fact."])).toEqual(["He has a dog named Max."]);
+  });
+
+  it("forget and history work end to end", async () => {
+    const env = makeEnv();
+    const cookie = (await login(env)).headers.get("Set-Cookie")!.split(";")[0];
+    const H = { Cookie: cookie, Origin: O, "X-Rory-Portal": "1", "Content-Type": "application/json" };
+    await worker.fetch(req("/parent/api/settings", { method: "PUT", headers: H, body: JSON.stringify({ keepLog: true }) }), env);
+    expect((await worker.fetch(req("/parent/api/forget", { method: "POST", headers: H, body: JSON.stringify({ line: "He has a dog named Max." }) }), env)).status).toBe(200);
+    vi.stubGlobal("fetch", vi.fn(async (input: any, init?: any) => {
+      const r = new Request(input, init);
+      if (new URL(r.url).hostname === "api.anthropic.com")
+        return Response.json({ id: "m", type: "message", role: "assistant", model: "x", content: [{ type: "text", text: "[happy] Hi!" }],
+          stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 } });
+      return new Response(new Uint8Array(10));
+    }));
+    const ctx = { waits: [] as Promise<unknown>[], waitUntil(p: Promise<unknown>) { this.waits.push(p); } };
+    const res = await worker.fetch(req("/talk", { method: "POST", body: "hello Rory",
+      headers: { Authorization: "Bearer robot-password", "Content-Type": "text/plain", "X-Rory-Memory": encodeURIComponent("His name is Nathan.\nHe has a dog named Max.") } }), env, ctx as any);
+    expect(decodeURIComponent(res.headers.get("X-Rory-Forget")!)).toBe("He has a dog named Max.");
+    await Promise.all(ctx.waits);
+    const got: any = await (await worker.fetch(req("/parent/api/settings", { headers: { Cookie: cookie } }), env)).json();
+    expect(got.log[0].q).toBe("hello Rory");
+    expect(got.learned).toEqual(["His name is Nathan."]);
   });
 });

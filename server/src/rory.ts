@@ -202,13 +202,14 @@ export async function askRory(
   look: Look = {},
   memory?: string | null,
   parent?: Settings | null,
+  quiet = false,
 ): Promise<Reply> {
   const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }];
   const note = friendsNote(friends);
   if (note) system.push({ type: "text", text: note });
   const remembered = memoryNote(memory);
   if (remembered) system.push({ type: "text", text: remembered });
-  const fromParents = parentNote(parent ?? null);
+  const fromParents = parentNote(parent ?? null, quiet);
   if (fromParents) system.push({ type: "text", text: fromParents });
 
   const response = await client.beta.messages.create({

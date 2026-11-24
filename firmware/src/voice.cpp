@@ -31,6 +31,7 @@ volatile bool recActive = false, recReady = false;
 volatile bool recStarting = false;  // asked for, not yet started by the task
 int appliedVol = -1;
 volatile float micLvl = 0;
+volatile bool quietMode = false;  // bedtime: answers play at about half the loudness
 
 // recording: 16 kHz, 16-bit, mono WAV in PSRAM
 const uint32_t kRate = 16000;
@@ -281,7 +282,7 @@ void pumpStream() {
   }
   // mono -> stereo, volume, loudness for the mouth
   const float v = VOLUME_STEPS[volStep] / 21.0f;
-  const float gain = v * v * STREAM_GAIN;
+  const float gain = v * v * STREAM_GAIN * (quietMode ? 0.5f : 1.0f);
   int16_t out[1024];
   size_t samples = n / 2;
   float sum = 0;
@@ -442,6 +443,8 @@ void setVolumeStep(int step) {
 }
 
 int volumeStep() { return volStep; }
+
+void setQuiet(bool q) { quietMode = q; }
 
 int clipCount(const char* moment) {
   auto it = clips.find(moment);

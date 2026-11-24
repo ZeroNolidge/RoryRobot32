@@ -21,6 +21,7 @@ void stop();
 bool speaking();
 float level();                   // 0..1 loudness, for the mouth
 void setVolumeStep(int step);    // index into VOLUME_STEPS
+void setQuiet(bool quiet);       // bedtime quiet hours: her answers play softer
 int volumeStep();
 int clipCount(const char* moment);
 void rescan();                   // look for new clips on the card

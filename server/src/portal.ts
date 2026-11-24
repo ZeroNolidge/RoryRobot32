@@ -27,13 +27,30 @@ export interface Settings {
   answerLength: "short" | "medium";
   avoid: string; // topics to steer away from
   notes: string; // anything else for Rory
+  quietStart: string; // "HH:MM" or "" - bedtime quiet hours (soft voice, calm chat)
+  quietEnd: string;
+  tz: string; // the family's time zone, e.g. "America/Denver" (from the browser)
+  keepLog: boolean; // keep a short history of chats for the portal
 }
 
-export const EMPTY_SETTINGS: Settings = { childName: "", about: [], friends: "", games: [], answerLength: "short", avoid: "", notes: "" };
+export interface LogEntry {
+  at: string; // ISO time
+  q: string; // what he said
+  a: string; // what Rory said
+  looked?: boolean;
+}
+
+export const EMPTY_SETTINGS: Settings = {
+  childName: "", about: [], friends: "", games: [], answerLength: "short", avoid: "", notes: "",
+  quietStart: "", quietEnd: "", tz: "", keepLog: true,
+};
 
 const SETTINGS_KEY = "settings";
 const LEARNED_KEY = "learned";
 const FAILS_KEY = "login-fails";
+const FORGET_KEY = "forget";
+const LOG_KEY = "log";
+const MAX_LOG = 60;
 const SESSION_DAYS = 7;
 const MAX_FAILS = 10;
 
@@ -59,7 +76,67 @@ export function cleanSettings(raw: any): Settings {
     answerLength: r.answerLength === "medium" ? "medium" : "short",
     avoid: clip(r.avoid, 500),
     notes: clip(r.notes, 1500),
+    quietStart: hhmm(r.quietStart),
+    quietEnd: hhmm(r.quietEnd),
+    tz: validTz(clip(r.tz, 60)),
+    keepLog: r.keepLog !== false,
   };
+}
+
+const hhmm = (v: unknown) => (typeof v === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : "");
+function validTz(tz: string): string {
+  if (!tz) return "";
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return tz;
+  } catch {
+    return "";
+  }
+}
+
+/** Is it bedtime quiet hours right now (in the family's time zone)? */
+export function isQuiet(s: Settings | null, now: Date): boolean {
+  if (!s || !s.quietStart || !s.quietEnd || s.quietStart === s.quietEnd) return false;
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: s.tz || "UTC", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(now);
+  const t = parts.replace(/[^0-9:]/g, "");
+  return s.quietStart < s.quietEnd ? t >= s.quietStart && t < s.quietEnd : t >= s.quietStart || t < s.quietEnd; // e.g. 19:30 -> 07:00
+}
+
+/* ---------- forgetting learned memories ---------- */
+
+const norm = (l: string) => l.replace(/\s+/g, " ").trim().toLowerCase();
+
+export async function loadForget(kv: KVNamespace | undefined): Promise<string[]> {
+  if (!kv) return [];
+  try {
+    const f = await kv.get(FORGET_KEY, "json");
+    return Array.isArray(f) ? f.filter((x) => typeof x === "string").slice(0, 50) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Her memory without the lines the grown-ups asked her to forget. */
+export function applyForget(memory: string | null, forget: string[]): string | null {
+  if (!memory || !forget.length) return memory;
+  const gone = new Set(forget.map(norm));
+  return memory.split("\n").filter((l) => !gone.has(norm(l))).join("\n");
+}
+
+/** The forgotten lines still on her SD card (sent back to the robot so it deletes them). */
+export function stillRemembered(memory: string | null, forget: string[]): string[] {
+  if (!memory || !forget.length) return [];
+  const have = new Set(memory.split("\n").map(norm));
+  return forget.filter((f) => have.has(norm(f)));
+}
+
+/* ---------- chat history ---------- */
+
+export async function appendLog(kv: KVNamespace | undefined, e: LogEntry): Promise<void> {
+  if (!kv) return;
+  const log = ((await kv.get(LOG_KEY, "json")) as LogEntry[] | null) ?? [];
+  log.push({ at: e.at, q: e.q.slice(0, 300), a: e.a.slice(0, 600), looked: e.looked || undefined });
+  await kv.put(LOG_KEY, JSON.stringify(log.slice(-MAX_LOG)));
 }
 
 export async function loadSettings(kv: KVNamespace | undefined): Promise<Settings | null> {
@@ -73,8 +150,13 @@ export async function loadSettings(kv: KVNamespace | undefined): Promise<Setting
 }
 
 /** Remember what Rory has learned on her own (her SD-card memory), for the portal to show. */
-export async function saveLearned(kv: KVNamespace | undefined, memory: string | null): Promise<void> {
+export async function saveLearned(kv: KVNamespace | undefined, memory: string | null, forget: string[] = []): Promise<void> {
   if (!kv || !memory) return;
+  // once the robot has deleted a forgotten line, stop asking it to
+  if (forget.length) {
+    const still = stillRemembered(memory, forget);
+    if (still.length !== forget.length) await kv.put(FORGET_KEY, JSON.stringify(still));
+  }
   const text = memory.slice(0, 6000);
   const prev = (await kv.get(LEARNED_KEY, "json")) as { text?: string } | null;
   if (prev?.text === text) return; // unchanged: no write
@@ -82,9 +164,11 @@ export async function saveLearned(kv: KVNamespace | undefined, memory: string | 
 }
 
 /** The grown-ups' settings, as a note for Rory's system prompt. */
-export function parentNote(s: Settings | null): string | null {
+export function parentNote(s: Settings | null, quiet = false): string | null {
   if (!s) return null;
   const parts: string[] = [];
+  if (quiet)
+    parts.push("It's bedtime quiet hours right now: be calm, soft and sleepy. Keep answers short and gentle, choose quiet games and cozy stories (no exciting or loud games, no silly-scared), and if he seems awake, kindly suggest snuggling down and saying goodnight.");
   if (s.childName) parts.push(`His first name is ${s.childName}. Use it now and then, warmly.`);
   if (s.about.length) parts.push(`About him (from his grown-ups):\n${s.about.map((a) => `- ${a}`).join("\n")}`);
   if (s.friends) parts.push(`His toy friends (from his grown-ups): ${s.friends}\nTreat them as his toys, never as real people.`);
@@ -180,8 +264,11 @@ export async function handlePortal(req: Request, env: PortalEnv, nowSec = Math.f
     if (req.method === "GET") {
       const settings = (await loadSettings(env.PORTAL)) ?? EMPTY_SETTINGS;
       const learned = ((await env.PORTAL.get(LEARNED_KEY, "json")) as { text?: string; at?: string } | null) ?? {};
-      const learnedLines = (learned.text ?? "").split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
-      return jsonRes({ settings, learned: learnedLines, learnedAt: learned.at ?? null });
+      const forget = await loadForget(env.PORTAL);
+      const gone = new Set(forget.map(norm));
+      const learnedLines = (learned.text ?? "").split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#") && !gone.has(norm(l)));
+      const log = settings.keepLog ? (((await env.PORTAL.get(LOG_KEY, "json")) as LogEntry[] | null) ?? []) : [];
+      return jsonRes({ settings, learned: learnedLines, learnedAt: learned.at ?? null, forgetting: forget, log: log.slice().reverse() });
     }
     if (req.method === "PUT") {
       if (!sameOrigin || req.headers.get("X-Rory-Portal") !== "1") return jsonRes({ error: "bad origin" }, 403);
@@ -195,6 +282,23 @@ export async function handlePortal(req: Request, env: PortalEnv, nowSec = Math.f
       await env.PORTAL.put(SETTINGS_KEY, JSON.stringify(settings));
       return jsonRes({ ok: true, settings });
     }
+  }
+  if (path === "/parent/api/forget" || path === "/parent/api/log/clear") {
+    if (!(await validSession(req, env.PARENT_PASSWORD, nowSec))) return jsonRes({ error: "Please log in." }, 401);
+    if (req.method !== "POST" || !sameOrigin || req.headers.get("X-Rory-Portal") !== "1") return jsonRes({ error: "bad origin" }, 403);
+    if (path === "/parent/api/log/clear") {
+      await env.PORTAL.delete(LOG_KEY);
+      return jsonRes({ ok: true });
+    }
+    let line = "";
+    try {
+      line = clip(((await req.json()) as any)?.line, 200);
+    } catch {}
+    if (!line) return jsonRes({ error: "bad data" }, 400);
+    const forget = await loadForget(env.PORTAL);
+    if (!forget.some((f) => norm(f) === norm(line))) forget.push(line);
+    await env.PORTAL.put(FORGET_KEY, JSON.stringify(forget.slice(-50)));
+    return jsonRes({ ok: true });
   }
   return new Response("not found", { status: 404, headers: securityHeaders });
 }
@@ -225,6 +329,8 @@ button.ghost{background:transparent;border:1px solid var(--line);color:inherit}b
 ul.learned{margin:6px 0 0;padding-left:20px}
 #status{min-height:1.4em;color:var(--accent2);font-weight:600}
 .err{color:#C62828}
+.learned li{margin:4px 0}.learned button{padding:2px 10px;margin-left:8px;font-size:.85rem}
+.chat{border-top:1px solid var(--line);padding:8px 0}.chat .t{color:var(--muted);font-size:.8rem}.chat .q{font-weight:600}
 .bar{position:sticky;bottom:0;background:var(--bg);padding:10px 0;border-top:1px solid var(--line)}
 </style></head><body><main>
 <h1>Rory's parent portal</h1>
@@ -246,7 +352,7 @@ ul.learned{margin:6px 0 0;padding-left:20px}
 </section>
 
 <section class=card><h2>What Rory has learned by herself</h2>
-  <p class=hint id=learnedInfo>Things he told her, saved on her SD card (rory/memory.txt). To remove one, delete that line from the file on the card.</p>
+  <p class=hint id=learnedInfo>Things he told her, saved on her SD card. "Forget" stops her using it straight away, and deletes it from her card after her next chat.</p>
   <ul class=learned id=learned></ul>
 </section>
 
@@ -254,6 +360,19 @@ ul.learned{margin:6px 0 0;padding-left:20px}
   <p class=hint>Describe a game in plain words. Rory starts it when he says a trigger word.</p>
   <div id=games></div>
   <button class=ghost id=addGame>+ Add a game or skill</button>
+</section>
+
+<section class=card><h2>Bedtime quiet hours</h2>
+  <p class=hint>During these hours Rory speaks softly, keeps things calm and sleepy, and gently suggests goodnight. Leave empty to turn off.</p>
+  <div class=row><div style="flex:1"><label for=quietStart>From</label><input id=quietStart type=time></div>
+  <div style="flex:1"><label for=quietEnd>Until</label><input id=quietEnd type=time></div></div>
+  <p class=hint id=tzInfo></p>
+</section>
+
+<section class=card><h2>Chat history</h2>
+  <label class=row style="font-weight:400"><input id=keepLog type=checkbox style="width:auto"> Keep a history of the last 60 chats (stored in your Cloudflare account)</label>
+  <div id=log></div>
+  <p class=row><button class=ghost id=clearLog type=button>Clear history</button></p>
 </section>
 
 <section class=card><h2>House rules</h2>
@@ -290,9 +409,26 @@ function fill(d) {
   $("childName").value = s.childName; $("about").value = s.about.join("\\n"); $("friends").value = s.friends;
   $("answerLength").value = s.answerLength; $("avoid").value = s.avoid; $("notes").value = s.notes;
   $("games").innerHTML = ""; s.games.forEach(addGame);
+  $("quietStart").value = s.quietStart; $("quietEnd").value = s.quietEnd; $("keepLog").checked = s.keepLog;
+  $("tzInfo").textContent = "Time zone: " + (s.tz || Intl.DateTimeFormat().resolvedOptions().timeZone) + " (from this device, saved when you click Save).";
   const ul = $("learned"); ul.innerHTML = "";
   if (!d.learned.length) { const li = document.createElement("li"); li.textContent = "Nothing yet."; ul.appendChild(li); }
-  d.learned.forEach((t) => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+  d.learned.forEach((t) => {
+    const li = document.createElement("li"); li.textContent = t;
+    const b = document.createElement("button"); b.className = "ghost"; b.type = "button"; b.textContent = "Forget";
+    b.onclick = async () => { await fetch("/parent/api/forget", { method: "POST", headers: H, body: JSON.stringify({ line: t }) }); load(); };
+    li.appendChild(b); ul.appendChild(li);
+  });
+  const lg = $("log"); lg.innerHTML = "";
+  if (!s.keepLog) lg.textContent = "History is off.";
+  else if (!d.log.length) lg.textContent = "No chats yet.";
+  d.log.forEach((e) => {
+    const div = document.createElement("div"); div.className = "chat";
+    const t = document.createElement("div"); t.className = "t"; t.textContent = new Date(e.at).toLocaleString() + (e.looked ? "  (looked with her camera)" : "");
+    const q = document.createElement("div"); q.className = "q"; q.textContent = "He said: " + e.q;
+    const a = document.createElement("div"); a.textContent = "Rory: " + e.a;
+    div.append(t, q, a); lg.appendChild(div);
+  });
 }
 async function load() {
   const r = await fetch("/parent/api/settings");
@@ -310,12 +446,15 @@ $("save").onclick = async () => {
   const games = [...document.querySelectorAll(".game")].map((n) => ({
     name: n.querySelector(".g-name").value, trigger: n.querySelector(".g-trigger").value, how: n.querySelector(".g-how").value }));
   const body = { childName: $("childName").value, about: $("about").value.split("\\n"), friends: $("friends").value,
-    games, answerLength: $("answerLength").value, avoid: $("avoid").value, notes: $("notes").value };
+    games, answerLength: $("answerLength").value, avoid: $("avoid").value, notes: $("notes").value,
+    quietStart: $("quietStart").value, quietEnd: $("quietEnd").value, keepLog: $("keepLog").checked,
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone };
   $("status").textContent = "Saving...";
   const r = await fetch("/parent/api/settings", { method: "PUT", headers: H, body: JSON.stringify(body) });
   if (r.status === 401) { $("status").textContent = ""; load(); return; }
   $("status").textContent = r.ok ? "Saved! Rory will use this from her next answer." : "Couldn't save. Try again.";
 };
+$("clearLog").onclick = async () => { if (confirm("Clear the chat history?")) { await fetch("/parent/api/log/clear", { method: "POST", headers: H }); load(); } };
 $("logout").onclick = async () => { await fetch("/parent/logout", { method: "POST", headers: H }); load(); };
 load();
 </script></main></body></html>`;
