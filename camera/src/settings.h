@@ -27,7 +27,11 @@
 #endif
 // Picture the wrong way round on the test page? Set these to 1 in my_settings.h.
 #ifndef EYES_FLIP
+#if EYES_BOARD == EYES_BOARD_WAVESHARE
+#define EYES_FLIP 1   // the camera folded onto the board (as in Rory's body) sees upside down
+#else
 #define EYES_FLIP 0
+#endif
 #endif
 #ifndef EYES_MIRROR
 #define EYES_MIRROR 0
