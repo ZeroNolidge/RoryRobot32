@@ -69,7 +69,7 @@ holder plate, the battery **lying sideways** (up to 40 × 10 × 25 mm, e.g. a
 | `stl/rory_body_holder.stl` | 1 | any (hidden) | flat, fingers up. No supports |
 | `stl/rory_body_panel.stl` | 1 | pale blue | flat, buttons up. Paint the left button teal and the right one yellow |
 | `stl/rory_body_hands.stl` | 1 (two hands) | brown or tan | lying on a side, as exported |
-| `stl/rory_body_feet.stl` | 1 (two feet) | tan | flat side down, as exported |
+| `stl/rory_body_feet.stl` | 1 (two feet) | tan or brown | as exported (flat on both sides: the soles are flat so she stands steadily) |
 | `stl/rory_head_head.stl` | 1 | almond yellow | **v3.1** (short collar for the socket, 2 screw holes underneath), face down, supports build plate only |
 
 Plus: **4 × M3 × 12 mm** screws (back panel), **2 × M3 × 6 mm** (from inside,

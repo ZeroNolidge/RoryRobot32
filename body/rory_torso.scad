@@ -183,11 +183,15 @@ module hands_placed() {
 // big oval feet that stick out at the front (tan); glue onto pegs under the body
 foot = [21, 32, 11];             // width, length, height
 foot_x = 11.3;  foot_y = D / 2 - 8;     // centers (forward, so the toes stick out like in the app)
-module foot() {                  // flat top at z = 0, rounded below
+module foot() {                  // flat top at z = 0 (glues to the body), FLAT bottom so she stands steadily
+  r = 3;                         // rounded edge around the sides
   difference() {
     hull() {
       translate([0, 0, -0.5]) scale([foot[0] / 2, foot[1] / 2, 0.5]) cylinder(r = 1, h = 1, $fn = 64);
-      translate([0, 0, -foot[2] + foot[2] * 0.45]) scale([foot[0] / 2, foot[1] / 2, foot[2] * 0.45]) sphere(r = 1, $fn = 48);
+      // soft bulge around the middle, like the app
+      translate([0, 0, -foot[2] * 0.55]) scale([foot[0] / 2 + 0.6, foot[1] / 2 + 0.6, 1]) cylinder(r = 1, h = 0.01, $fn = 64);
+      // flat sole, a bit smaller so the edge looks rounded
+      translate([0, 0, -foot[2]]) scale([foot[0] / 2 - r * 0.6, foot[1] / 2 - r * 0.6, 1]) cylinder(r = 1, h = 0.01, $fn = 64);
     }
     for (y = [-7, 7]) translate([0, y, -peg[1] - 0.3]) cylinder(d = peg[0] + 0.3, h = peg[1] + 1);  // peg holes
   }
